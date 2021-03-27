@@ -17,7 +17,7 @@ class CombineLambdaStack(cdk.Stack):
         event_source = SqsEventSource(queue=queue, batch_size=1, enabled=True)
 
         sqs_lambda = _lambda.Function(self, 'ClipInputLambda',
-            handler='lambda.handler',
+            handler='handler.handler',
             runtime=_lambda.Runtime.PYTHON_3_8,
             code=_lambda.Code.from_asset(path=os.path.join('lambda'))
         )

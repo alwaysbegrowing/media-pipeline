@@ -1,3 +1,5 @@
+import os
+
 from aws_cdk import core as cdk
 from aws_cdk import aws_sqs as sqs
 from aws_cdk import aws_lambda as _lambda
@@ -17,7 +19,7 @@ class CombineLambdaStack(cdk.Stack):
         sqs_lambda = _lambda.Function(self, 'ClipInputLambda',
             handler='lambda.handler',
             runtime=_lambda.Runtime.PYTHON_3_8,
-            code=_lambda.Code.asset('lambda')
+            code=_lambda.Code.from_asset(path=os.path.join('lambda'))
         )
 
         sqs_lambda.add_event_source(event_source)

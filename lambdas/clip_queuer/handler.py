@@ -59,11 +59,9 @@ def upload_file(file_name, bucket, object_name=None):
     :return: True if file was uploaded, else False
     """
 
-    # If S3 object_name was not specified, use file_name
     if object_name is None:
         object_name = file_name
 
-    # Upload the file
     s3_client = boto3.client('s3')
     try:
         response = s3_client.upload_file(file_name, bucket, object_name)
@@ -77,6 +75,12 @@ def upload_file(file_name, bucket, object_name=None):
 def download_clips(timestamps):
     # add logic to use youtube-dl and ffmpeg to download the clips
     # return an array with all the file paths
+    
+    for timestamp in timestamps: 
+        # example of how you could do this with bash
+        # ffmpeg $(youtube-dl -g 'https://www.twitch.tv/videos/958928945' | sed 's/.*/-ss 00:05 -i &/') -t 01:00 -c copy out2.mkv
+        pass
+    
     return []
 
 def handler(event, context):

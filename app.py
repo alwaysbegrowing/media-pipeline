@@ -9,11 +9,11 @@ from aws_cdk import core as cdk
 # being updated to use `cdk`.  You may delete this import if you don't need it.
 from aws_cdk import core
 
-from combine_lambda.combine_lambda_stack import CombineLambdaStack
+from render_lambda.render_lambda_stack import RenderLambdaStack
 
 
 app = core.App()
-CombineLambdaStack(app, "CombineLambdaStack",
+RenderLambdaStack(app, "RenderLambdaStack",
     # If you don't specify 'env', this stack will be environment-agnostic.
     # Account/Region-dependent features and context lookups will not work,
     # but a single synthesized template can be deployed anywhere.

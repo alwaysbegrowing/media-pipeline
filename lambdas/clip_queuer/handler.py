@@ -1,9 +1,18 @@
-import boto3
 import json
-# import ffmpy # how the heck do i import this!!
+import logging
+import boto3
+import os
+from botocore.exceptions import ClientError
+
+# import ffmpy # how the heck do i import this and package with the lambda!!
 # import youtube_dl
 
 # ydl = youtube_dl.YoutubeDL({'outtmpl': '%(id)s.%(ext)s'})
+
+
+BUCKET = os.getenv('BUCKET')
+
+
 def makeInput(file):
     return {
         "AudioSelectors": {
@@ -36,12 +45,9 @@ def buildObj(s3Urls):
     with open("job.json", "r") as jsonfile:
         job_object = json.load(jsonfile)
 
-
-
     for url in s3Urls:
         job_object['Settings']['Inputs'].append(makeInput(url))
     return job_object
-
 
 
 def upload_file(file_name, bucket, object_name=None):
@@ -61,28 +67,34 @@ def upload_file(file_name, bucket, object_name=None):
     s3_client = boto3.client('s3')
     try:
         response = s3_client.upload_file(file_name, bucket, object_name)
+        return response
     except ClientError as e:
         logging.error(e)
         return False
     return True
 
 
+def download_clips(timestamps):
+    # add logic to use youtube-dl and ffmpeg to download the clips
+    # return an array with all the file paths
+    return []
+
 def handler(event, context):
+
+    # example body 
+    # {
+    #     "clips": [{"startTime": 60, "endTime": 90, "videoId": 964746682}]
+    # }
+    timestamps = event['body'].clips
+
+    clip_local_file_paths = download_clips(timestamps)
+    for file_name in clip_local_file_paths:
+        upload_file(file_name, BUCKET)
+
+    job_object = buildObj(clip_local_file_paths)
 
     mediaconvert_client = boto3.client(
         'mediaconvert', endpoint_url=mediaconvert_endpoint)
-
-    # get messages from API
-    # download messages with timestamp
-    # upload messages to s3 bucket
-    # add s3 urls to job object
-
-    # upload_file(file_name)
-
-    s3Urls = ['s3://pillarclips/clip_11_im_baguette_2021-02-14T04:58:48Z.mp4',
-              's3://pillarclips/clip_11_im_baguette_2021-02-14T04:58:48Z.mp4']
-    job_object = buildObj(s3Urls)
-
     convertResponse = mediaconvert_client.create_job(**job_object)
     print(convertResponse)
     return {
@@ -90,7 +102,5 @@ def handler(event, context):
         "headers": {
             "Content-Type": "application/json"
         },
-        "body": event['body']
+        "body": convertResponse
     }
-
-

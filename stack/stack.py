@@ -37,12 +37,14 @@ class RenderLambdaStack(cdk.Stack):
                                        code=lambda_.Code.from_asset(
                                            path=os.path.join('lambdas/clip_queuer')),
                                        environment={
-                                           'MEDIA_QUEUE': mediaconvert_queue.attr_arn}
+                                           'MEDIA_QUEUE': mediaconvert_queue.attr_arn,
+                                           'BUCKET': individual_clips.bucket_name
+                                       }
                                        )
 
 
         individual_clips.grant_read(clip_queuer)
-        
+
         getfromQueue = apigateway.LambdaIntegration(clip_queuer,
                                                     request_templates={"application/json": '{ "statusCode": "200" }'})
 

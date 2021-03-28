@@ -6,7 +6,7 @@ with open("README.md") as fp:
 
 
 setuptools.setup(
-    name="render_lambda",
+    name="stack",
     version="0.0.1",
 
     description="An empty CDK Python app",
@@ -15,8 +15,8 @@ setuptools.setup(
 
     author="PillarGG",
 
-    package_dir={"": "render_lambda"},
-    packages=setuptools.find_packages(where="render_lambda"),
+    package_dir={"": "stack"},
+    packages=setuptools.find_packages(where="stack"),
 
     install_requires=[
         "aws-cdk.core==1.95.1",

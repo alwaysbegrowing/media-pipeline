@@ -1,9 +1,8 @@
 import os
-import uuid
 
 from aws_cdk import core as cdk
 from aws_cdk import aws_sqs as sqs
-from aws_cdk import aws_lambda as _lambda
+from aws_cdk import aws_lambda as lambda_
 from aws_cdk import aws_mediaconvert as mediaconvert
 from aws_cdk.aws_lambda_event_sources import SqsEventSource
 
@@ -17,17 +16,16 @@ class RenderLambdaStack(cdk.Stack):
 
         event_source = SqsEventSource(queue=queue, batch_size=1, enabled=True)
 
-        queue_uuid = uuid.uuid4()
 
-        mediaconvert_queue = mediaconvert.CfnQueue(self, id=f"FinalRenderQueue-{queue_uuid}", name=f"FinalRenderQueue-{queue_uuid}")
+        mediaconvert_queue = mediaconvert.CfnQueue(self, id=f"ClipCombiner")
 
-        sqs_lambda = _lambda.Function(self, 'ClipInputLambda',
+        sqs_lambda = lambda_.Function(self, 'ClipCreator',
             handler='handler.handler',
-            runtime=_lambda.Runtime.PYTHON_3_8,
-            code=_lambda.Code.from_asset(path=os.path.join('combine'))
+            runtime=lambda_.Runtime.PYTHON_3_8,
+            code=lambda_.Code.from_asset(path=os.path.join('lambdas/clip_creator')),
+            environment={'MEDIA_QUEUE': mediaconvert_queue.attr_arn}
         )
 
-        sqs_lambda.add_environment("MEDIA_QUEUE", mediaconvert_queue.attr_arn)
 
         sqs_lambda.add_event_source(event_source)
 

@@ -1,0 +1,14 @@
+FROM python:3
+
+RUN apt-get update && apt-get install --no-install-recommends -y build-essential ffmpeg \
+    && apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+COPY . .
+
+RUN pip install --upgrade pip
+RUN pip install -r requirements.txt
+
+RUN apt-get purge build-essential -y && apt-get autoremove -y
+
+CMD ["python", "main.py"]

@@ -23,7 +23,9 @@ class RenderLambdaStack(cdk.Stack):
         combined_clips = s3.Bucket(self,
                                    "CombinedClips")
 
-        mediaconvert_queue = mediaconvert.CfnQueue(self, id="ClipCombiner")
+        download_queue = sqs.Queue(self, 'ClipDownloadQueue')
+
+        # mediaconvert_queue = mediaconvert.CfnQueue(self, id="ClipCombiner")
         # individual_clips.grant_read(mediaconvert_queue)
         # combined_clips.grant_write(mediaconvert_queue)
 
@@ -31,38 +33,43 @@ class RenderLambdaStack(cdk.Stack):
                                       rest_api_name="Clips service",
                                       description="Service handles combining clips")
 
-        # TODO wtf why do I have to specify code as a param here?
-        temp_layer = lambda_.LayerVersion(self, "FFMPEG", code=lambda_.Code.from_asset(
-            path=os.path.join(
-                'lambdas/clip_queuer')
-        ))
-
-        ffmpeg_layer=temp_layer.from_layer_version_arn(self, 'ffmpeg',
-        layer_version_arn='arn:aws:serverlessrepo:us-east-1:145266761615:applications/ffmpeg-lambda-layer')
-
         clip_queuer = PythonFunction(self, 'ClipQueuer',
                                      handler='handler',
                                      index='handler.py',
                                      entry='./lambdas/clip_queuer',
                                      runtime=lambda_.Runtime.PYTHON_3_8,
                                      environment={
-                                         'MEDIA_QUEUE': mediaconvert_queue.attr_arn,
-                                         'BUCKET': individual_clips.bucket_name
-                                     },
-                                     layers=[ffmpeg_layer]
+                                         'BUCKET': individual_clips.bucket_name,
+                                         'DOWNLOAD_QUEUE': download_queue.queue_url
+                                     })
+        
+        download_queue.grant_send_messages(clip_queuer)
 
-                                     )
-
-
-
-        #    layer = lambda_.LayerVersion(self, 'FFMPEG', code=None)
-        # layer.
-
-        individual_clips.grant_read(clip_queuer)
-
-        getfromQueue = apigateway.LambdaIntegration(clip_queuer,
+        addToQueue = apigateway.LambdaIntegration(clip_queuer,
                                                     request_templates={"application/json": '{ "statusCode": "200" }'})
 
         clips_endpoint = clip_api.root.add_resource("clips")
 
-        clips_endpoint.add_method("POST", getfromQueue)
+        clips_endpoint.add_method("POST", addToQueue)
+
+        # Clip Downloader Container
+
+        image_name = "lambdaClipDownloader"
+        image_version = "latest"
+
+        ecr_image = lambda_.EcrImageCode.from_asset_image(
+            directory = os.path.join(os.getcwd(), 'lambdas', 'downloader')
+        )
+
+        downloader = lambda_.Function(self,
+            id=image_name,
+            description="Containerized Clip Downloader",
+            code=ecr_image,
+            handler=lambda_.Handler.FROM_IMAGE,
+            runtime=lambda_.Runtime.FROM_IMAGE,
+            function_name='ClipDownloader',
+        )
+    
+        download_event_source = SqsEventSource(queue=download_queue, batch_size=1, enabled=True)
+
+        downloader.add_event_source(download_event_source)

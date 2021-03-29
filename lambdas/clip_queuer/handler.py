@@ -1,110 +1,47 @@
-import json
-import logging
-import boto3
 import os
-from botocore.exceptions import ClientError
+import json
 
-# import ffmpy # how the heck do i import this and package with the lambda!!
-# import youtube_dl
+import boto3
 
-# ydl = youtube_dl.YoutubeDL({'outtmpl': '%(id)s.%(ext)s'})
-
-
-BUCKET = os.getenv('BUCKET')
-
-
-def makeInput(file):
-    return {
-        "AudioSelectors": {
-            "Audio Selector 1": {
-                "Offset": 0,
-                "DefaultSelection": "DEFAULT",
-                "ProgramSelection": 1
-            }
-        },
-        "VideoSelector": {
-            "ColorSpace": "FOLLOW",
-            "Rotate": "DEGREE_0",
-            "AlphaBehavior": "DISCARD"
-        },
-        "FilterEnable": "AUTO",
-        "PsiControl": "USE_PSI",
-        "FilterStrength": 0,
-        "DeblockFilter": "DISABLED",
-        "DenoiseFilter": "DISABLED",
-        "InputScanType": "AUTO",
-        "TimecodeSource": "ZEROBASED",
-        "FileInput": file
-    }
-
-
-mediaconvert_endpoint = 'https://lxlxpswfb.mediaconvert.us-east-1.amazonaws.com'
-
-
-def buildObj(s3Urls):
-    with open("job.json", "r") as jsonfile:
-        job_object = json.load(jsonfile)
-
-    for url in s3Urls:
-        job_object['Settings']['Inputs'].append(makeInput(url))
-    return job_object
-
-
-def upload_file(file_name, bucket, object_name=None):
-    """Upload a file to an S3 bucket
-
-    :param file_name: File to upload
-    :param bucket: Bucket to upload to
-    :param object_name: S3 object name. If not specified then file_name is used
-    :return: True if file was uploaded, else False
-    """
-
-    if object_name is None:
-        object_name = file_name
-
-    s3_client = boto3.client('s3')
-    try:
-        response = s3_client.upload_file(file_name, bucket, object_name)
-        return response
-    except ClientError as e:
-        logging.error(e)
-        return False
-    return True
-
-
-def download_clips(timestamps):
-    # add logic to use youtube-dl and ffmpeg to download the clips
-    # return an array with all the file paths
-    
-    for timestamp in timestamps: 
-        # example of how you could do this with bash
-        # ffmpeg $(youtube-dl -g 'https://www.twitch.tv/videos/958928945' | sed 's/.*/-ss 00:05 -i &/') -t 01:00 -c copy out2.mkv
-        pass
-    
-    return []
+import streamlink
 
 def handler(event, context):
-
-    # example body 
-    # {
-    #     "clips": [{"startTime": 60, "endTime": 90, "videoId": 964746682}]
-    # }
-    timestamps = event['body'].clips
-
-    clip_local_file_paths = download_clips(timestamps)
-    for file_name in clip_local_file_paths:
-        upload_file(file_name, BUCKET)
-
-    job_object = buildObj(clip_local_file_paths)
-
-    mediaconvert_client = boto3.client(
-        'mediaconvert', endpoint_url=mediaconvert_endpoint)
-    convertResponse = mediaconvert_client.create_job(**job_object)
-    print(convertResponse)
-    return {
-        "statusCode": 200,
-        "headers": {
-            "Content-Type": "application/json"
-        },
-        "body": convertResponse
+    '''
+    Here is what the request body will look like.
+    {
+        'clips': [{'start_time': 55, 'end_time': 90, 'name': 'clip12'}],
+        'original_url': 'https://www.twitch.tv/videos/964350897',
     }
+    '''
+    job = json.loads(event.get('body'))
+
+    original_url = job.get('original_url')
+    clips = job.get('clips')
+
+    streams = streamlink.streams(original_url)
+    best_stream = streams.get('best').url
+
+    sqs = boto3.client('sqs')
+
+    for clip in clips:
+        data = {
+            'end_time': clip.get('end_time'),
+            'start_time': clip.get('start_time'),
+            'stream_manifest_url': best_stream,
+            'name': clip.get('name') + '.mp4',
+            'bucket': os.getenv('BUCKET')
+        }
+        data_str = json.dumps(data)
+        resp = client.send_message(
+            QueueUrl=os.getenv('DOWNLOAD_QUEUE'),
+            MessageBody=data_str
+        )
+
+    return {
+        'statusCode': 200
+        'headers': {
+            'Content-Type': 'application/json'
+        },
+        body: '{}'
+    }
+        

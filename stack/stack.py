@@ -31,6 +31,15 @@ class RenderLambdaStack(cdk.Stack):
                                       rest_api_name="Clips service",
                                       description="Service handles combining clips")
 
+        # TODO wtf why do I have to specify code as a param here?
+        temp_layer = lambda_.LayerVersion(self, "FFMPEG", code=lambda_.Code.from_asset(
+            path=os.path.join(
+                'lambdas/clip_queuer')
+        ))
+
+        ffmpeg_layer=temp_layer.from_layer_version_arn(self, 'ffmpeg',
+        layer_version_arn='arn:aws:serverlessrepo:us-east-1:145266761615:applications/ffmpeg-lambda-layer')
+
         clip_queuer = PythonFunction(self, 'ClipQueuer',
                                      handler='handler',
                                      index='handler.py',
@@ -39,8 +48,15 @@ class RenderLambdaStack(cdk.Stack):
                                      environment={
                                          'MEDIA_QUEUE': mediaconvert_queue.attr_arn,
                                          'BUCKET': individual_clips.bucket_name
-                                     }
+                                     },
+                                     layers=[ffmpeg_layer]
+
                                      )
+
+
+
+        #    layer = lambda_.LayerVersion(self, 'FFMPEG', code=None)
+        # layer.
 
         individual_clips.grant_read(clip_queuer)
 

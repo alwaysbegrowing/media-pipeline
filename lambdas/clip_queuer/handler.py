@@ -13,8 +13,8 @@ from botocore.exceptions import ClientError
 BUCKET = os.getenv('BUCKET')
 
 
-def makeInput(file):
-    return {
+def makeInput(file, start_time=None, end_time=None):
+    data = {
         "AudioSelectors": {
             "Audio Selector 1": {
                 "Offset": 0,
@@ -37,7 +37,18 @@ def makeInput(file):
         "FileInput": file
     }
 
+    if start_time != None and end_time != None:
+        data['InputClippings'] = [
+            {
+                "StartTimecode": start_time,
+                "EndTimecode": end_time
+            }
+        ]
 
+    return data
+
+
+# this shouldn't be static, it will change.
 mediaconvert_endpoint = 'https://lxlxpswfb.mediaconvert.us-east-1.amazonaws.com'
 
 
@@ -75,17 +86,18 @@ def upload_file(file_name, bucket, object_name=None):
 def download_clips(timestamps):
     # add logic to use youtube-dl and ffmpeg to download the clips
     # return an array with all the file paths
-    
-    for timestamp in timestamps: 
+
+    for timestamp in timestamps:
         # example of how you could do this with bash
         # ffmpeg $(youtube-dl -g 'https://www.twitch.tv/videos/958928945' | sed 's/.*/-ss 00:05 -i &/') -t 01:00 -c copy out2.mkv
         pass
-    
+
     return []
+
 
 def handler(event, context):
 
-    # example body 
+    # example body
     # {
     #     "clips": [{"startTime": 60, "endTime": 90, "videoId": 964746682}]
     # }

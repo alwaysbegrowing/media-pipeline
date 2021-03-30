@@ -7,7 +7,9 @@ from aws_cdk import (core as cdk,
                      aws_sqs as sqs,
                      aws_s3 as s3,
                      aws_lambda as lambda_,
-                     aws_mediaconvert as mediaconvert)
+                     aws_mediaconvert as mediaconvert,
+                     aws_stepfunctions as stepfunctions,
+                     aws_stepfunctions_tasks as stp_tasks)
 
 from aws_cdk.aws_lambda_python import PythonFunction, PythonLayerVersion
 

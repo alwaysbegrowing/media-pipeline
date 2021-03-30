@@ -24,7 +24,7 @@ def handler(event, context):
 
     sqs = boto3.client('sqs')
 
-    for clip in clips:
+    for clip in clips: # this will be changed to add tasks
         data = {
             'end_time': clip.get('end_time'),
             'start_time': clip.get('start_time'),

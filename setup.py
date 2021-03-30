@@ -25,6 +25,8 @@ setuptools.setup(
         "aws-cdk.aws-sqs==1.95.1",
         "aws-cdk.aws-mediaconvert==1.95.1",
         "aws-cdk.aws-lambda-event-sources==1.95.1",
+        "aws-cdk.aws-lambda-python==1.95.1",
+        "aws-cdk.aws-ecr",
         "boto3==1.17.39"
     ],
 

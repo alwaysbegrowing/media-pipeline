@@ -1,2 +1,2 @@
 boto3==1.17.39
-ffmpeg-python==0.2.0
+ffmpy==0.3.0

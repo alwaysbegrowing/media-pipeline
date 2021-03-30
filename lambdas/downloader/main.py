@@ -1,8 +1,11 @@
 import os
 import json
+import uuid
 
 import boto3
-import ffmpeg
+from ffmpy import FFmpeg
+
+from lib import seconds_to_ffmpeg_time
 
 def handler(event, context):
     '''
@@ -22,17 +25,30 @@ def handler(event, context):
 
     job = json.loads(body)
     name = job.get('name')
-    bucket = job.get('bucket') or 'pillarclips'
+    download_name = f'{uuid.uuid4()}-{name}.mkv'
+    bucket = job.get('bucket') or os.getenv('BUCKET')
+    start_time = seconds_to_ffmpeg_time(job.get('start_time'))
+    duration = str(job.get('end_time') - job.get('start_time'))
 
     stream_manifest_url = job.get('stream_manifest_url')
 
-    input_stream = ffmpeg.input(stream_manifest_url)
-    input_stream.trim(start=job.get('start_time'), end=job.get('end_time'))
-    input_stream.output(name)
-    input_stream.run()
+    ffmpeg_inputs = {
+        stream_manifest_url: ['-ss', start_time]
+    }
+
+    ffmpeg_outputs = {
+        download_name:  ['-t', duration, '-y', '-c', 'copy']
+    }
+    #ffmpeg_global_options = ['-hide_banner', '-loglevel', 'panic']
+
+    ffmpeg_global_options = []
+
+    ffmpeg = FFmpeg(inputs=ffmpeg_inputs, outputs=ffmpeg_outputs,
+                                global_options=ffmpeg_global_options)
+    ffmpeg.run()
 
     s3 = boto3.client('s3')
-    s3.upload_file(name, job.get('bucket'), name)
+    s3.upload_file(download_name, bucket, download_name)
 
     return {
         'statusCode': 200

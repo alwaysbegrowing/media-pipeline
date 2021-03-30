@@ -1,4 +1,5 @@
-import time
+import math
+
 
 def seconds_to_ffmpeg_time(input_seconds):
     '''
@@ -9,7 +10,8 @@ def seconds_to_ffmpeg_time(input_seconds):
     minutes_float = (hours_float - hours) * 60
     minutes = math.floor(minutes_float)
     seconds_float = (minutes_float - minutes) * 60
-    seconds = math.ceil(seconds_float) - 1 # this will need to be improved at some point
+    # this will need to be improved at some point
+    seconds = math.ceil(seconds_float) - 1
 
     if seconds >= 60:
         minutes += math.floor(seconds / 60)

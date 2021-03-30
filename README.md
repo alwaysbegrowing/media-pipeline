@@ -1,6 +1,8 @@
 
 # Welcome to your CDK Python project!
 
+Examples can be found [here](https://github.com/aws-samples/aws-cdk-examples/tree/master/python)
+
 This is a blank project for Python development with CDK.
 
 The `cdk.json` file tells the CDK Toolkit how to execute your app.

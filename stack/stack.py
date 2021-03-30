@@ -22,15 +22,7 @@ class RenderLambdaStack(cdk.Stack):
         individual_clips = s3.Bucket(self,
                                      "IndividualClips")
 
-        combined_clips = s3.Bucket(self,
-                                   "CombinedClips")
-
-        download_queue = sqs.Queue(self, 'ClipDownloadQueue')
-
-        # mediaconvert_queue = mediaconvert.CfnQueue(self, id="ClipCombiner")
-        # individual_clips.grant_read(mediaconvert_queue)
-        # combined_clips.grant_write(mediaconvert_queue)
-
+        # API For Frontend
         clip_api = apigateway.RestApi(self, "clip-api",
                                       rest_api_name="Clips service",
                                       description="Service handles combining clips")
@@ -38,17 +30,15 @@ class RenderLambdaStack(cdk.Stack):
         clip_queuer = PythonFunction(self, 'ClipQueuer',
                                      handler='handler',
                                      index='handler.py',
-                                     entry='./lambdas/clip_queuer',
+                                     entry=os.path.join(
+                                         os.getcwd(), 'lambdas', 'clip_queuer'),
                                      runtime=lambda_.Runtime.PYTHON_3_8,
                                      environment={
-                                         'BUCKET': individual_clips.bucket_name,
-                                         'DOWNLOAD_QUEUE': download_queue.queue_url
+                                         'BUCKET': individual_clips.bucket_name
                                      })
-        
-        download_queue.grant_send_messages(clip_queuer)
 
         addToQueue = apigateway.LambdaIntegration(clip_queuer,
-                                                    request_templates={"application/json": '{ "statusCode": "200" }'})
+                                                  request_templates={"application/json": '{ "statusCode": "200" }'})
 
         clips_endpoint = clip_api.root.add_resource("clips")
 
@@ -60,18 +50,59 @@ class RenderLambdaStack(cdk.Stack):
         image_version = "latest"
 
         ecr_image = lambda_.EcrImageCode.from_asset_image(
-            directory = os.path.join(os.getcwd(), 'lambdas', 'downloader')
+            directory=os.path.join(os.getcwd(), 'lambdas', 'downloader')
         )
 
         downloader = lambda_.Function(self,
-            id=image_name,
-            description="Containerized Clip Downloader",
-            code=ecr_image,
-            handler=lambda_.Handler.FROM_IMAGE,
-            runtime=lambda_.Runtime.FROM_IMAGE,
-            function_name='ClipDownloader',
-        )
-    
-        download_event_source = SqsEventSource(queue=download_queue, batch_size=1, enabled=True)
+                                      id=image_name,
+                                      description="Containerized Clip Downloader",
+                                      code=ecr_image,
+                                      handler=lambda_.Handler.FROM_IMAGE,
+                                      runtime=lambda_.Runtime.FROM_IMAGE,
+                                      environment={
+                                          'BUCKET': individual_clips.bucket_name
+                                      }
+                                      )
 
-        downloader.add_event_source(download_event_source)
+        # Final Renderer
+        combined_clips = s3.Bucket(self,
+                                   "CombinedClips")
+
+        # mediaconvert_queue = mediaconvert.CfnQueue(self, id="ClipCombiner")
+        # individual_clips.grant_read(mediaconvert_queue)
+        # combined_clips.grant_write(mediaconvert_queue)
+
+        renderer = PythonFunction(self, 'FinalRenderer',
+                                  handler='handler',
+                                  index='handler.py',
+                                  entry=os.path.join(
+                                      os.getcwd(), 'lambdas', 'clip_queuer'),
+                                  runtime=lambda_.Runtime.PYTHON_3_8,
+                                  environment={
+                                      'IN_BUCKET': individual_clips.bucket_name,
+                                      'OUT_BUCKET': combined_clips.bucket_name
+                                  }
+                                  )
+
+        # state machine definition
+
+        get_clips_task = stp_tasks.LambdaInvoke(self, "Download Clip",
+                                                lambda_function=downloader
+                                                )
+
+        render_video_task = stp_tasks.LambdaInvoke(self, "Render Video",
+                                                   lambda_function=renderer,
+                                                   input_path="$.render"
+                                                   )
+
+        process_clips = stepfunctions.Map(self, "Process Clips",
+                                          result_path="$.render",
+                                          ).iterator(get_clips_task)
+
+        success = stepfunctions.Succeed(self, "Video Processing Finished.")
+
+        definition = process_clips.next(render_video_task).next(success)
+
+        stepfunctions.StateMachine(self, "Renderer",
+                                   definition=definition
+                                   )

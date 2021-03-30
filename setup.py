@@ -28,7 +28,7 @@ setuptools.setup(
         "aws-cdk.aws-lambda-python==1.95.1",
         "aws-cdk.aws-ecr==1.95.1",
         "aws-cdk.aws-stepfunctions==1.95.1",
-        "aws-cdk.aws-stepfunctions-tasks==1.95.1"
+        "aws-cdk.aws-stepfunctions-tasks==1.95.1",
         "boto3==1.17.39"
     ],
 

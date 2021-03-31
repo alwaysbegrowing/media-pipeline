@@ -15,15 +15,11 @@ def handler(event, context):
         'stream_manifest_url': 'https://d2e2de1etea730.cloudfront.net/a359af50e593ba0523f2_syndicate_41548964492_1616754736/chunked/index-muted-NKKI82IMYD.m3u8',
         'start_time': 4230,
         'end_time': 4300,
-        'name': 'clip12.mp4'
+        'name': 'clip12',
+        'position': 12
     }
     '''
-    body = event
-
-    if body is None:
-        raise AssertionError('Body is null.')
-
-    job = json.loads(body)
+    job = event
     name = job.get('name')
     download_name = f'{uuid.uuid4()}-{name}.mkv'
     bucket = os.getenv('BUCKET')
@@ -50,6 +46,9 @@ def handler(event, context):
     s3 = boto3.client('s3')
     s3.upload_file(download_name, bucket, download_name)
 
+    # need a way to combine all of the outputs
+    # Outputs contain the the video name and position
     return {
-        'statusCode': 200
+        'position': job.get('position'),
+        'name': download_name
     }

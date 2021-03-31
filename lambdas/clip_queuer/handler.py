@@ -10,7 +10,7 @@ def handler(event, context):
     '''
     Here is what the request body will look like.
     {
-        'clips': [{'start_time': 55, 'end_time': 90, 'name': 'clip12'}],
+        'clips': [{'start_time': 55, 'end_time': 90, 'name': 'clip12', 'position': 12}],
         'original_url': 'https://www.twitch.tv/videos/964350897',
     }
 
@@ -38,7 +38,7 @@ def handler(event, context):
             'start_time': clip.get('start_time'),
             'stream_manifest_url': best_stream,
             'name': clip.get('name') + '.mp4',
-            'bucket': os.getenv('BUCKET')
+            'position': clip.get('position')
         }
         state['clips'].append(data)
 

@@ -93,12 +93,14 @@ class RenderLambdaStack(cdk.Stack):
         render_video_task = stp_tasks.LambdaInvoke(self, "Render Video",
                                                    lambda_function=renderer)
 
-        process_clips = stepfunctions.Map(self, "Process Clips").iterator(get_clips_task)
+        process_clips = stepfunctions.Map(self, "Process Clips", input_path="$.clips").iterator(get_clips_task)
 
         success = stepfunctions.Succeed(self, "Video Processing Finished.")
 
         definition = process_clips.next(render_video_task).next(success)
 
-        stepfunctions.StateMachine(self, "Renderer",
+        state_machine = stepfunctions.StateMachine(self, "Renderer",
                                    definition=definition
                                    )
+
+        clip_queuer.add_environment('STEPFUNCTION_ARN', state_machine.state_machine_arn)

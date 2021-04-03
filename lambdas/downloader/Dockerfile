@@ -8,7 +8,10 @@ COPY . .
 
 RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
+RUN pip install awslambdaric
 
 RUN apt-get purge build-essential -y && apt-get autoremove -y
 
-CMD ["python", "main.py"]
+WORKDIR /
+ENTRYPOINT [ "/usr/local/bin/python", "-m", "awslambdaric" ]
+CMD ["main.handler"]

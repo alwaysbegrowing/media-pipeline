@@ -19,6 +19,7 @@ def handler(event, context):
         'position': 12
     }
     '''
+    os.chdir('/tmp')
     job = event
     name = job.get('name')
     download_name = f'{uuid.uuid4()}-{name}.mkv'
@@ -45,9 +46,7 @@ def handler(event, context):
 
     s3 = boto3.client('s3')
     s3.upload_file(download_name, bucket, download_name)
-
-    # need a way to combine all of the outputs
-    # Outputs contain the the video name and position
+    os.remove(download_name)
     return {
         'position': job.get('position'),
         'name': download_name

@@ -35,7 +35,9 @@ class RenderLambdaStack(cdk.Stack):
                                      runtime=lambda_.Runtime.PYTHON_3_8,
                                      environment={
                                          'BUCKET': individual_clips.bucket_name
-                                     })
+                                     },
+                                     timeout=cdk.Duration.seconds(15),
+                                     memory_size=256)
 
         addToQueue = apigateway.LambdaIntegration(clip_queuer,
                                                   request_templates={"application/json": '{ "statusCode": "200" }'})
@@ -61,8 +63,11 @@ class RenderLambdaStack(cdk.Stack):
                                       runtime=lambda_.Runtime.FROM_IMAGE,
                                       environment={
                                           'BUCKET': individual_clips.bucket_name
-                                      }
-                                      )
+                                      },
+                                      timeout=cdk.Duration.seconds(60),
+                                      memory_size=1024)
+
+        individual_clips.grant_write(downloader)
 
         # Final Renderer
         combined_clips = s3.Bucket(self,
@@ -81,8 +86,10 @@ class RenderLambdaStack(cdk.Stack):
                                   environment={
                                       'IN_BUCKET': individual_clips.bucket_name,
                                       'OUT_BUCKET': combined_clips.bucket_name
-                                  }
-                                  )
+                                  })
+
+        combined_clips.grant_write(renderer)
+        individual_clips.grant_read(renderer)
 
         # state machine definition
 
@@ -104,3 +111,5 @@ class RenderLambdaStack(cdk.Stack):
                                    )
 
         clip_queuer.add_environment('STEPFUNCTION_ARN', state_machine.state_machine_arn)
+        
+        state_machine.grant_start_execution(clip_queuer)

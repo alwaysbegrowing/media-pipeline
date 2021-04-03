@@ -4,12 +4,6 @@ import boto3
 import os
 from botocore.exceptions import ClientError
 
-# import ffmpy # how the heck do i import this and package with the lambda!!
-# import youtube_dl
-
-# ydl = youtube_dl.YoutubeDL({'outtmpl': '%(id)s.%(ext)s'})
-
-
 BUCKET = os.getenv('BUCKET')
 
 

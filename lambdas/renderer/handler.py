@@ -1,13 +1,13 @@
 import json
-import logging
-import boto3
 import os
+
+import boto3
 from botocore.exceptions import ClientError
 
-BUCKET = os.getenv('BUCKET')
 
-
-def makeInput(file):
+def make_input(name):
+    input_bucket = os.getenv('IN_BUCKET')
+    filename = f's3://{input_bucket}/{name}'
     return {
         "AudioSelectors": {
             "Audio Selector 1": {
@@ -28,71 +28,58 @@ def makeInput(file):
         "DenoiseFilter": "DISABLED",
         "InputScanType": "AUTO",
         "TimecodeSource": "ZEROBASED",
-        "FileInput": file
+        "FileInput": filename
     }
 
+def make_job(inputs):
 
-mediaconvert_endpoint = 'https://lxlxpswfb.mediaconvert.us-east-1.amazonaws.com'
+    output_bucket = os.getenv('OUT_BUCKET')
+    job_str = ''
+    with open('job.json') as f:
+        job_str = f.read()
 
+    job_str = job_str.replace('**name_modifier**', output_bucket)
+    job = json.loads(job_str)
+    job["Settings"]["Inputs"] = inputs
+    job["Queue"] = os.getenv('QUEUE_ARN')
 
-def buildObj(s3Urls):
-    with open("job.json", "r") as jsonfile:
-        job_object = json.load(jsonfile)
-
-    for url in s3Urls:
-        job_object['Settings']['Inputs'].append(makeInput(url))
-    return job_object
-
-
-def upload_file(file_name, bucket, object_name=None):
-    """Upload a file to an S3 bucket
-
-    :param file_name: File to upload
-    :param bucket: Bucket to upload to
-    :param object_name: S3 object name. If not specified then file_name is used
-    :return: True if file was uploaded, else False
-    """
-
-    if object_name is None:
-        object_name = file_name
-
-    s3_client = boto3.client('s3')
-    try:
-        response = s3_client.upload_file(file_name, bucket, object_name)
-        return response
-    except ClientError as e:
-        logging.error(e)
-        return False
-    return True
-
-
-def download_clips(timestamps):
-    # add logic to use youtube-dl and ffmpeg to download the clips
-    # return an array with all the file paths
+    return job
     
-    for timestamp in timestamps: 
-        # example of how you could do this with bash
-        # ffmpeg $(youtube-dl -g 'https://www.twitch.tv/videos/958928945' | sed 's/.*/-ss 00:05 -i &/') -t 01:00 -c copy out2.mkv
-        pass
-    
-    return []
 
 def handler(event, context):
+    '''
+    Here is an example of what the event list will look like.
+    ```
+    [{'ExecutedVersion': '$LATEST', 'Payload': {'position': 12, 'name': 'a91a0ee5-c7e8-4ba1-b91b-ccdcb593e623-clip12.mkv'},
+    'SdkHttpMetadata': {'AllHttpHeaders': {'X-Amz-Executed-Version': ['$LATEST'], 'x-amzn-Remapped-Content-Length': ['0'], 
+    'Connection': ['keep-alive'], 'x-amzn-RequestId': ['c59e6cdb-f51c-4897-b1d3-04cbead3e358'], 'Content-Length': ['75'], 
+    'Date': ['Sat, 03 Apr 2021 20:26:25 GMT'], 'X-Amzn-Trace-Id': ['root=1-6068cf6f-2f2f61e418e94bf90ebcb57b;sampled=0'], 
+    'Content-Type': ['application/json']}, 'HttpHeaders': {'Connection': 'keep-alive', 'Content-Length': '75', 
+    'Content-Type': 'application/json', 'Date': 'Sat, 03 Apr 2021 20:26:25 GMT', 'X-Amz-Executed-Version': '$LATEST', 
+    'x-amzn-Remapped-Content-Length': '0', 'x-amzn-RequestId': 'c59e6cdb-f51c-4897-b1d3-04cbead3e358', 
+    'X-Amzn-Trace-Id': 'root=1-6068cf6f-2f2f61e418e94bf90ebcb57b;sampled=0'}, 'HttpStatusCode': 200}, 
+    'SdkResponseMetadata': {'RequestId': 'c59e6cdb-f51c-4897-b1d3-04cbead3e358'}, 'StatusCode': 200}, ...]
+    ```
 
-    # example body 
-    # {
-    #     "clips": [{"startTime": 60, "endTime": 90, "videoId": 964746682}]
-    # }
-    timestamps = event['body'].clips
+    The "Payload" attribute contains the data we need to contatenate the clips together.
+    All of that data will be concatenated into the `clips` variable that will be used to construct the
+    MediaConvert Object.
+    '''
+    clips = []
+    for item in event:
+        payload = item.get('Payload')
+        if not payload is None:
+            clips.append(payload)
 
-    clip_local_file_paths = download_clips(timestamps)
-    for file_name in clip_local_file_paths:
-        upload_file(file_name, BUCKET)
+    sorted(clips, key=lambda clip: clip['position'])
 
-    job_object = buildObj(clip_local_file_paths)
+    inputs = []
+    for clip in clips:
+        inputs.append(make_input(clip['name']))
 
-    mediaconvert_client = boto3.client(
-        'mediaconvert', endpoint_url=mediaconvert_endpoint)
+    job_object = make_job(inputs)
+
+    mediaconvert_client = boto3.client('mediaconvert')
     convertResponse = mediaconvert_client.create_job(**job_object)
     print(convertResponse)
     return {
@@ -100,5 +87,5 @@ def handler(event, context):
         "headers": {
             "Content-Type": "application/json"
         },
-        "body": convertResponse
+        "body": json.dumps(convertResponse, default=str)
     }

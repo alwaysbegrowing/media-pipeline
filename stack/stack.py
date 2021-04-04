@@ -9,7 +9,8 @@ from aws_cdk import (core as cdk,
                      aws_lambda as lambda_,
                      aws_mediaconvert as mediaconvert,
                      aws_stepfunctions as stepfunctions,
-                     aws_stepfunctions_tasks as stp_tasks)
+                     aws_stepfunctions_tasks as stp_tasks,
+                     aws_iam as iam)
 
 from aws_cdk.aws_lambda_python import PythonFunction, PythonLayerVersion
 
@@ -73,7 +74,10 @@ class RenderLambdaStack(cdk.Stack):
         combined_clips = s3.Bucket(self,
                                    "CombinedClips")
 
-        # mediaconvert_queue = mediaconvert.CfnQueue(self, id="ClipCombiner")
+        mediaconvert_role = iam.Role(self, id="VideoRenderer")
+        # need to add media convert permissions to this role
+        mediaconvert_queue = mediaconvert.CfnQueue(self, id="ClipCombiner")
+        
         # individual_clips.grant_read(mediaconvert_queue)
         # combined_clips.grant_write(mediaconvert_queue)
 
@@ -81,15 +85,14 @@ class RenderLambdaStack(cdk.Stack):
                                   handler='handler',
                                   index='handler.py',
                                   entry=os.path.join(
-                                      os.getcwd(), 'lambdas', 'clip_queuer'),
+                                      os.getcwd(), 'lambdas', 'renderer'),
                                   runtime=lambda_.Runtime.PYTHON_3_8,
                                   environment={
                                       'IN_BUCKET': individual_clips.bucket_name,
-                                      'OUT_BUCKET': combined_clips.bucket_name
+                                      'OUT_BUCKET': combined_clips.bucket_name,
+                                      'QUEUE_ARN': mediaconvert_queue.attr_arn,
+                                      'QUEUE_ROLE': mediaconvert_role.role_arn
                                   })
-
-        combined_clips.grant_write(renderer)
-        individual_clips.grant_read(renderer)
 
         # state machine definition
 

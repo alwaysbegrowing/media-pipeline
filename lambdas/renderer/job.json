@@ -1,7 +1,5 @@
 {
-        "Queue": "arn:aws:mediaconvert:us-east-1:576758376358:queues/ClipCombiner-F9mnzp0NBL6G",
         "UserMetadata": {},
-        "Role": "arn:aws:iam::576758376358:role/service-role/Admi_Role",
         "Settings": {
             "TimecodeConfig": {
                 "Source": "ZEROBASED"
@@ -40,7 +38,7 @@
                                         "GopBReference": "DISABLED",
                                         "SlowPal": "DISABLED",
                                         "EntropyEncoding": "CABAC",
-                                        "Bitrate": 5000000,
+                                        "Bitrate": 12000000,
                                         "FramerateControl": "INITIALIZE_FROM_SOURCE",
                                         "RateControlMode": "CBR",
                                         "CodecProfile": "MAIN",
@@ -84,13 +82,13 @@
                                     "LanguageCodeControl": "FOLLOW_INPUT"
                                 }
                             ],
-                            "NameModifier": "Roos_Test"
+                            "NameModifier": "**name_modifier**"
                         }
                     ],
                     "OutputGroupSettings": {
                         "Type": "FILE_GROUP_SETTINGS",
                         "FileGroupSettings": {
-                            "Destination": "s3://slstack-myfirstbucketb8884501-xkw6n7d2tkkm/"
+                            "Destination": "s3://**bucketname**"
                         }
                     }
                 }

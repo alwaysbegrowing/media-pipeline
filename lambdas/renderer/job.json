@@ -28,7 +28,7 @@
                                     "Codec": "H_264",
                                     "H264Settings": {
                                         "InterlaceMode": "PROGRESSIVE",
-                                        "ScanTypeConversionMode": "INTERLACED",
+                                        "ScanTypeConversionMode": "INTERLACED_OPTIMIZED",
                                         "NumberReferenceFrames": 3,
                                         "Syntax": "DEFAULT",
                                         "Softness": 0,

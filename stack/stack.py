@@ -74,8 +74,9 @@ class RenderLambdaStack(cdk.Stack):
         combined_clips = s3.Bucket(self,
                                    "CombinedClips")
 
-        mediaconvert_role = iam.Role(self, id="VideoRenderer")
-        # need to add media convert permissions to this role
+        mediaconvert_service_principal = iam.ServicePrincipal('mediaconvert.amazonaws.com', region='us-east-1')
+        mediaconvert_role = iam.Role(self, id="VideoRenderer", assumed_by=mediaconvert_service_principal)
+        
         mediaconvert_queue = mediaconvert.CfnQueue(self, id="ClipCombiner")
         
         # individual_clips.grant_read(mediaconvert_queue)

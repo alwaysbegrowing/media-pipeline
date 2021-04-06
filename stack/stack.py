@@ -74,11 +74,17 @@ class RenderLambdaStack(cdk.Stack):
         combined_clips = s3.Bucket(self,
                                    "CombinedClips")
 
-        mediaconvert_service_principal = iam.ServicePrincipal('mediaconvert.amazonaws.com', region='us-east-1')
-        mediaconvert_role = iam.Role(self, id="VideoRenderer", assumed_by=mediaconvert_service_principal)
-        
+        mediaconvert_service_principal = iam.ServicePrincipal(
+            'mediaconvert.amazonaws.com', region='us-east-1')
+        mediaconvert_create_job = iam.PolicyStatement(
+            actions=['mediaconvert:CreateJob'], resources=['*'])
+        mediaconvert_role = iam.Role(
+            self, id="VideoRenderer", assumed_by=mediaconvert_service_principal)
+
+        mediaconvert_role.add_to_policy(mediaconvert_create_job)
+
         mediaconvert_queue = mediaconvert.CfnQueue(self, id="ClipCombiner")
-        
+
         # individual_clips.grant_read(mediaconvert_queue)
         # combined_clips.grant_write(mediaconvert_queue)
 
@@ -95,6 +101,8 @@ class RenderLambdaStack(cdk.Stack):
                                       'QUEUE_ROLE': mediaconvert_role.role_arn
                                   })
 
+        mediaconvert_role.grant_pass_role(renderer)
+
         # state machine definition
 
         get_clips_task = stp_tasks.LambdaInvoke(self, "Download Clip",
@@ -104,16 +112,18 @@ class RenderLambdaStack(cdk.Stack):
         render_video_task = stp_tasks.LambdaInvoke(self, "Render Video",
                                                    lambda_function=renderer)
 
-        process_clips = stepfunctions.Map(self, "Process Clips", input_path="$.clips").iterator(get_clips_task)
+        process_clips = stepfunctions.Map(
+            self, "Process Clips", input_path="$.clips").iterator(get_clips_task)
 
         success = stepfunctions.Succeed(self, "Video Processing Finished.")
 
         definition = process_clips.next(render_video_task).next(success)
 
         state_machine = stepfunctions.StateMachine(self, "Renderer",
-                                   definition=definition
-                                   )
+                                                   definition=definition
+                                                   )
 
-        clip_queuer.add_environment('STEPFUNCTION_ARN', state_machine.state_machine_arn)
-        
+        clip_queuer.add_environment(
+            'STEPFUNCTION_ARN', state_machine.state_machine_arn)
+
         state_machine.grant_start_execution(clip_queuer)

@@ -74,19 +74,19 @@ class RenderLambdaStack(cdk.Stack):
         combined_clips = s3.Bucket(self,
                                    "CombinedClips")
 
+        mediaconvert_queue = mediaconvert.CfnQueue(self, id="ClipCombiner")
+
         mediaconvert_service_principal = iam.ServicePrincipal(
             'mediaconvert.amazonaws.com', region='us-east-1')
-        mediaconvert_create_job = iam.PolicyStatement(
-            actions=['mediaconvert:CreateJob'], resources=['*'])
+
+        mediaconvert_create_job = iam.PolicyStatement()
+        mediaconvert_create_job.add_resources(mediaconvert_queue.attr_arn)
+        mediaconvert_create_job.add_actions('mediaconvert:CreateJob')
+
         mediaconvert_role = iam.Role(
             self, id="VideoRenderer", assumed_by=mediaconvert_service_principal)
 
         mediaconvert_role.add_to_policy(mediaconvert_create_job)
-
-        mediaconvert_queue = mediaconvert.CfnQueue(self, id="ClipCombiner")
-
-        # individual_clips.grant_read(mediaconvert_queue)
-        # combined_clips.grant_write(mediaconvert_queue)
 
         renderer = PythonFunction(self, 'FinalRenderer',
                                   handler='handler',

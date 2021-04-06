@@ -70,18 +70,8 @@ class RenderLambdaStack(cdk.Stack):
 
         individual_clips.grant_write(downloader)
 
-        # Final Renderer
         combined_clips = s3.Bucket(self,
                                    "CombinedClips")
-
-        mediaconvert_service_principal = iam.ServicePrincipal(
-            'mediaconvert.amazonaws.com', region='us-east-1')
-        mediaconvert_create_job = iam.PolicyStatement(
-            actions=['mediaconvert:CreateJob'], resources=['*'])
-        mediaconvert_role = iam.Role(
-            self, id="VideoRenderer", assumed_by=mediaconvert_service_principal)
-
-        mediaconvert_role.add_to_policy(mediaconvert_create_job)
 
         mediaconvert_queue = mediaconvert.CfnQueue(self, id="ClipCombiner")
 
@@ -98,12 +88,17 @@ class RenderLambdaStack(cdk.Stack):
                                       'IN_BUCKET': individual_clips.bucket_name,
                                       'OUT_BUCKET': combined_clips.bucket_name,
                                       'QUEUE_ARN': mediaconvert_queue.attr_arn,
-                                      'QUEUE_ROLE': mediaconvert_role.role_arn
                                   })
 
-        mediaconvert_role.grant_pass_role(renderer)
+        renderer.add_environment('QUEUE_ROLE', renderer.role.role_arn)
 
-        # state machine definition
+        mediaconvert_create_job = iam.PolicyStatement(
+            actions=['mediaconvert:*'], resources=[mediaconvert_queue.attr_arn])
+
+        mediaconvert_pass_role = iam.PolicyStatement(
+            actions=["iam:PassRole", "iam:ListRoles"], resources=["arn:aws:iam::*:role/*"])
+        renderer.add_to_role_policy(mediaconvert_create_job)
+        renderer.add_to_role_policy(mediaconvert_pass_role)
 
         get_clips_task = stp_tasks.LambdaInvoke(self, "Download Clip",
                                                 lambda_function=downloader

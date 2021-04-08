@@ -83,7 +83,7 @@ def handler(event, context):
 
     mediaconvert_client = boto3.client('mediaconvert', endpoint_url='https://lxlxpswfb.mediaconvert.us-east-1.amazonaws.com')
     convertResponse = mediaconvert_client.create_job(**job_object)
-    print(convertResponse)
+
     return {
         "statusCode": 200,
         "headers": {

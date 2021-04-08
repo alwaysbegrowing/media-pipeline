@@ -18,6 +18,7 @@ def handler(event, context):
     {
         'clips': [{'start_time': 55, 'end_time': 90, 'name': 'clip12', 'position': 12}],
         'videoId': '964350897',
+        'render': true
     }
 
     The response body will be the state input body with the response

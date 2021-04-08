@@ -1,11 +1,10 @@
 import os
 
-from aws_cdk.aws_lambda_event_sources import SqsEventSource
-
 from aws_cdk import (core as cdk,
                      aws_apigateway as apigateway,
-                     aws_sqs as sqs,
+                     aws_sns as sns,
                      aws_s3 as s3,
+                     aws_s3_notifications as s3_notify,
                      aws_lambda as lambda_,
                      aws_mediaconvert as mediaconvert,
                      aws_stepfunctions as stepfunctions,
@@ -112,7 +111,12 @@ class RenderLambdaStack(cdk.Stack):
 
         success = stepfunctions.Succeed(self, "Video Processing Finished.")
 
-        definition = process_clips.next(render_video_task).next(success)
+        choice = stepfunctions.Choice(self, "Render?")
+
+        choice.when(stepfunctions.Condition.boolean_equals("$.render", False), no_render)
+        choice.when(stepfunctions.Condition.boolean_equals("$.render", True), render_video_task)
+
+        definition = process_clips.next(choice).next(success)
 
         state_machine = stepfunctions.StateMachine(self, "Renderer",
                                                    definition=definition
@@ -122,3 +126,7 @@ class RenderLambdaStack(cdk.Stack):
             'STEPFUNCTION_ARN', state_machine.state_machine_arn)
 
         state_machine.grant_start_execution(clip_queuer)
+
+        # notification system
+        sns = sns.Topic(self, 'finishprocessingclips', content_based_deduplication=True)
+        combined_clips.add_event_notification(s3.EventType.OBJECT_CREATED, s3_notify.SnsDestination(sns))

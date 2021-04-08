@@ -87,7 +87,7 @@
                     "OutputGroupSettings": {
                         "Type": "FILE_GROUP_SETTINGS",
                         "FileGroupSettings": {
-                            "Destination": "s3://**bucketname**"
+                            "Destination": "s3://**bucketname**/"
                         }
                     }
                 }

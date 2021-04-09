@@ -31,6 +31,7 @@ def make_input(name):
         "FileInput": filename
     }
 
+
 def make_job(inputs):
 
     output_bucket = os.getenv('OUT_BUCKET')
@@ -46,7 +47,7 @@ def make_job(inputs):
     job["Role"] = os.getenv('QUEUE_ROLE')
 
     return job
-    
+
 
 def handler(event, context):
     '''
@@ -81,7 +82,8 @@ def handler(event, context):
 
     job_object = make_job(inputs)
 
-    mediaconvert_client = boto3.client('mediaconvert', endpoint_url='https://lxlxpswfb.mediaconvert.us-east-1.amazonaws.com')
+    mediaconvert_client = boto3.client(
+        'mediaconvert', endpoint_url='https://lxlxpswfb.mediaconvert.us-east-1.amazonaws.com')
     convertResponse = mediaconvert_client.create_job(**job_object)
 
     return {

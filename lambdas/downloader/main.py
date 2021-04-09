@@ -22,7 +22,7 @@ def handler(event, context):
     os.chdir('/tmp')
     job = event
     name = job.get('name')
-    download_name = f'{uuid.uuid4()}-{name}.mkv'
+    download_name = f'{name}.mkv'
     bucket = os.getenv('BUCKET')
     start_time = seconds_to_ffmpeg_time(job.get('start_time'))
     duration = str(job.get('end_time') - job.get('start_time'))
@@ -45,7 +45,8 @@ def handler(event, context):
     ffmpeg.run()
 
     s3 = boto3.client('s3')
-    s3.upload_file(download_name, bucket, download_name)
+    s3.upload_file(download_name, bucket, download_name,
+                   ExtraArgs={'ACL': 'public-read'})
     os.remove(download_name)
     return {
         'position': job.get('position'),

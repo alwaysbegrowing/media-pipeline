@@ -19,8 +19,9 @@ class RenderLambdaStack(cdk.Stack):
     def __init__(self, scope: cdk.Construct, construct_id: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
-        individual_clips = s3.Bucket(self,
-                                     "IndividualClips")
+        individual_clips = s3.Bucket(scope=self,
+                                     id="IndividualClips",
+                                     public_read_access=True)
 
         # API For Frontend
         clip_api = apigateway.RestApi(self, "clip-api",
@@ -69,8 +70,9 @@ class RenderLambdaStack(cdk.Stack):
 
         individual_clips.grant_write(downloader)
 
-        combined_clips = s3.Bucket(self,
-                                   "CombinedClips")
+        combined_clips = s3.Bucket(scope=self,
+                                   id="CombinedClips",
+                                   public_read_access=True)
 
         mediaconvert_queue = mediaconvert.CfnQueue(self, id="ClipCombiner")
 
@@ -88,7 +90,8 @@ class RenderLambdaStack(cdk.Stack):
         renderer = PythonFunction(self, 'FinalRenderer',
                                   handler='handler',
                                   index='handler.py',
-                                  initial_policy=[mediaconvert_create_job, mediaconvert_pass_role],
+                                  initial_policy=[
+                                      mediaconvert_create_job, mediaconvert_pass_role],
                                   entry=os.path.join(
                                       os.getcwd(), 'lambdas', 'renderer'),
                                   runtime=lambda_.Runtime.PYTHON_3_8,
@@ -99,12 +102,29 @@ class RenderLambdaStack(cdk.Stack):
                                       'QUEUE_ROLE': mediaconvert_role.role_arn
                                   })
 
+        # skip render lambda
+        skip = PythonFunction(self, 'SkipRender',
+                              handler='handler',
+                              index='handler.py',
+                              entry=os.path.join(
+                                  os.getcwd(), 'lambdas', 'skip_render'),
+                              runtime=lambda_.Runtime.PYTHON_3_8,
+                              environment={
+                                  'BUCKET': individual_clips.bucket_name,
+                                  'BUCKET_DNS': individual_clips.bucket_domain_name
+                              })
+
+        # state machine
+
         get_clips_task = stp_tasks.LambdaInvoke(self, "Download Clip",
                                                 lambda_function=downloader
                                                 )
 
         render_video_task = stp_tasks.LambdaInvoke(self, "Render Video",
                                                    lambda_function=renderer)
+
+        skip_render = stp_tasks.LambdaInvoke(self, "Skip Render",
+                                             lambda_function=skip)
 
         process_clips = stepfunctions.Map(
             self, "Process Clips", input_path="$.clips").iterator(get_clips_task)
@@ -113,10 +133,12 @@ class RenderLambdaStack(cdk.Stack):
 
         choice = stepfunctions.Choice(self, "Render?")
 
-        choice.when(stepfunctions.Condition.boolean_equals("$.render", False), no_render)
-        choice.when(stepfunctions.Condition.boolean_equals("$.render", True), render_video_task)
+        choice.when(stepfunctions.Condition.boolean_equals(
+            "$.render", False), skip_render)
+        choice.when(stepfunctions.Condition.boolean_equals(
+            "$.render", True), render_video_task)
 
-        definition = process_clips.next(choice).next(success)
+        definition = process_clips.next(choice)
 
         state_machine = stepfunctions.StateMachine(self, "Renderer",
                                                    definition=definition
@@ -128,5 +150,8 @@ class RenderLambdaStack(cdk.Stack):
         state_machine.grant_start_execution(clip_queuer)
 
         # notification system
-        sns = sns.Topic(self, 'finishprocessingclips', content_based_deduplication=True)
-        combined_clips.add_event_notification(s3.EventType.OBJECT_CREATED, s3_notify.SnsDestination(sns))
+        sns_topic = sns.Topic(self, 'finishprocessingclips')
+        combined_clips.add_event_notification(
+            s3.EventType.OBJECT_CREATED, s3_notify.SnsDestination(sns_topic))
+        sns_topic.grant_publish(skip)
+        skip.add_environment('TOPIC_ARN', sns_topic.topic_arn)

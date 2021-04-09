@@ -6,11 +6,13 @@ from datetime import datetime
 import boto3
 import streamlink
 
+
 def json_handler(item):
     if type(item) is datetime:
         return item.isoformat()
     else:
         return str(item)
+
 
 def handler(event, context):
     '''
@@ -36,20 +38,26 @@ def handler(event, context):
 
     streams = streamlink.streams(original_url)
     best_stream = streams.get('best').url
+    render = job.get('render')
+
+    if render is None:
+        render = True
 
     state = {
+        'render': render,
         'stream_manifest_url': best_stream,
         'clips': []
     }
 
     sfn = boto3.client('stepfunctions')
 
-    for clip in clips: # this will be changed to add tasks
+    for clip in clips:  # this will be changed to add tasks
+        name = clip.get('name')
         data = {
             'end_time': clip.get('end_time'),
             'start_time': clip.get('start_time'),
             'stream_manifest_url': best_stream,
-            'name': clip.get('name'),
+            'name': f'{video_id}-{name}',
             'position': clip.get('position')
         }
         state['clips'].append(data)
@@ -69,4 +77,3 @@ def handler(event, context):
         },
         'body': json.dumps(state, default=json_handler)
     }
-        

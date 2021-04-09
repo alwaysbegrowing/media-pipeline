@@ -70,20 +70,26 @@ class RenderLambdaStack(cdk.Stack):
 
         individual_clips.grant_write(downloader)
 
-        # Final Renderer
         combined_clips = s3.Bucket(self,
                                    "CombinedClips")
 
-        mediaconvert_role = iam.Role(self, id="VideoRenderer")
-        # need to add media convert permissions to this role
         mediaconvert_queue = mediaconvert.CfnQueue(self, id="ClipCombiner")
-        
-        # individual_clips.grant_read(mediaconvert_queue)
-        # combined_clips.grant_write(mediaconvert_queue)
+
+        mediaconvert_role = iam.Role(self, "MediaConvert",
+                                     assumed_by=iam.ServicePrincipal("mediaconvert.amazonaws.com"))
+        individual_clips.grant_read(mediaconvert_role)
+        combined_clips.grant_write(mediaconvert_role)
+
+        mediaconvert_create_job = iam.PolicyStatement(
+            actions=['mediaconvert:CreateJob'], resources=[mediaconvert_queue.attr_arn])
+
+        mediaconvert_pass_role = iam.PolicyStatement(
+            actions=["iam:PassRole", "iam:ListRoles"], resources=["arn:aws:iam::*:role/*"])
 
         renderer = PythonFunction(self, 'FinalRenderer',
                                   handler='handler',
                                   index='handler.py',
+                                  initial_policy=[mediaconvert_create_job, mediaconvert_pass_role],
                                   entry=os.path.join(
                                       os.getcwd(), 'lambdas', 'renderer'),
                                   runtime=lambda_.Runtime.PYTHON_3_8,
@@ -94,8 +100,6 @@ class RenderLambdaStack(cdk.Stack):
                                       'QUEUE_ROLE': mediaconvert_role.role_arn
                                   })
 
-        # state machine definition
-
         get_clips_task = stp_tasks.LambdaInvoke(self, "Download Clip",
                                                 lambda_function=downloader
                                                 )
@@ -103,16 +107,18 @@ class RenderLambdaStack(cdk.Stack):
         render_video_task = stp_tasks.LambdaInvoke(self, "Render Video",
                                                    lambda_function=renderer)
 
-        process_clips = stepfunctions.Map(self, "Process Clips", input_path="$.clips").iterator(get_clips_task)
+        process_clips = stepfunctions.Map(
+            self, "Process Clips", input_path="$.clips").iterator(get_clips_task)
 
         success = stepfunctions.Succeed(self, "Video Processing Finished.")
 
         definition = process_clips.next(render_video_task).next(success)
 
         state_machine = stepfunctions.StateMachine(self, "Renderer",
-                                   definition=definition
-                                   )
+                                                   definition=definition
+                                                   )
 
-        clip_queuer.add_environment('STEPFUNCTION_ARN', state_machine.state_machine_arn)
-        
+        clip_queuer.add_environment(
+            'STEPFUNCTION_ARN', state_machine.state_machine_arn)
+
         state_machine.grant_start_execution(clip_queuer)

@@ -38,10 +38,12 @@ def make_job(inputs):
     with open('job.json') as f:
         job_str = f.read()
 
-    job_str = job_str.replace('**name_modifier**', output_bucket)
+    job_str = job_str.replace('**name_modifier**', 'final-render-')
+    job_str = job_str.replace('**bucketname**', output_bucket)
     job = json.loads(job_str)
     job["Settings"]["Inputs"] = inputs
     job["Queue"] = os.getenv('QUEUE_ARN')
+    job["Role"] = os.getenv('QUEUE_ROLE')
 
     return job
     
@@ -79,7 +81,7 @@ def handler(event, context):
 
     job_object = make_job(inputs)
 
-    mediaconvert_client = boto3.client('mediaconvert')
+    mediaconvert_client = boto3.client('mediaconvert', endpoint_url='https://lxlxpswfb.mediaconvert.us-east-1.amazonaws.com')
     convertResponse = mediaconvert_client.create_job(**job_object)
     print(convertResponse)
     return {

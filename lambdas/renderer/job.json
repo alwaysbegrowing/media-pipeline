@@ -28,7 +28,6 @@
                                     "Codec": "H_264",
                                     "H264Settings": {
                                         "InterlaceMode": "PROGRESSIVE",
-                                        "ScanTypeConversionMode": "INTERLACED",
                                         "NumberReferenceFrames": 3,
                                         "Syntax": "DEFAULT",
                                         "Softness": 0,
@@ -88,7 +87,7 @@
                     "OutputGroupSettings": {
                         "Type": "FILE_GROUP_SETTINGS",
                         "FileGroupSettings": {
-                            "Destination": "s3://**bucketname**"
+                            "Destination": "s3://**bucketname**/"
                         }
                     }
                 }

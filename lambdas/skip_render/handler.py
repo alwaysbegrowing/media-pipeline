@@ -15,11 +15,11 @@ def handler(event, context):
 
     clips = []
     for item in event:
-        payload = item.get('Payload')
-        if not payload is None:
+        clip = item.get('Payload')
+        if not clip is None:
             name = clip.get('name')
-            payload['url'] = f'https://{BUCKET_DNS}/{name}'
-            clips.append(payload)
+            clip['url'] = f'https://{BUCKET_DNS}/{name}'
+            clips.append(clip)
 
     sorted(clips, key=lambda clip: clip['position'])
 
@@ -27,8 +27,7 @@ def handler(event, context):
     resp = sns.publish(
         TopicArn=SNS_TOPIC,
         Message=json.dumps(clips),
-        Subject=f'{len(clip_links)} clips were downloaded.', ,
-        MessageStructure='json'
+        Subject=f'{len(clips)} clips were downloaded.'
     )
 
     return {

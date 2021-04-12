@@ -10,7 +10,7 @@ def handler(event, context):
     '''
 
     BUCKET = os.getenv('BUCKET')
-    SNS_TOPIC = os.getenv('TOPIC_ARN')
+    SNS_TOPIC = os.getenv('TOPIC_ARN')  # this may be switched to an SQS queue
     BUCKET_DNS = os.getenv('BUCKET_DNS')
 
     clips = []

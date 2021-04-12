@@ -134,9 +134,9 @@ class RenderLambdaStack(cdk.Stack):
         choice = stepfunctions.Choice(self, "Render?")
 
         choice.when(stepfunctions.Condition.boolean_equals(
-            "$.render", False), skip_render)
+            "$[0].Payload.render", False), skip_render)
         choice.when(stepfunctions.Condition.boolean_equals(
-            "$.render", True), render_video_task)
+            "$[0].Payload.render", True), render_video_task)
 
         definition = process_clips.next(choice)
 

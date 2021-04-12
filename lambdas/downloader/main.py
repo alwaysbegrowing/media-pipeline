@@ -16,7 +16,8 @@ def handler(event, context):
         'start_time': 4230,
         'end_time': 4300,
         'name': 'clip12',
-        'position': 12
+        'position': 12,
+        'render': true
     }
     '''
     os.chdir('/tmp')
@@ -26,6 +27,10 @@ def handler(event, context):
     bucket = os.getenv('BUCKET')
     start_time = seconds_to_ffmpeg_time(job.get('start_time'))
     duration = str(job.get('end_time') - job.get('start_time'))
+
+    render = job.get('render')
+    if render is None:
+        render = True
 
     stream_manifest_url = job.get('stream_manifest_url')
 
@@ -45,10 +50,10 @@ def handler(event, context):
     ffmpeg.run()
 
     s3 = boto3.client('s3')
-    s3.upload_file(download_name, bucket, download_name,
-                   ExtraArgs={'ACL': 'public-read'})
+    s3.upload_file(download_name, bucket, download_name)
     os.remove(download_name)
     return {
         'position': job.get('position'),
-        'name': download_name
+        'name': download_name,
+        'render': render
     }

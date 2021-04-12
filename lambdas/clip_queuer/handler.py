@@ -58,7 +58,8 @@ def handler(event, context):
             'start_time': clip.get('start_time'),
             'stream_manifest_url': best_stream,
             'name': f'{video_id}-{name}',
-            'position': clip.get('position')
+            'position': clip.get('position'),
+            'render': render
         }
         state['clips'].append(data)
 

@@ -2,7 +2,6 @@ import os
 
 from aws_cdk import (core as cdk,
                      aws_apigateway as apigateway,
-                     aws_sns as sns,
                      aws_s3 as s3,
                      aws_s3_notifications as s3_notify,
                      aws_lambda as lambda_,

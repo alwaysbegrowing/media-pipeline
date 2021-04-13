@@ -22,7 +22,6 @@ setuptools.setup(
         "aws_cdk.aws_lambda_python==1.95.1",
         "aws-cdk.core==1.95.1",
         "aws-cdk.aws-lambda==1.95.1",
-        "aws-cdk.aws-sns==1.95.1",
         "aws-cdk.aws-s3==1.95.1",
         "aws-cdk.aws-s3-notifications==1.95.1",
         "aws-cdk.aws-mediaconvert==1.95.1",

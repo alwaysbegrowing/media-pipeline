@@ -1,17 +1,13 @@
 import json
 import os
 
-import boto3
-
 
 def handler(event, context):
     '''
     Will take a list of clips and make a notification event out of them.
     '''
 
-    BUCKET = os.getenv('BUCKET')
-    SNS_TOPIC = os.getenv('TOPIC_ARN')  # this may be switched to an SQS queue
-    BUCKET_DNS = os.getenv('BUCKET_DNS')
+    os.getenv('BUCKET_DNS')
 
     clips = []
     for item in event:
@@ -23,17 +19,15 @@ def handler(event, context):
 
     sorted(clips, key=lambda clip: clip['position'])
 
-    sns = boto3.client('sns')
-    resp = sns.publish(
-        TopicArn=SNS_TOPIC,
-        Message=json.dumps(clips),
-        Subject=f'{len(clips)} clips were downloaded.'
-    )
+    body = {
+        'clips': clips,
+        'render': False
+    }
 
     return {
         "statusCode": 200,
         "headers": {
             "Content-Type": "application/json"
         },
-        "body": json.dumps(resp, default=str)
+        "body": json.dumps(body, default=str)
     }

@@ -66,7 +66,7 @@ class RenderLambdaStack(cdk.Stack):
                                           'BUCKET': individual_clips.bucket_name
                                       },
                                       timeout=cdk.Duration.seconds(60),
-                                      memory_size=1024)
+                                      memory_size=512)
 
         individual_clips.grant_write(downloader)
 
@@ -100,7 +100,8 @@ class RenderLambdaStack(cdk.Stack):
                                       'OUT_BUCKET': combined_clips.bucket_name,
                                       'QUEUE_ARN': mediaconvert_queue.attr_arn,
                                       'QUEUE_ROLE': mediaconvert_role.role_arn
-                                  })
+                                  },
+                                  memory_size=128)
 
         # skip render lambda
         skip = PythonFunction(self, 'SkipRender',
@@ -112,7 +113,8 @@ class RenderLambdaStack(cdk.Stack):
                               environment={
                                   'BUCKET': individual_clips.bucket_name,
                                   'BUCKET_DNS': individual_clips.bucket_domain_name
-                              })
+                              },
+                              memory_size=128)
 
         # state machine
 
@@ -151,7 +153,5 @@ class RenderLambdaStack(cdk.Stack):
 
         # notification system
         sns_topic = sns.Topic(self, 'finishprocessingclips')
-        combined_clips.add_event_notification(
-            s3.EventType.OBJECT_CREATED, s3_notify.SnsDestination(sns_topic))
-        sns_topic.grant_publish(skip)
-        skip.add_environment('TOPIC_ARN', sns_topic.topic_arn)
+        # sns_topic.grant_publish(skip)
+        # skip.add_environment('TOPIC_ARN', sns_topic.topic_arn)

@@ -18,6 +18,8 @@ def handler(event, context):
     if render:
         video_url = event.get('videoURL')
         url_numbers = re.findall(r'\d+-', video_url)
+        video_id = url_numbers[:len(url_numbers)-1]
+
 
         attributes['VideoId'] = {
             'Type': 'String',
@@ -26,7 +28,10 @@ def handler(event, context):
 
         attributes['Video'] = {
             'Type': 'String',
-            'Value':}
+            'Value': video_id
+        }
+
+
 
     TOPIC_ARN = os.getenv('TOPIC_ARN')
 

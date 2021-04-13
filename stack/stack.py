@@ -111,13 +111,32 @@ class RenderLambdaStack(cdk.Stack):
                                   os.getcwd(), 'lambdas', 'skip_render'),
                               runtime=lambda_.Runtime.PYTHON_3_8,
                               environment={
-                                  'BUCKET': individual_clips.bucket_name,
                                   'BUCKET_DNS': individual_clips.bucket_domain_name
                               },
                               memory_size=128)
 
-        # state machine
+        # notification lambda
+        notify_lambda = PythonFunction(self, 'Notify',
+                                       handler='handler',
+                                       index='handler.py',
+                                       entry=os.path.join(
+                                           os.getcwd(), 'lambdas', 'notify'),
+                                       runtime=lambda_.Runtime.PYTHON_3_8,
+                                       environment={
+                                           'BUCKET_DNS': combined_clips.bucket_domain_name
+                                       },
+                                       memory_size=128)
 
+        item_added = s3_notify.LambdaDestination(notify_lambda)
+
+        combined_clips.add_event_notification(
+            s3.EventType.OBJECT_CREATED, item_added)
+
+        # allow skip lambda to invoke the notification lambda
+        notify_lambda.grant_invoke(skip)
+        skip.add_environment('LAMBDA_ARN', notify_lambda.function_arn)
+
+        # state machine
         get_clips_task = stp_tasks.LambdaInvoke(self, "Download Clip",
                                                 lambda_function=downloader
                                                 )
@@ -150,8 +169,3 @@ class RenderLambdaStack(cdk.Stack):
             'STEPFUNCTION_ARN', state_machine.state_machine_arn)
 
         state_machine.grant_start_execution(clip_queuer)
-
-        # notification system
-        sns_topic = sns.Topic(self, 'finishprocessingclips')
-        # sns_topic.grant_publish(skip)
-        # skip.add_environment('TOPIC_ARN', sns_topic.topic_arn)

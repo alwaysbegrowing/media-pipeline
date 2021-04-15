@@ -28,10 +28,7 @@ def handler(event, context):
     start_time = seconds_to_ffmpeg_time(job.get('start_time'))
     duration = str(job.get('end_time') - job.get('start_time'))
 
-    render = job.get('render')
-    if render is None:
-        render = True
-
+    render = job.get('render', True)
     stream_manifest_url = job.get('stream_manifest_url')
 
     ffmpeg_inputs = {

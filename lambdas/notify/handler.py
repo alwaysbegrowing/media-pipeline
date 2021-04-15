@@ -4,7 +4,8 @@ import re
 
 import boto3
 
-BUCKET_DNS = os.getenv('BUCKET_DNS')
+COMBINED_BUCKET_DNS = os.getenv('COMBINED_BUCKET_DNS')
+INDIVIDUAL_BUCKET_DNS = os.getenv('INDIVIDUAL_BUCKET_DNS')
 
 
 def handler(event, context):
@@ -54,18 +55,41 @@ def handler(event, context):
     ```
     '''
 
-    records = event.get('Records')
     body = {}
 
-    if records != None:
-        # Event is an S3 Notification
-        body['render'] = True
-        body['clips'] = []
+    # if triggered by S3
+    if type(event) is dict:
+        records = event.get('Records')
+        for record in records:
+            if record.get('eventSource') == 'aws:s3':
+                # Event is an S3 Notification
+                body['render'] = True
+                body['clips'] = []
 
-        name = records[0]['s3']['object'].get('key')
-        body['video'] = f'https://{BUCKET_DNS}/{name}'
-    else:
-        body = event
+                name = records[0]['s3']['object'].get('key')
+                body['video'] = f'https://{COMBINED_BUCKET_DNS}/{name}'
+    # if triggered by state machine
+    elif type(event) is list:
+        clips = []
+        for item in event:
+            clip = item.get('Payload')
+            if not clip is None:
+                name = clip.get('name')
+                position = clip.get('position')
+                new_clip = {
+                    'url': f'https://{INDIVIDUAL_BUCKET_DNS}/{name}',
+                    'name': name,
+                    'position': position
+                }
+                clips.append(new_clip)
+
+        sorted(clips, key=lambda clip: clip['position'])
+
+        body = {
+            'clips': clips,
+            'render': False,
+            'video': None
+        }
 
     print(body)
     '''

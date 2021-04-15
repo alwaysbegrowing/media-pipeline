@@ -51,12 +51,14 @@ def handler(event, context):
     sfn = boto3.client('stepfunctions')
 
     for clip in clips:  # this will be changed to add tasks
+        start_time = clip.get('start_time')
+        end_time = clip.get('end_time')
         name = clip.get('name')
         data = {
-            'end_time': clip.get('end_time'),
-            'start_time': clip.get('start_time'),
+            'end_time': end_time,
+            'start_time': start_time,
             'stream_manifest_url': best_stream,
-            'name': f'{video_id}/{start_time}-{end_time}',
+            'name': f'{video_id}-{start_time}-{end_time}',
             'position': clip.get('position'),
             'render': render
         }

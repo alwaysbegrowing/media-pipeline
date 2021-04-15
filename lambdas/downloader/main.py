@@ -47,11 +47,13 @@ def handler(event, context):
                     global_options=ffmpeg_global_options)
     ffmpeg.run()
 
+    s3_name = download_name.replace('-', '/', 1)
+
     s3 = boto3.client('s3')
-    s3.upload_file(download_name, BUCKET, download_name)
+    s3.upload_file(download_name, BUCKET, s3_name)
     os.remove(download_name)
     return {
         'position': job.get('position'),
-        'name': download_name,
+        'name': s3_name,
         'render': render
     }

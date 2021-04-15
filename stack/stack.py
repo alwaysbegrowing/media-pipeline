@@ -102,18 +102,6 @@ class RenderLambdaStack(cdk.Stack):
                                   },
                                   memory_size=128)
 
-        # skip render lambda
-        skip = PythonFunction(self, 'SkipRender',
-                              handler='handler',
-                              index='handler.py',
-                              entry=os.path.join(
-                                  os.getcwd(), 'lambdas', 'skip_render'),
-                              runtime=lambda_.Runtime.PYTHON_3_8,
-                              environment={
-                                  'BUCKET_DNS': individual_clips.bucket_domain_name
-                              },
-                              memory_size=128)
-
         # notification lambda
         notify_lambda = PythonFunction(self, 'Notify',
                                        handler='handler',
@@ -122,7 +110,8 @@ class RenderLambdaStack(cdk.Stack):
                                            os.getcwd(), 'lambdas', 'notify'),
                                        runtime=lambda_.Runtime.PYTHON_3_8,
                                        environment={
-                                           'BUCKET_DNS': combined_clips.bucket_domain_name
+                                           'COMBINED_BUCKET_DNS': combined_clips.bucket_domain_name,
+                                           'INDIVIDUAL_BUCKET_DNS': individual_clips.bucket_domain_name
                                        },
                                        memory_size=128)
 
@@ -130,10 +119,6 @@ class RenderLambdaStack(cdk.Stack):
 
         combined_clips.add_event_notification(
             s3.EventType.OBJECT_CREATED, item_added)
-
-        # allow skip lambda to invoke the notification lambda
-        notify_lambda.grant_invoke(skip)
-        skip.add_environment('LAMBDA_ARN', notify_lambda.function_arn)
 
         # state machine
         get_clips_task = stp_tasks.LambdaInvoke(self, "Download Clip",
@@ -143,8 +128,8 @@ class RenderLambdaStack(cdk.Stack):
         render_video_task = stp_tasks.LambdaInvoke(self, "Render Video",
                                                    lambda_function=renderer)
 
-        skip_render = stp_tasks.LambdaInvoke(self, "Skip Render",
-                                             lambda_function=skip)
+        notify_task = stp_tasks.LambdaInvoke(self, "Send notification",
+                                             lambda_function=notify_lambda)
 
         process_clips = stepfunctions.Map(
             self, "Process Clips", input_path="$.clips").iterator(get_clips_task)
@@ -154,7 +139,7 @@ class RenderLambdaStack(cdk.Stack):
         choice = stepfunctions.Choice(self, "Render?")
 
         choice.when(stepfunctions.Condition.boolean_equals(
-            "$[0].Payload.render", False), skip_render)
+            "$[0].Payload.render", False), notify_task)
         choice.when(stepfunctions.Condition.boolean_equals(
             "$[0].Payload.render", True), render_video_task)
 

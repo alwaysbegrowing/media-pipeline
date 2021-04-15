@@ -6,6 +6,8 @@ from datetime import datetime
 import boto3
 import streamlink
 
+STATE_MACHINE_ARN = os.getenv('STEPFUNCTION_ARN')
+
 
 def json_handler(item):
     if type(item) is datetime:
@@ -61,7 +63,7 @@ def handler(event, context):
         state['clips'].append(data)
 
     resp = sfn.start_execution(
-        stateMachineArn=os.getenv('STEPFUNCTION_ARN'),
+        stateMachineArn=STATE_MACHINE_ARN,
         name=str(uuid.uuid4()),
         input=json.dumps(state, default=json_handler)
     )

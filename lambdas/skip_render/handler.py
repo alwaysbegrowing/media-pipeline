@@ -3,13 +3,14 @@ import os
 
 import boto3
 
+LAMBDA_ARN = os.getenv('LAMBDA_ARN')
+BUCKET_DNS = os.getenv('BUCKET_DNS')
+
 
 def handler(event, context):
     '''
     Will take a list of clips and make a notification event out of them.
     '''
-
-    BUCKET_DNS = os.getenv('BUCKET_DNS')
 
     clips = []
     for item in event:
@@ -37,7 +38,6 @@ def handler(event, context):
     payload = json.dumps(body).encode()
 
     lambda_ = boto3.client('lambda')
-    LAMBDA_ARN = os.getenv('LAMBDA_ARN')
     resp = lambda_.invoke(
         FunctionName=LAMBDA_ARN,
         Payload=payload,

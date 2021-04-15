@@ -7,6 +7,8 @@ from ffmpy import FFmpeg
 
 from lib import seconds_to_ffmpeg_time
 
+BUCKET = os.getenv('BUCKET')
+
 
 def handler(event, context):
     '''
@@ -24,7 +26,6 @@ def handler(event, context):
     job = event
     name = job.get('name')
     download_name = f'{name}.mkv'
-    bucket = os.getenv('BUCKET')
     start_time = seconds_to_ffmpeg_time(job.get('start_time'))
     duration = str(job.get('end_time') - job.get('start_time'))
 
@@ -47,7 +48,7 @@ def handler(event, context):
     ffmpeg.run()
 
     s3 = boto3.client('s3')
-    s3.upload_file(download_name, bucket, download_name)
+    s3.upload_file(download_name, BUCKET, download_name)
     os.remove(download_name)
     return {
         'position': job.get('position'),

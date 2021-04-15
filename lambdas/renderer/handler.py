@@ -4,10 +4,14 @@ import os
 import boto3
 from botocore.exceptions import ClientError
 
+INPUT_BUCKET = os.getenv('IN_BUCKET')
+OUT_BUCKET = os.getenv('OUT_BUCKET')
+QUEUE_ARN = os.getenv('QUEUE_ARN')
+QUEUE_ROLE = os.getenv('QUEUE_ROLE')
+
 
 def make_input(name):
-    input_bucket = os.getenv('IN_BUCKET')
-    filename = f's3://{input_bucket}/{name}'
+    filename = f's3://{INPUT_BUCKET}/{name}'
     return {
         "AudioSelectors": {
             "Audio Selector 1": {
@@ -34,17 +38,16 @@ def make_input(name):
 
 def make_job(inputs):
 
-    output_bucket = os.getenv('OUT_BUCKET')
     job_str = ''
     with open('job.json') as f:
         job_str = f.read()
 
     job_str = job_str.replace('**name_modifier**', 'final-render')
-    job_str = job_str.replace('**bucketname**', output_bucket)
+    job_str = job_str.replace('**bucketname**', OUT_BUCKET)
     job = json.loads(job_str)
     job["Settings"]["Inputs"] = inputs
-    job["Queue"] = os.getenv('QUEUE_ARN')
-    job["Role"] = os.getenv('QUEUE_ROLE')
+    job["Queue"] = QUEUE_ARN
+    job["Role"] = QUEUE_ROLE
 
     return job
 
@@ -82,7 +85,7 @@ def handler(event, context):
 
     job_object = make_job(inputs)
 
-    mediaconvert_client = boto3.client(
+    mediaconvert_client = boto3.client(  # need endpoint url to start mediaconvert
         'mediaconvert', endpoint_url='https://lxlxpswfb.mediaconvert.us-east-1.amazonaws.com')
     convertResponse = mediaconvert_client.create_job(**job_object)
 

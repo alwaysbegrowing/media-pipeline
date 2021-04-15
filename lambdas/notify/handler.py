@@ -4,6 +4,8 @@ import re
 
 import boto3
 
+BUCKET_DNS = os.getenv('BUCKET_DNS')
+
 
 def handler(event, context):
     '''
@@ -51,7 +53,6 @@ def handler(event, context):
     }
     ```
     '''
-    BUCKET_DNS = os.getenv('BUCKET_DNS')
 
     records = event.get('Records')
     body = {}

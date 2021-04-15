@@ -54,7 +54,7 @@ def handler(event, context):
             'end_time': clip.get('end_time'),
             'start_time': clip.get('start_time'),
             'stream_manifest_url': best_stream,
-            'name': f'{video_id}-{name}',
+            'name': f'{video_id}/{start_time}-{end_time}',
             'position': clip.get('position'),
             'render': render
         }

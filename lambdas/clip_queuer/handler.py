@@ -53,7 +53,6 @@ def handler(event, context):
     for clip in clips:  # this will be changed to add tasks
         start_time = clip.get('start_time')
         end_time = clip.get('end_time')
-        name = clip.get('name')
         data = {
             'end_time': end_time,
             'start_time': start_time,

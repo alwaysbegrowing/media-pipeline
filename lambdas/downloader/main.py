@@ -5,8 +5,6 @@ import uuid
 import boto3
 from ffmpy import FFmpeg
 
-from lib import seconds_to_ffmpeg_time
-
 BUCKET = os.getenv('BUCKET')
 
 
@@ -26,7 +24,7 @@ def handler(event, context):
     job = event
     name = job.get('name')
     download_name = f'{name}.mkv'
-    start_time = seconds_to_ffmpeg_time(job.get('start_time'))
+    start_time = str(job.get('start_time'))
     duration = str(job.get('end_time') - job.get('start_time'))
 
     render = job.get('render', True)

@@ -63,17 +63,19 @@ def handler(event, context):
         for record in records:
             if record.get('eventSource') == 'aws:s3':
                 # Event is an S3 Notification
-                body['render'] = True
-                body['clips'] = []
-
                 name = records[0]['s3']['object'].get('key')
-                body['video'] = f'https://{COMBINED_BUCKET_DNS}/{name}'
+                video = f'https://{COMBINED_BUCKET_DNS}/{name}'
+                body = {
+                    'render': True,
+                    'clips': [],
+                    'video': video
+                }
     # if triggered by state machine
     elif type(event) is list:
         clips = []
         for item in event:
             clip = item.get('Payload')
-            if not clip is None:
+            if clip:
                 name = clip.get('name')
                 position = clip.get('position')
                 new_clip = {
@@ -131,6 +133,4 @@ def handler(event, context):
 
     # do notification stuffs
 
-    return {
-        'statusCode': 200
-    }
+    return {}

@@ -38,10 +38,7 @@ def handler(event, context):
 
     streams = streamlink.streams(original_url)
     best_stream = streams.get('best').url
-    render = job.get('render')
-
-    if render is None:
-        render = True
+    render = job.get('render', True)
 
     state = {
         'render': render,

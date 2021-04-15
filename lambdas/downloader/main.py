@@ -17,32 +17,40 @@ def handler(event, context):
         'end_time': 4300,
         'name': 'clip12',
         'position': 12,
-        'render': true
+        'render': true,
+        'ccc': false
     }
     '''
     os.chdir('/tmp')
-    job = event
-    name = job.get('name')
+    name = event.get('name')
+    ccc = event.get('ccc')
     download_name = f'{name}.mkv'
-    start_time = str(job.get('start_time'))
-    duration = str(job.get('end_time') - job.get('start_time'))
 
-    render = job.get('render', True)
-    stream_manifest_url = job.get('stream_manifest_url')
+    render = event.get('render', True)
+    stream_manifest_url = event.get('stream_manifest_url')
 
-    ffmpeg_inputs = {
-        stream_manifest_url: ['-ss', start_time]
-    }
+    ffmpeg_inputs = {}
+    ffmpeg_outputs = {}
 
-    ffmpeg_outputs = {
-        download_name:  ['-t', duration, '-y', '-c', 'copy']
-    }
-    #ffmpeg_global_options = ['-hide_banner', '-loglevel', 'panic']
+    if ccc:
+        ffmpeg_inputs = {
+            stream_manifest_url: None
+        }
+        ffmpeg_outputs = {
+            download_name: None
+        }
+    else:
+        start_time = str(event.get('start_time'))
+        duration = str(event.get('end_time') - event.get('start_time'))
+        ffmpeg_inputs = {
+            stream_manifest_url: ['-ss', start_time]
+        }
 
-    ffmpeg_global_options = []
+        ffmpeg_outputs = {
+            download_name:  ['-t', duration, '-y', '-c', 'copy']
+        }
 
-    ffmpeg = FFmpeg(inputs=ffmpeg_inputs, outputs=ffmpeg_outputs,
-                    global_options=ffmpeg_global_options)
+    ffmpeg = FFmpeg(inputs=ffmpeg_inputs, outputs=ffmpeg_outputs)
     ffmpeg.run()
 
     s3_name = download_name.replace('-', '/', 1)
@@ -51,7 +59,7 @@ def handler(event, context):
     s3.upload_file(download_name, BUCKET, s3_name)
     os.remove(download_name)
     return {
-        'position': job.get('position'),
+        'position': event.get('position'),
         'name': s3_name,
         'render': render
     }

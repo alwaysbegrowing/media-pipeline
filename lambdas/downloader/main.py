@@ -5,7 +5,7 @@ import uuid
 import boto3
 from ffmpy import FFmpeg
 
-from lib import seconds_to_ffmpeg_time
+BUCKET = os.getenv('BUCKET')
 
 
 def handler(event, context):
@@ -16,17 +16,18 @@ def handler(event, context):
         'start_time': 4230,
         'end_time': 4300,
         'name': 'clip12',
-        'position': 12
+        'position': 12,
+        'render': true
     }
     '''
     os.chdir('/tmp')
     job = event
     name = job.get('name')
-    download_name = f'{uuid.uuid4()}-{name}.mkv'
-    bucket = os.getenv('BUCKET')
-    start_time = seconds_to_ffmpeg_time(job.get('start_time'))
+    download_name = f'{name}.mkv'
+    start_time = str(job.get('start_time'))
     duration = str(job.get('end_time') - job.get('start_time'))
 
+    render = job.get('render', True)
     stream_manifest_url = job.get('stream_manifest_url')
 
     ffmpeg_inputs = {
@@ -44,10 +45,13 @@ def handler(event, context):
                     global_options=ffmpeg_global_options)
     ffmpeg.run()
 
+    s3_name = download_name.replace('-', '/', 1)
+
     s3 = boto3.client('s3')
-    s3.upload_file(download_name, bucket, download_name)
+    s3.upload_file(download_name, BUCKET, s3_name)
     os.remove(download_name)
     return {
         'position': job.get('position'),
-        'name': download_name
+        'name': s3_name,
+        'render': render
     }

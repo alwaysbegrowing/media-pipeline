@@ -1,11 +1,9 @@
 import os
 
-from aws_cdk.aws_lambda_event_sources import SqsEventSource
-
 from aws_cdk import (core as cdk,
                      aws_apigateway as apigateway,
-                     aws_sqs as sqs,
                      aws_s3 as s3,
+                     aws_s3_notifications as s3_notify,
                      aws_lambda as lambda_,
                      aws_mediaconvert as mediaconvert,
                      aws_stepfunctions as stepfunctions,
@@ -20,8 +18,9 @@ class RenderLambdaStack(cdk.Stack):
     def __init__(self, scope: cdk.Construct, construct_id: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
-        individual_clips = s3.Bucket(self,
-                                     "IndividualClips")
+        individual_clips = s3.Bucket(scope=self,
+                                     id="IndividualClips",
+                                     public_read_access=True)
 
         # API For Frontend
         clip_api = apigateway.RestApi(self, "clip-api",
@@ -66,12 +65,13 @@ class RenderLambdaStack(cdk.Stack):
                                           'BUCKET': individual_clips.bucket_name
                                       },
                                       timeout=cdk.Duration.seconds(60),
-                                      memory_size=1024)
+                                      memory_size=512)
 
         individual_clips.grant_write(downloader)
 
-        combined_clips = s3.Bucket(self,
-                                   "CombinedClips")
+        combined_clips = s3.Bucket(scope=self,
+                                   id="CombinedClips",
+                                   public_read_access=True)
 
         mediaconvert_queue = mediaconvert.CfnQueue(self, id="ClipCombiner")
 
@@ -89,7 +89,8 @@ class RenderLambdaStack(cdk.Stack):
         renderer = PythonFunction(self, 'FinalRenderer',
                                   handler='handler',
                                   index='handler.py',
-                                  initial_policy=[mediaconvert_create_job, mediaconvert_pass_role],
+                                  initial_policy=[
+                                      mediaconvert_create_job, mediaconvert_pass_role],
                                   entry=os.path.join(
                                       os.getcwd(), 'lambdas', 'renderer'),
                                   runtime=lambda_.Runtime.PYTHON_3_8,
@@ -98,8 +99,28 @@ class RenderLambdaStack(cdk.Stack):
                                       'OUT_BUCKET': combined_clips.bucket_name,
                                       'QUEUE_ARN': mediaconvert_queue.attr_arn,
                                       'QUEUE_ROLE': mediaconvert_role.role_arn
-                                  })
+                                  },
+                                  memory_size=128)
 
+        # notification lambda
+        notify_lambda = PythonFunction(self, 'Notify',
+                                       handler='handler',
+                                       index='handler.py',
+                                       entry=os.path.join(
+                                           os.getcwd(), 'lambdas', 'notify'),
+                                       runtime=lambda_.Runtime.PYTHON_3_8,
+                                       environment={
+                                           'COMBINED_BUCKET_DNS': combined_clips.bucket_domain_name,
+                                           'INDIVIDUAL_BUCKET_DNS': individual_clips.bucket_domain_name
+                                       },
+                                       memory_size=128)
+
+        item_added = s3_notify.LambdaDestination(notify_lambda)
+
+        combined_clips.add_event_notification(
+            s3.EventType.OBJECT_CREATED, item_added)
+
+        # state machine
         get_clips_task = stp_tasks.LambdaInvoke(self, "Download Clip",
                                                 lambda_function=downloader
                                                 )
@@ -107,12 +128,22 @@ class RenderLambdaStack(cdk.Stack):
         render_video_task = stp_tasks.LambdaInvoke(self, "Render Video",
                                                    lambda_function=renderer)
 
+        notify_task = stp_tasks.LambdaInvoke(self, "Send notification",
+                                             lambda_function=notify_lambda)
+
         process_clips = stepfunctions.Map(
             self, "Process Clips", input_path="$.clips").iterator(get_clips_task)
 
         success = stepfunctions.Succeed(self, "Video Processing Finished.")
 
-        definition = process_clips.next(render_video_task).next(success)
+        choice = stepfunctions.Choice(self, "Render?")
+
+        choice.when(stepfunctions.Condition.boolean_equals(
+            "$[0].Payload.render", False), notify_task)
+        choice.when(stepfunctions.Condition.boolean_equals(
+            "$[0].Payload.render", True), render_video_task)
+
+        definition = process_clips.next(choice)
 
         state_machine = stepfunctions.StateMachine(self, "Renderer",
                                                    definition=definition

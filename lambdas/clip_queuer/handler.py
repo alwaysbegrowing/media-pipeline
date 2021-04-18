@@ -5,16 +5,15 @@ from datetime import datetime
 
 import boto3
 import streamlink
-from youtube_dl import YoutubeDL
+
+from clip_lib import get_ccc_start_end_times
+from lib import get_secret, json_handler
+
 
 STATE_MACHINE_ARN = os.getenv('STEPFUNCTION_ARN')
-
-
-def json_handler(item):
-    if type(item) is datetime:
-        return item.isoformat()
-    else:
-        return str(item)
+TWITCH_CLIENT_ID = os.getenv('TWITCH_CLIENT_SECRET')
+TWITCH_CLIENT_SECRET_ARN = os.getenv('TWITCH_CLIENT_SECRET_ARN')
+TWITCH_CLIENT_SECRET = get_secret(TWITCH_CLIENT_SECRET_ARN)
 
 
 def handler(event, context):
@@ -53,7 +52,7 @@ def handler(event, context):
 
     position = 1
 
-    for clip in clips:  # this will be changed to add tasks
+    for clip in clips:
         stream_manifest_url = best_stream
         start_time = clip.get('start_time', 0)
         end_time = clip.get('end_time', 0)
@@ -63,19 +62,13 @@ def handler(event, context):
         # rather than a generated clip
         if clip.get('highlight_url'):
             highlight_url = clip.get('highlight_url')
-            ytdl_options = {
-                'format': 'best',  # format for the video
-                'forceurl': True
-            }
+            clip_slug = highlight_url.split('/')[-1]
 
-            with YoutubeDL(ytdl_options) as ytdl:
-                # we are using YouTube DL because streamlink doesn't always
-                # work when its a clip rather than a livestream
-                info_dict = ytdl.extract_info(highlight_url, download=False)
-                stream_manifest_url = info_dict.get('url')  # get the clip link
+            start_time, end_time = get_ccc_start_end_times(twitch_client_id=TWITCH_CLIENT_ID,
+                                                           twitch_client_secret=TWITCH_CLIENT_SECRET,
+                                                           clip_slug=clip_slug)
 
-            clip_name = highlight_url.split('/')[-1]
-            name = f'{video_id}-{clip_name}'
+            name = f'{video_id}-{clip_slug}'
             ccc = True
 
         data = {

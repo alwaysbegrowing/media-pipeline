@@ -8,9 +8,13 @@ from aws_cdk import (core as cdk,
                      aws_mediaconvert as mediaconvert,
                      aws_stepfunctions as stepfunctions,
                      aws_stepfunctions_tasks as stp_tasks,
+                     aws_secretsmanager as secrets_manager,
                      aws_iam as iam)
 
 from aws_cdk.aws_lambda_python import PythonFunction, PythonLayerVersion
+
+TWITCH_CLIENT_ID = '2nakqoqdxka9v5oekyo6742bmnxt2o'
+TWITCH_CLIENT_SECRET_ARN = 'arn:aws:secretsmanager:us-east-1:576758376358:secret:TWITCH_CLIENT_SECRET-OyAp7V'
 
 
 class RenderLambdaStack(cdk.Stack):
@@ -34,10 +38,17 @@ class RenderLambdaStack(cdk.Stack):
                                          os.getcwd(), 'lambdas', 'clip_queuer'),
                                      runtime=lambda_.Runtime.PYTHON_3_8,
                                      environment={
-                                         'BUCKET': individual_clips.bucket_name
+                                         'BUCKET': individual_clips.bucket_name,
+                                         'TWITCH_CLIENT_ID': TWITCH_CLIENT_ID,
+                                         'TWITCH_CLIENT_SECRET_ARN': TWITCH_CLIENT_SECRET_ARN
                                      },
-                                     timeout=cdk.Duration.seconds(15),
+                                     timeout=cdk.Duration.seconds(60),
                                      memory_size=256)
+
+        twitch_client_secret = secrets_manager.Secret.from_secret_complete_arn(
+            self, id='TwitchClientSecret', secret_complete_arn=TWITCH_CLIENT_SECRET_ARN)
+
+        twitch_client_secret.grant_read(clip_queuer)
 
         addToQueue = apigateway.LambdaIntegration(clip_queuer,
                                                   request_templates={"application/json": '{ "statusCode": "200" }'})

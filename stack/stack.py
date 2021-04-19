@@ -75,7 +75,7 @@ class RenderLambdaStack(cdk.Stack):
                                       environment={
                                           'BUCKET': individual_clips.bucket_name
                                       },
-                                      timeout=cdk.Duration.seconds(120),
+                                      timeout=cdk.Duration.seconds(60),
                                       memory_size=512)
 
         individual_clips.grant_write(downloader)

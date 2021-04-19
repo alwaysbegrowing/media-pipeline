@@ -20,7 +20,7 @@ def handler(event, context):
     '''
     Here is what the request body will look like.
     {
-        'clips': [{'start_time': 55, 'end_time': 90}, {"highlight_url": "https://www.twitch.tv/smii7y/clip/NeighborlyBombasticPancakeTTours-YnJN7ray0zhct_v5"}],
+        'clips': [{'start_time': 55, 'end_time': 90}, {"clip_url": "https://www.twitch.tv/smii7y/clip/NeighborlyBombasticPancakeTTours-YnJN7ray0zhct_v5"}],
         'videoId': '964350897',
         'render': true
     }
@@ -60,9 +60,9 @@ def handler(event, context):
         ccc = False
         # if clip is a CCC
         # rather than a generated clip
-        if clip.get('highlight_url'):
-            highlight_url = clip.get('highlight_url')
-            clip_slug = highlight_url.split('/')[-1]
+        if clip.get('clip_url'):
+            clip_url = clip.get('clip_url')
+            clip_slug = clip_url.split('/')[-1]
 
             start_time, end_time = get_ccc_start_end_times(twitch_client_id=TWITCH_CLIENT_ID,
                                                            twitch_client_secret=TWITCH_CLIENT_SECRET,

@@ -118,8 +118,8 @@ def get_ccc_start_end_times(twitch_client_id, twitch_client_secret, clip_slug):
     if type(duration) is str:
         duration = twitch_time_to_seconds(duration)
 
-    # this can be simplified
-    if not type(duration) is int and not type(duration) is float and not type(duration) is str:
+    types = [int, str, float]
+    if not any(type(duration) is t for t in types):
         print(type(duration))
         raise AssertionError('Duration is not an integer, float, or string.')
 

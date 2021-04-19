@@ -1,3 +1,4 @@
+import json
 import os
 
 from aws_cdk import (core as cdk,
@@ -12,6 +13,15 @@ from aws_cdk import (core as cdk,
 
 from aws_cdk.aws_lambda_python import PythonFunction, PythonLayerVersion
 
+import boto3
+
+def get_render_api_key():
+    secret_name = "RENDER_API_KEY"
+    region_name = "us-east-1"
+    client = boto3.client('secretsmanager')
+    resp = client.get_secret_value(SecretId=secret_name)
+    data = json.loads(resp.get('SecretString'))
+    return data[secret_name]
 
 class RenderLambdaStack(cdk.Stack):
 
@@ -22,10 +32,22 @@ class RenderLambdaStack(cdk.Stack):
                                      id="IndividualClips",
                                      public_read_access=True)
 
+        # api key
+        api_key = apigateway.ApiKey(self, 'RenderKey', value=get_render_api_key())
+
+        # api gateway "plan" that 
+        # determines usage and api keys
+        plan = apigateway.UsagePlan(self, 'MainPlan',
+                                    name='RenderUsePlan',
+                                    description='Render Lambda Stack Plan')
+        plan.add_api_key(api_key)
+
         # API For Frontend
         clip_api = apigateway.RestApi(self, "clip-api",
                                       rest_api_name="Clips service",
                                       description="Service handles combining clips")
+
+        plan.add_api_stage(api=clip_api, stage=clip_api.deployment_stage)
 
         clip_queuer = PythonFunction(self, 'ClipQueuer',
                                      handler='handler',
@@ -44,7 +66,7 @@ class RenderLambdaStack(cdk.Stack):
 
         clips_endpoint = clip_api.root.add_resource("clips")
 
-        clips_endpoint.add_method("POST", addToQueue)
+        clips_endpoint.add_method("POST", addToQueue, api_key_required=True)
 
         # Clip Downloader Container
 

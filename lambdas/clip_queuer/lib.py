@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import boto3
 
 # misc functions
@@ -12,5 +14,5 @@ def json_handler(item):
 
 def get_secret(arn):
     client = boto3.client('secretsmanager')
-    resp = client.get_secret_value(arn)
+    resp = client.get_secret_value(SecretId=arn)
     return resp.get('SecretString')

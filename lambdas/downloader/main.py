@@ -23,32 +23,20 @@ def handler(event, context):
     '''
     os.chdir('/tmp')
     name = event.get('name')
-    ccc = event.get('ccc')
     download_name = f'{name}.mkv'
 
     render = event.get('render', True)
     stream_manifest_url = event.get('stream_manifest_url')
 
-    ffmpeg_inputs = {}
-    ffmpeg_outputs = {}
+    start_time = str(event.get('start_time'))
+    duration = str(event.get('end_time') - event.get('start_time'))
+    ffmpeg_inputs = {
+        stream_manifest_url: ['-ss', start_time]
+    }
 
-    if ccc:
-        ffmpeg_inputs = {
-            stream_manifest_url: None
-        }
-        ffmpeg_outputs = {
-            download_name: None
-        }
-    else:
-        start_time = str(event.get('start_time'))
-        duration = str(event.get('end_time') - event.get('start_time'))
-        ffmpeg_inputs = {
-            stream_manifest_url: ['-ss', start_time]
-        }
-
-        ffmpeg_outputs = {
-            download_name:  ['-t', duration, '-y', '-c', 'copy']
-        }
+    ffmpeg_outputs = {
+        download_name:  ['-t', duration, '-y', '-c', 'copy']
+    }
 
     ffmpeg = FFmpeg(inputs=ffmpeg_inputs, outputs=ffmpeg_outputs)
     ffmpeg.run()

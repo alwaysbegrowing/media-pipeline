@@ -110,6 +110,19 @@ def get_ccc_start_end_times(twitch_client_id, twitch_client_secret, clip_slug):
 
     api_data = get_ccc_info(
         twitch_client_id, twitch_client_secret, query)['data'][0]
-    end_time = start_time + twitch_time_to_seconds(api_data.get('duration'))
+
+    duration = api_data.get('duration')
+    if duration is None:
+        raise AssertionError('Could not find duration in API response.')
+
+    if type(duration) is str:
+        duration = twitch_time_to_seconds(duration)
+
+    # this can be simplified
+    if not type(duration) is int and not type(duration) is float and not type(duration) is str:
+        print(type(duration))
+        raise AssertionError('Duration is not an integer, float, or string.')
+
+    end_time = start_time + duration
 
     return start_time, end_time

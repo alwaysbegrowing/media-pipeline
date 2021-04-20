@@ -14,14 +14,11 @@ def twitch_auth(client_id, client_secret):
     return resp.json()
 
 
-def get_ccc_info(twitch_client_id, twitch_client_secret, query):
+def get_ccc_info(twitch_client_id, access_token, query):
 
     if not type(query) is dict:
         raise TypeError('Parameter "query" must be a dictionary!')
 
-    auth = twitch_auth(twitch_client_id, twitch_client_secret)
-    print(auth)
-    access_token = auth['access_token']
     headers = {
         'Client-Id': twitch_client_id,
         'Authorization': f'Bearer {access_token}'
@@ -81,21 +78,8 @@ def get_ccc_start_end_times(twitch_client_id, twitch_client_secret, clip_slug):
         }
     }]
 
-    gql_headers = headers = {  # we can probably delete most of this
-        'Connection': 'keep-alive',
-        'sec-ch-ua': '"Google Chrome";v="89", "Chromium";v="89", ";Not A Brand";v="99"',
-        'X-Device-Id': 'xQR0BchhwJE1VO05SLyC5ygMlNIiKcPC',
-        'Accept-Language': 'en-US',
-        'sec-ch-ua-mobile': '?0',
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.114 Safari/537.36',
-        'Client-Id': 'kimne78kx3ncx6brgo4mv6wki5h1ko',
-        'Content-Type': 'text/plain;charset=UTF-8',
-        'Accept': '*/*',
-        'Origin': 'https://clips.twitch.tv',
-        'Sec-Fetch-Site': 'same-site',
-        'Sec-Fetch-Mode': 'cors',
-        'Sec-Fetch-Dest': 'empty',
-        'Referer': 'https://clips.twitch.tv/'
+    gql_headers = {  # we can probably delete most of this
+        'Client-Id': 'kimne78kx3ncx6brgo4mv6wki5h1ko'
     }
 
     gql_resp = requests.post(gql_url, headers=gql_headers, json=gql_payload)

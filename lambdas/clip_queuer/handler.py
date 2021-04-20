@@ -28,6 +28,9 @@ def handler(event, context):
     The response body will be the state input body with the response
     from the request to create the state machine appended to the state input
     '''
+
+    access_token = twitch_auth(TWITCH_CLIENT_ID, TWITCH_CLIENT_SECRET)
+
     job = json.loads(event.get('body'))
 
     prefix = 'https://twitch.tv/videos/'
@@ -56,8 +59,7 @@ def handler(event, context):
         stream_manifest_url = best_stream
         start_time = clip.get('start_time', 0)
         end_time = clip.get('end_time', 0)
-        name = f'{video_id}-{start_time}-{end_time}'
-        ccc = False
+
         # if clip is a CCC
         # rather than a generated clip
         if clip.get('clip_url'):
@@ -65,20 +67,17 @@ def handler(event, context):
             clip_slug = clip_url.split('/')[-1]
 
             start_time, end_time = get_ccc_start_end_times(twitch_client_id=TWITCH_CLIENT_ID,
-                                                           twitch_client_secret=TWITCH_CLIENT_SECRET,
+                                                           access_token=access_token,
                                                            clip_slug=clip_slug)
 
-            name = f'{video_id}-{clip_slug}'
-            ccc = True
-
+        name = f'{video_id}-{start_time}-{end_time}'
         data = {
             'end_time': end_time,
             'start_time': start_time,
             'stream_manifest_url': stream_manifest_url,
             'name': name,
             'position': position,
-            'render': render,
-            'ccc': ccc
+            'render': render
         }
         state['clips'].append(data)
         position += 1

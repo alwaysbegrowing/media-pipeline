@@ -10,7 +10,7 @@ from lib import get_secret
 COMBINED_BUCKET_DNS = os.getenv('COMBINED_BUCKET_DNS')
 INDIVIDUAL_BUCKET_DNS = os.getenv('INDIVIDUAL_BUCKET_DNS')
 # FROM_EMAIL = os.getenv('FROM_EMAIL') # pro
-FROM_EMAIL = 'chandler@pillar.gg'
+FROM_EMAIL = 'chandler@chand1012.dev'
 MONGODB_CONNECT_STR = get_secret(os.getenv('MONGODB_URI_SECRET_ARN'))
 MONGODB_DBNAME = os.getenv('DB_NAME')
 TWITCH_CLIENT_ID = os.getenv('TWITCH_CLIENT_ID')
@@ -141,7 +141,6 @@ def handler(event, context):
 
     dbclient = DBClient(db_name=MONGODB_DBNAME, connect_str=MONGODB_CONNECT_STR)
     helix = twitch.Helix(TWITCH_CLIENT_ID, TWITCH_CLIENT_SECRET)
-    sg = SendGridAPIClient(json.loads(SENDGRID_API_KEY)['SENDGRID_API_KEY'])
 
     twitch_video_id = ''
 
@@ -162,13 +161,25 @@ def handler(event, context):
     user = dbclient.get_user_by_twitch_id(user_twitch_id)
 
     email = user['email']
-    message = Mail(
-        from_email=FROM_EMAIL,
-        to_emails=[email],
-        subject='Your Pillar Job is Ready!',
-        html_content=f'{body}'
+    
+    email_client = boto3.client('ses')
+    resp = email_client.send_email(
+        Source=FROM_EMAIL,
+        Destination={
+            'BccAddresses': [
+                email,
+            ]
+        },
+        Message={
+            'Subject': {
+                'Data': 'Your PillarGG Job is Ready!'
+            },
+            'Body': {
+                'Text': {
+                    'Data': str(body),
+               }
+            }
+        }
     )
-
-    sg.send(message)
 
     return {}

@@ -1,16 +1,26 @@
-import json
 import os
-import re
+import json
 
-import boto3
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Mail
+from dbclient import DBClient
+import twitch
+
+from lib import get_secret
 
 COMBINED_BUCKET_DNS = os.getenv('COMBINED_BUCKET_DNS')
 INDIVIDUAL_BUCKET_DNS = os.getenv('INDIVIDUAL_BUCKET_DNS')
-
+# FROM_EMAIL = os.getenv('FROM_EMAIL') # pro
+FROM_EMAIL = 'chandler@pillar.gg'
+MONGODB_CONNECT_STR = get_secret(os.getenv('MONGODB_URI_SECRET_ARN'))
+MONGODB_DBNAME = os.getenv('DB_NAME')
+TWITCH_CLIENT_ID = os.getenv('TWITCH_CLIENT_ID')
+TWITCH_CLIENT_SECRET = get_secret(os.getenv('TWITCH_CLIENT_SECRET_ARN'))
+SENDGRID_API_KEY = get_secret(os.getenv('SENDGRID_API_KEY_SECRET'))
 
 def handler(event, context):
     '''
-    Will take the event and transform it into a notification for SES.
+    Will take the event and transform it into a notification for SendGrid.
     Will take S3 notifications and manual invocation from "skip_render".
     Here an an example of the S3 notification event invocation:
     ```
@@ -93,7 +103,6 @@ def handler(event, context):
             'video': None
         }
 
-    print(body)
     '''
     Here is what the Body will look like:
     ```
@@ -131,6 +140,36 @@ def handler(event, context):
     ```
     '''
 
-    # do notification stuffs
+    dbclient = DBClient(db_name=MONGODB_DBNAME, connect_str=MONGODB_CONNECT_STR)
+    helix = twitch.Helix(TWITCH_CLIENT_ID, TWITCH_CLIENT_SECRET)
+    sg = SendGridAPIClient(json.loads(SENDGRID_API_KEY)['SENDGRID_API_KEY'])
+
+    twitch_video_id = ''
+
+    if body['clips'] != []:
+        print('Input is clips.')
+        clip = body['clips'][0]
+        name = clip['name'].split('-')[0]
+        twitch_video_id = name.split('/')[0]
+    else:
+        print('Input is video.')
+        name = body['video'].split('/')[-1]
+        twitch_video_id = name.split('-')[0]
+
+    video = helix.video(twitch_video_id)
+
+    user_twitch_id = video.user.id
+
+    user = dbclient.get_user_by_twitch_id(user_twitch_id)
+
+    email = user['email']
+    message = Mail(
+        from_email=FROM_EMAIL,
+        to_emails=[email],
+        subject='Your Pillar Job is Ready!',
+        html_content=f'{body}'
+    )
+
+    sg.send(message)
 
     return {}

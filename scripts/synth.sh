@@ -1,0 +1,1 @@
+cdk synth --no-staging > template.yaml

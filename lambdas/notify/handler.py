@@ -1,8 +1,7 @@
 import os
 import json
 
-from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail
+import boto3
 from dbclient import DBClient
 import twitch
 

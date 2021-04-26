@@ -1,45 +1,4 @@
 
-# Welcome to your CDK Python project!
-
-Examples can be found [here](https://github.com/aws-samples/aws-cdk-examples/tree/master/python)
-
-This is a blank project for Python development with CDK.
-
-The `cdk.json` file tells the CDK Toolkit how to execute your app.
-
-This project is set up like a standard Python project.  The initialization
-process also creates a virtualenv within this project, stored under the `.venv`
-directory.  To create the virtualenv it assumes that there is a `python3`
-(or `python` for Windows) executable in your path with access to the `venv`
-package. If for any reason the automatic creation of the virtualenv fails,
-you can create the virtualenv manually.
-
-To manually create a virtualenv on MacOS and Linux:
-
-```
-$ python3 -m pip install pipenv
-$ pipenv --three
-```
-
-After the init process completes and the virtualenv is created, you can use the following
-step to activate your virtualenv.
-
-```
-$ pipenv shell
-```
-
-Once the virtualenv is activated, you can install the required dependencies.
-
-```
-$ pipenv install
-```
-
-At this point you can now synthesize the CloudFormation template for this code.
-
-```
-$ pipenv run synth
-```
-
 To add additional dependencies, for example other CDK libraries, just add
 them to your `setup.py` file and run the `pipenv update -e .`
 command.

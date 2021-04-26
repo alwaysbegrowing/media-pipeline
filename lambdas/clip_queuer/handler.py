@@ -74,7 +74,10 @@ def handler(event, context):
     return {
         'statusCode': 200,
         'headers': {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Methods': 'OPTIONS,POST,GET',
+            'Access-Control-Allow-Origin': '*',
+            
         },
         'body': json.dumps(state, default=json_handler)
     }

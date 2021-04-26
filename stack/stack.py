@@ -22,10 +22,12 @@ class RenderLambdaStack(cdk.Stack):
                                      id="IndividualClips",
                                      public_read_access=True)
 
+        cors = apigateway.CorsOptions(allow_origins=apigateway.Cors.ALL_ORIGINS)
+
         # API For Frontend
         clip_api = apigateway.RestApi(self, "clip-api",
                                       rest_api_name="Clips service",
-                                      description="Service handles combining clips")
+                                      description="Service handles combining clips", default_cors_preflight_options=cors)
 
         clip_queuer = PythonFunction(self, 'ClipQueuer',
                                      handler='handler',

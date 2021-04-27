@@ -1,5 +1,4 @@
 import os
-import json
 
 import boto3
 from dbclient import DBClient
@@ -144,15 +143,23 @@ def handler(event, context):
 
     twitch_video_id = ''
 
+    video_links = ''
+
     if body['clips'] != []:
         print('Input is clips.')
         clip = body['clips'][0]
         name = clip['name'].split('-')[0]
         twitch_video_id = name.split('/')[0]
+        video_links = '<table><caption> Your Pillar Videos </caption>'
+        for clip in body['clips']:
+            video_links += f'<tr><td>{clip["name"]}</td><td>{clip["url"]}</td></tr>'
+        video_links += '</table>'
+
     else:
         print('Input is video.')
         name = body['video'].split('/')[-1]
         twitch_video_id = name.split('-')[0]
+        video_links = body['video']
 
     video = helix.video(twitch_video_id)
 
@@ -161,9 +168,31 @@ def handler(event, context):
     user = dbclient.get_user_by_twitch_id(user_twitch_id)
 
     email = user['email']
+    name = user['display_name']
     
     email_client = boto3.client('ses')
-    resp = email_client.send_email(
+
+    html = f'''
+    <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+  <meta http-equiv="Content-Type" content="text/html charset=UTF-8" />
+  <head>
+  </head>
+  <body>
+  {name}, <br>
+  Here are your Pillar videos: <br>
+  
+  {video_links}
+  <br>
+  Thanks for using Pillar! <br>
+  If you'd like to leave feedback, let us know how your experience was (any bugs, questions, etc? ) by replying to the 2 minute survey we will send you soon. <br>
+  See you soon, <br>
+  The Pillar Team
+      </body>
+</html>
+    '''
+
+    email_client.send_email(
         Source=FROM_EMAIL,
         Destination={
             'BccAddresses': [
@@ -175,9 +204,12 @@ def handler(event, context):
                 'Data': 'Your PillarGG Job is Ready!'
             },
             'Body': {
-                'Text': {
-                    'Data': str(body),
-               }
+            #     'Text': {
+            #         'Data': str(body),
+            #    }
+                'Html': {
+                    'Data': html
+                }
             }
         }
     )

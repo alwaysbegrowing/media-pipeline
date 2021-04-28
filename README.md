@@ -4,8 +4,8 @@
 # Deploying
 
  - To deploy to production, run `cdk deploy RenderLambdaStack`. **DO NOT DO THIS UNLESS INSTRUCTED**
- - To deploy to staging, run `cdk deploy StagingRenderLambda`. **DO NOT DO THIS UNLESS INSTRUCTED**
- - To deploy to the development stack, run `cd deploy DevRenderLambda`.
+ - To deploy to staging, run `cdk deploy DevRenderLambda`. **DO NOT DO THIS UNLESS INSTRUCTED**
+ - To deploy to the "hacking" stack, which is the stack that the devs should hack on, run `cdk deploy HackRenderLambda`.
 
 Examples can be found [here](https://github.com/aws-samples/aws-cdk-examples/tree/master/python)
 

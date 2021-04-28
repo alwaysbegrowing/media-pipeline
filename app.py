@@ -23,4 +23,6 @@ RenderLambdaStack(app, "DevRenderLambda",
                   env=cdk.Environment(account='576758376358', region='us-east-1')
 )
 
+RenderLambdaStack(app, "HackRenderLambda")
+
 app.synth()

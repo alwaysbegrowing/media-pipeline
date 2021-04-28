@@ -1,6 +1,12 @@
 
 # Welcome to your CDK Python project!
 
+# Deploying
+
+ - To deploy to production, run `cdk deploy RenderLambdaStack`. **DO NOT DO THIS UNLESS INSTRUCTED**
+ - To deploy to staging, run `cdk deploy StagingRenderLambda`. **DO NOT DO THIS UNLESS INSTRUCTED**
+ - To deploy to the development stack, run `cd deploy DevRenderLambda`.
+
 Examples can be found [here](https://github.com/aws-samples/aws-cdk-examples/tree/master/python)
 
 This is a blank project for Python development with CDK.

@@ -13,9 +13,10 @@ RenderLambdaStack(app, "RenderLambdaStack",
 )
 
 # staging. Will be deployed from GitHub Actions CI on `develop` branch
-RenderLambdaStack(app, "StagingRenderLambda", 
-                  env=cdk.Environment(account='576758376358', region='us-east-1')
-)
+# this will be added later when the scale makes sense to have it
+# RenderLambdaStack(app, "StagingRenderLambda", 
+#                   env=cdk.Environment(account='576758376358', region='us-east-1')
+# )
 
 # For development only
 RenderLambdaStack(app, "DevRenderLambda", 

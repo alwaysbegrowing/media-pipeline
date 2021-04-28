@@ -8,8 +8,8 @@ from lib import get_secret
 
 COMBINED_BUCKET_DNS = os.getenv('COMBINED_BUCKET_DNS')
 INDIVIDUAL_BUCKET_DNS = os.getenv('INDIVIDUAL_BUCKET_DNS')
-# FROM_EMAIL = os.getenv('FROM_EMAIL') # pro
-FROM_EMAIL = 'chandler@chand1012.dev'
+FROM_EMAIL = os.getenv('FROM_EMAIL') # prod
+# FROM_EMAIL = 'steven@pillar.gg' # dev
 MONGODB_CONNECT_STR = get_secret(os.getenv('MONGODB_URI_SECRET_ARN'))
 MONGODB_DBNAME = os.getenv('DB_NAME')
 TWITCH_CLIENT_ID = os.getenv('TWITCH_CLIENT_ID')

@@ -115,11 +115,10 @@ class RenderLambdaStack(cdk.Stack):
                                            'COMBINED_BUCKET_DNS': combined_clips.bucket_domain_name,
                                            'INDIVIDUAL_BUCKET_DNS': individual_clips.bucket_domain_name,
                                            'DB_NAME': 'pillar',
-                                           'FROM_EMAIL': 'noreply@pillar.gg',
+                                           'FROM_EMAIL': 'steven@pillar.gg',
                                            "TWITCH_CLIENT_ID": "2nakqoqdxka9v5oekyo6742bmnxt2o",
                                            "TWITCH_CLIENT_SECRET_ARN": "arn:aws:secretsmanager:us-east-1:576758376358:secret:TWITCH_CLIENT_SECRET-OyAp7V",
-                                           "MONGODB_URI_SECRET_ARN": "arn:aws:secretsmanager:us-east-1:576758376358:secret:MONGODB_FULL_URI-DBSAtt",
-                                           "SENDGRID_API_KEY_SECRET": "arn:aws:secretsmanager:us-east-1:576758376358:secret:SendgridAPIKey-jVl0ZG"
+                                           "MONGODB_URI_SECRET_ARN": "arn:aws:secretsmanager:us-east-1:576758376358:secret:MONGODB_FULL_URI-DBSAtt"
                                        },
                                        memory_size=256,
                                        timeout=cdk.Duration.seconds(60))

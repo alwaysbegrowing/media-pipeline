@@ -81,7 +81,7 @@
                                     "LanguageCodeControl": "FOLLOW_INPUT"
                                 }
                             ],
-                            "NameModifier": "**name_modifier**"
+                            "NameModifier": "-**name_modifier**"
                         }
                     ],
                     "OutputGroupSettings": {

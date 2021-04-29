@@ -4,6 +4,7 @@ import os
 from aws_cdk import core as cdk
 
 from stack.stack import RenderLambdaStack
+from stack.pipelines import RenderLambdaPipeline
 
 app = cdk.App()
 
@@ -24,5 +25,8 @@ RenderLambdaStack(app, "DevRenderLambda",
 )
 
 RenderLambdaStack(app, "HackRenderLambda")
+
+
+RenderLambdaPipeline(app, 'RenderLambdaPipeline')
 
 app.synth()

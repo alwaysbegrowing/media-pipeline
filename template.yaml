@@ -266,7 +266,7 @@ Resources:
     Properties:
       Code:
         S3Bucket:
-          Ref: AssetParameters285a749230d35aaf45cb1c1b62c15ebf0789552fa6173c0d2c34ba19427300c3S3Bucket04B881F4
+          Ref: AssetParameters488f2e9786a4cd8429588522fb3349a1854bc7d7d458c6f4d5e68dde2c6f67b0S3Bucket429C9E4B
         S3Key:
           Fn::Join:
             - ""
@@ -274,12 +274,12 @@ Resources:
                   - 0
                   - Fn::Split:
                       - "||"
-                      - Ref: AssetParameters285a749230d35aaf45cb1c1b62c15ebf0789552fa6173c0d2c34ba19427300c3S3VersionKeyFDE4F2DE
+                      - Ref: AssetParameters488f2e9786a4cd8429588522fb3349a1854bc7d7d458c6f4d5e68dde2c6f67b0S3VersionKeyCA8345F2
               - Fn::Select:
                   - 1
                   - Fn::Split:
                       - "||"
-                      - Ref: AssetParameters285a749230d35aaf45cb1c1b62c15ebf0789552fa6173c0d2c34ba19427300c3S3VersionKeyFDE4F2DE
+                      - Ref: AssetParameters488f2e9786a4cd8429588522fb3349a1854bc7d7d458c6f4d5e68dde2c6f67b0S3VersionKeyCA8345F2
       Role:
         Fn::GetAtt:
           - ClipQueuerServiceRole860A233D
@@ -299,7 +299,7 @@ Resources:
       - ClipQueuerServiceRole860A233D
     Metadata:
       aws:cdk:path: RenderLambdaStack/ClipQueuer/Resource
-      aws:asset:path: C:\Users\chizz\Documents\render-lambda\cdk.out\asset.285a749230d35aaf45cb1c1b62c15ebf0789552fa6173c0d2c34ba19427300c3
+      aws:asset:path: C:\Users\chizz\Documents\render-lambda\cdk.out\asset.488f2e9786a4cd8429588522fb3349a1854bc7d7d458c6f4d5e68dde2c6f67b0
       aws:asset:property: Code
   lambdaClipDownloaderServiceRole5EE7441F:
     Type: AWS::IAM::Role
@@ -541,7 +541,7 @@ Resources:
     Properties:
       Code:
         S3Bucket:
-          Ref: AssetParameters131cfabee2042cd97f4a9cfe1434b0e637608fee189ef88da607734085450975S3BucketBED59859
+          Ref: AssetParameters67b1de841992cb6b6f7f0873449676584e073681044cfa50e30a4ff0a787b74fS3Bucket4FE884B7
         S3Key:
           Fn::Join:
             - ""
@@ -549,12 +549,12 @@ Resources:
                   - 0
                   - Fn::Split:
                       - "||"
-                      - Ref: AssetParameters131cfabee2042cd97f4a9cfe1434b0e637608fee189ef88da607734085450975S3VersionKey7F64E2AF
+                      - Ref: AssetParameters67b1de841992cb6b6f7f0873449676584e073681044cfa50e30a4ff0a787b74fS3VersionKey6A506C0F
               - Fn::Select:
                   - 1
                   - Fn::Split:
                       - "||"
-                      - Ref: AssetParameters131cfabee2042cd97f4a9cfe1434b0e637608fee189ef88da607734085450975S3VersionKey7F64E2AF
+                      - Ref: AssetParameters67b1de841992cb6b6f7f0873449676584e073681044cfa50e30a4ff0a787b74fS3VersionKey6A506C0F
       Role:
         Fn::GetAtt:
           - FinalRendererServiceRoleFB621397
@@ -581,7 +581,7 @@ Resources:
       - FinalRendererServiceRoleFB621397
     Metadata:
       aws:cdk:path: RenderLambdaStack/FinalRenderer/Resource
-      aws:asset:path: C:\Users\chizz\Documents\render-lambda\cdk.out\asset.131cfabee2042cd97f4a9cfe1434b0e637608fee189ef88da607734085450975
+      aws:asset:path: C:\Users\chizz\Documents\render-lambda\cdk.out\asset.67b1de841992cb6b6f7f0873449676584e073681044cfa50e30a4ff0a787b74f
       aws:asset:property: Code
   NotifyServiceRole5B74FDA4:
     Type: AWS::IAM::Role
@@ -606,7 +606,7 @@ Resources:
     Properties:
       Code:
         S3Bucket:
-          Ref: AssetParameters4b249883b069550254d8c645f69f323ee1b2f6ff777fcda928e9e0fc6b76bc83S3BucketC166813F
+          Ref: AssetParametersb1706f93b75d393e63749124a0d943f510aa6739ca836726f7cfaf46526cd79bS3BucketBE93F8E0
         S3Key:
           Fn::Join:
             - ""
@@ -614,12 +614,12 @@ Resources:
                   - 0
                   - Fn::Split:
                       - "||"
-                      - Ref: AssetParameters4b249883b069550254d8c645f69f323ee1b2f6ff777fcda928e9e0fc6b76bc83S3VersionKey87308D06
+                      - Ref: AssetParametersb1706f93b75d393e63749124a0d943f510aa6739ca836726f7cfaf46526cd79bS3VersionKeyE4AA3EE1
               - Fn::Select:
                   - 1
                   - Fn::Split:
                       - "||"
-                      - Ref: AssetParameters4b249883b069550254d8c645f69f323ee1b2f6ff777fcda928e9e0fc6b76bc83S3VersionKey87308D06
+                      - Ref: AssetParametersb1706f93b75d393e63749124a0d943f510aa6739ca836726f7cfaf46526cd79bS3VersionKeyE4AA3EE1
       Role:
         Fn::GetAtt:
           - NotifyServiceRole5B74FDA4
@@ -635,11 +635,10 @@ Resources:
               - IndividualClips96D9129C
               - DomainName
           DB_NAME: pillar
-          FROM_EMAIL: noreply@pillar.gg
+          FROM_EMAIL: steven@pillar.gg
           TWITCH_CLIENT_ID: 2nakqoqdxka9v5oekyo6742bmnxt2o
           TWITCH_CLIENT_SECRET_ARN: arn:aws:secretsmanager:us-east-1:576758376358:secret:TWITCH_CLIENT_SECRET-OyAp7V
           MONGODB_URI_SECRET_ARN: arn:aws:secretsmanager:us-east-1:576758376358:secret:MONGODB_FULL_URI-DBSAtt
-          SENDGRID_API_KEY_SECRET: arn:aws:secretsmanager:us-east-1:576758376358:secret:SendgridAPIKey-jVl0ZG
       Handler: handler.handler
       MemorySize: 256
       Runtime: python3.8
@@ -648,7 +647,7 @@ Resources:
       - NotifyServiceRole5B74FDA4
     Metadata:
       aws:cdk:path: RenderLambdaStack/Notify/Resource
-      aws:asset:path: C:\Users\chizz\Documents\render-lambda\cdk.out\asset.4b249883b069550254d8c645f69f323ee1b2f6ff777fcda928e9e0fc6b76bc83
+      aws:asset:path: C:\Users\chizz\Documents\render-lambda\cdk.out\asset.b1706f93b75d393e63749124a0d943f510aa6739ca836726f7cfaf46526cd79b
       aws:asset:property: Code
   BucketNotificationsHandler050a0587b7544547bf325f094a3db834RoleB6FB88EC:
     Type: AWS::IAM::Role
@@ -848,7 +847,7 @@ Resources:
   CDKMetadata:
     Type: AWS::CDK::Metadata
     Properties:
-      Analytics: v2:deflate64:H4sIAAAAAAAACl1S2W7CMBD8Ft4dI4Qq0bdyCAmpqBS+wHUWcBMf8q5BUZR/r53EgPq0s0d2ZseZ8fc3Ppt8iDsWsqymrbQeeHsiISu2tgbJB0lsfTZfgVwgtkQEiu2LMhd2BLTBS0j9g/BCA4FPyWsjbikVKWs6llhanPN2FWQF/doRDeFgayWbZ3nI43dOXQTBXTS8jatp6dTIkuFSShsMsQ242jYaTL/8JUuSezkDyAJXAoHtga62TM0RvcrPuGNK6Ehv66Gc4lNvVloL/VMK3qYSeK0Q4+FpYBuMTCawDPJs4ZrIafihD48xnBciWY28d5yB9LmwsdEbv9PxjkePH8FZVGR905+koVRCWnMDTzzSfwcIwJDAnUcGLEhghfyzV7EzN1v9G+DtXjh2ClICRHeuVkVHon0EeyGvymQ7H3kXX2qQOP4gHRuums75gi8mv6hU4eMzKQ38OMQ/JfbHBIECAAA=
+      Analytics: v2:deflate64:H4sIAAAAAAAACl1Ry27CMBD8Fu6OAXHhWB6qhFRUCl/gOguYxA9516Aoyr/XTmJAPe3swzuz4zmfz+Z8NvkQDyxkWU1baT3w9kRCVmxjDZIPktjmbL4DuUBshQgU2xdlLuwIaIOXkPoH4YUGAp+S90bcUipS1nQssbS44O06yAr6tSMawsHWSjav8pDHd05dBMFDNLyNq2nl1MiS4UpKGwyxLbjaNhpMv/wtS5J7OQPIAtcCge2BrrZMzRG9y8+4Y0roSG/roZziS29WWgv9WwrephJ4rRDj4WngMxiZTGAZ5NnCNZHT8EMfnmO4KESyGnnvOAPpc2Frozd+p+Mdzx4/grOoyPqmP0lDqYS05g6eeKT/CRCAIYE7jwxYkMAK+VevYmfutvo3wNu9cOwUpASI7lytio5E+wj2Ql6VyXY+867r2HDGdMGXfDm5oVKFj/+iNPDjEP8AMjAo0XMCAAA=
     Metadata:
       aws:cdk:path: RenderLambdaStack/CDKMetadata/Default
     Condition: CDKMetadataAvailable
@@ -867,33 +866,33 @@ Outputs:
           - Ref: clipapiDeploymentStageprodECE8F136
           - /
 Parameters:
-  AssetParameters285a749230d35aaf45cb1c1b62c15ebf0789552fa6173c0d2c34ba19427300c3S3Bucket04B881F4:
+  AssetParameters488f2e9786a4cd8429588522fb3349a1854bc7d7d458c6f4d5e68dde2c6f67b0S3Bucket429C9E4B:
     Type: String
-    Description: S3 bucket for asset "285a749230d35aaf45cb1c1b62c15ebf0789552fa6173c0d2c34ba19427300c3"
-  AssetParameters285a749230d35aaf45cb1c1b62c15ebf0789552fa6173c0d2c34ba19427300c3S3VersionKeyFDE4F2DE:
+    Description: S3 bucket for asset "488f2e9786a4cd8429588522fb3349a1854bc7d7d458c6f4d5e68dde2c6f67b0"
+  AssetParameters488f2e9786a4cd8429588522fb3349a1854bc7d7d458c6f4d5e68dde2c6f67b0S3VersionKeyCA8345F2:
     Type: String
-    Description: S3 key for asset version "285a749230d35aaf45cb1c1b62c15ebf0789552fa6173c0d2c34ba19427300c3"
-  AssetParameters285a749230d35aaf45cb1c1b62c15ebf0789552fa6173c0d2c34ba19427300c3ArtifactHash4FEB3063:
+    Description: S3 key for asset version "488f2e9786a4cd8429588522fb3349a1854bc7d7d458c6f4d5e68dde2c6f67b0"
+  AssetParameters488f2e9786a4cd8429588522fb3349a1854bc7d7d458c6f4d5e68dde2c6f67b0ArtifactHash736CE354:
     Type: String
-    Description: Artifact hash for asset "285a749230d35aaf45cb1c1b62c15ebf0789552fa6173c0d2c34ba19427300c3"
-  AssetParameters131cfabee2042cd97f4a9cfe1434b0e637608fee189ef88da607734085450975S3BucketBED59859:
+    Description: Artifact hash for asset "488f2e9786a4cd8429588522fb3349a1854bc7d7d458c6f4d5e68dde2c6f67b0"
+  AssetParameters67b1de841992cb6b6f7f0873449676584e073681044cfa50e30a4ff0a787b74fS3Bucket4FE884B7:
     Type: String
-    Description: S3 bucket for asset "131cfabee2042cd97f4a9cfe1434b0e637608fee189ef88da607734085450975"
-  AssetParameters131cfabee2042cd97f4a9cfe1434b0e637608fee189ef88da607734085450975S3VersionKey7F64E2AF:
+    Description: S3 bucket for asset "67b1de841992cb6b6f7f0873449676584e073681044cfa50e30a4ff0a787b74f"
+  AssetParameters67b1de841992cb6b6f7f0873449676584e073681044cfa50e30a4ff0a787b74fS3VersionKey6A506C0F:
     Type: String
-    Description: S3 key for asset version "131cfabee2042cd97f4a9cfe1434b0e637608fee189ef88da607734085450975"
-  AssetParameters131cfabee2042cd97f4a9cfe1434b0e637608fee189ef88da607734085450975ArtifactHash26CA1B01:
+    Description: S3 key for asset version "67b1de841992cb6b6f7f0873449676584e073681044cfa50e30a4ff0a787b74f"
+  AssetParameters67b1de841992cb6b6f7f0873449676584e073681044cfa50e30a4ff0a787b74fArtifactHash19AEEB30:
     Type: String
-    Description: Artifact hash for asset "131cfabee2042cd97f4a9cfe1434b0e637608fee189ef88da607734085450975"
-  AssetParameters4b249883b069550254d8c645f69f323ee1b2f6ff777fcda928e9e0fc6b76bc83S3BucketC166813F:
+    Description: Artifact hash for asset "67b1de841992cb6b6f7f0873449676584e073681044cfa50e30a4ff0a787b74f"
+  AssetParametersb1706f93b75d393e63749124a0d943f510aa6739ca836726f7cfaf46526cd79bS3BucketBE93F8E0:
     Type: String
-    Description: S3 bucket for asset "4b249883b069550254d8c645f69f323ee1b2f6ff777fcda928e9e0fc6b76bc83"
-  AssetParameters4b249883b069550254d8c645f69f323ee1b2f6ff777fcda928e9e0fc6b76bc83S3VersionKey87308D06:
+    Description: S3 bucket for asset "b1706f93b75d393e63749124a0d943f510aa6739ca836726f7cfaf46526cd79b"
+  AssetParametersb1706f93b75d393e63749124a0d943f510aa6739ca836726f7cfaf46526cd79bS3VersionKeyE4AA3EE1:
     Type: String
-    Description: S3 key for asset version "4b249883b069550254d8c645f69f323ee1b2f6ff777fcda928e9e0fc6b76bc83"
-  AssetParameters4b249883b069550254d8c645f69f323ee1b2f6ff777fcda928e9e0fc6b76bc83ArtifactHash0B4D1565:
+    Description: S3 key for asset version "b1706f93b75d393e63749124a0d943f510aa6739ca836726f7cfaf46526cd79b"
+  AssetParametersb1706f93b75d393e63749124a0d943f510aa6739ca836726f7cfaf46526cd79bArtifactHash8D7451E4:
     Type: String
-    Description: Artifact hash for asset "4b249883b069550254d8c645f69f323ee1b2f6ff777fcda928e9e0fc6b76bc83"
+    Description: Artifact hash for asset "b1706f93b75d393e63749124a0d943f510aa6739ca836726f7cfaf46526cd79b"
 Conditions:
   CDKMetadataAvailable:
     Fn::Or:

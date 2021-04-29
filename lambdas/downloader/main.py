@@ -17,7 +17,7 @@ def handler(event, context):
         'end_time': 4300,
         'name': 'clip12',
         'position': 12,
-        'render': true
+        'render': True
     }
     '''
     os.chdir('/tmp')

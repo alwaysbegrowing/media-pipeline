@@ -14,53 +14,13 @@ MONGODB_CONNECT_STR = get_secret(os.getenv('MONGODB_URI_SECRET_ARN'))
 MONGODB_DBNAME = os.getenv('DB_NAME')
 TWITCH_CLIENT_ID = os.getenv('TWITCH_CLIENT_ID')
 TWITCH_CLIENT_SECRET = get_secret(os.getenv('TWITCH_CLIENT_SECRET_ARN'))
-SENDGRID_API_KEY = get_secret(os.getenv('SENDGRID_API_KEY_SECRET'))
 
 def handler(event, context):
     '''
-    Will take the event and transform it into a notification for SendGrid.
+    Will take the event and transform it into a notification for SES.
     Will take S3 notifications and manual invocation from "skip_render".
-    Here an an example of the S3 notification event invocation:
-    ```
-    {
-        "Records": [
-            {
-                "eventVersion": "2.1",
-                "eventSource": "aws:s3",
-                "awsRegion": "us-east-1",
-                "eventTime": "2021-04-13T16:37:25.401Z",
-                "eventName": "ObjectCreated:CompleteMultipartUpload",
-                "userIdentity": {
-                    "principalId": "AWS:AROAYMSL2M6TO7VFAQ4RM:EmeSession_dc715bb615de7955cb45c69a0419b4ed"
-                },
-                "requestParameters": {
-                    "sourceIPAddress": "172.31.80.10"
-                },
-                "responseElements": {
-                    "x-amz-request-id": "FGCCXK04H91BZ49G",
-                    "x-amz-id-2": "NAdivVjM6kA7U/aiZjQZFkpeHD9K11PxHd9IQF2nlqSPgvU0uacKom9WTs44V9cUfpAzh2Q7OYrPTnym/CrS8oQ+E3Q/6Wwe"
-                },
-                "s3": {
-                    "s3SchemaVersion": "1.0",
-                    "configurationId": "ZDljMjAyNGMtMjczZS00ODBhLTk1YjktMGQxMGIxNjY3Nzcx",
-                    "bucket": {
-                        "name": "renderlambdastack-combinedclips9275ae0a-exc6csik1g96",
-                        "ownerIdentity": {
-                            "principalId": "AK7KQUDP8IB11"
-                        },
-                        "arn": "arn:aws:s3:::renderlambdastack-combinedclips9275ae0a-exc6csik1g96"
-                    },
-                    "object": {
-                        "key": "964350897-clip1final-render.mp4",
-                        "size": 190323650,
-                        "eTag": "84893e6aec730542232ab9d8eee7a864-8",
-                        "sequencer": "006075C8C76192A3D0"
-                    }
-                }
-            }
-        ]
-    }
-    ```
+    An example of the S3 and the state machine invokers can be found in the 
+    `events` folder, as `notifyS3Event.json` and `notifyStepEvent.json` respectively.
     '''
 
     body = {}
@@ -204,9 +164,6 @@ def handler(event, context):
                 'Data': 'Your PillarGG Job is Ready!'
             },
             'Body': {
-            #     'Text': {
-            #         'Data': str(body),
-            #    }
                 'Html': {
                     'Data': html
                 }

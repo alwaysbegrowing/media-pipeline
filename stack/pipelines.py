@@ -24,7 +24,7 @@ class RenderLambdaPipeline(cdk.Stack):
             source_action=codepipeline_actions.GitHubSourceAction(
                 action_name='GitHubRenderLambda',
                 output=source_artifact,
-                oauth_token=cdk.SecretValue.secrets_manager('github-token'),
+                oauth_token=cdk.SecretValue.secrets_manager('github-token', json_field='chand1012'),
                 owner='pillargg',
                 repo='render-lambda'
             ),
@@ -40,7 +40,10 @@ class RenderLambdaPipeline(cdk.Stack):
                 synth_command="cdk synth",
                 source_artifact=source_artifact,
                 cloud_assembly_artifact=cloudAssemblyArtifact,
+                environment={'privileged': True}
                 # build_commands=['npm run build']
             )
         )
+
+        # need to add stages
                                         

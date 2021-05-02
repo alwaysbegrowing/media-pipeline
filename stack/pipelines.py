@@ -47,4 +47,4 @@ class RenderLambdaPipeline(cdk.Stack):
         )
 
         # need to add stages
-        pipeline.add_application_stage(PreprodStage(self, 'PreProd', env=cdk.Environment(account='576758376358', region='us-east-1')))
+        pipeline.add_application_stage(PreprodStage(self, 'PreProd'))

@@ -3,6 +3,7 @@ from aws_cdk import pipelines
 from aws_cdk import aws_codepipeline_actions as codepipeline_actions
 from aws_cdk import aws_codepipeline as codepipeline
 
+from stack.preprod_stage import PreprodStage
 # used this as reference
 # https://aws.amazon.com/blogs/developer/cdk-pipelines-continuous-delivery-for-aws-cdk-applications/
 class RenderLambdaPipeline(cdk.Stack):
@@ -46,4 +47,4 @@ class RenderLambdaPipeline(cdk.Stack):
         )
 
         # need to add stages
-                                        
+        pipeline.add_application_stage(PreprodStage(self, 'PreProd', env=cdk.Environment(account='576758376358', region='us-east-1')))

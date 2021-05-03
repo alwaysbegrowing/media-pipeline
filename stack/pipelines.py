@@ -27,7 +27,8 @@ class RenderLambdaPipeline(cdk.Stack):
                 output=source_artifact,
                 oauth_token=cdk.SecretValue.secrets_manager('github-token', json_field='chand1012'),
                 owner='pillargg',
-                repo='render-lambda'
+                repo='render-lambda',
+                branch='develop'
             ),
 
             # synthesises the code

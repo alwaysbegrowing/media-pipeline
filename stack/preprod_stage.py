@@ -1,6 +1,6 @@
 import typing
 
-from aws_cdk.core import CfnOutput, Construct, Stage, StageProps
+from aws_cdk.core import CfnOutput, Construct, Stage, Environment
 from stack.stack import RenderLambdaStack
 
 class PreprodStage(Stage):

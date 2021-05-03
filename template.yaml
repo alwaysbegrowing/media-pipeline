@@ -4,7 +4,7 @@ Resources:
     UpdateReplacePolicy: Retain
     DeletionPolicy: Retain
     Metadata:
-      aws:cdk:path: RenderLambdaStack/IndividualClips/Resource
+      aws:cdk:path: DevRenderLambda/IndividualClips/Resource
   IndividualClipsPolicyAD45D984:
     Type: AWS::S3::BucketPolicy
     Properties:
@@ -24,14 +24,14 @@ Resources:
                   - /*
         Version: "2012-10-17"
     Metadata:
-      aws:cdk:path: RenderLambdaStack/IndividualClips/Policy/Resource
+      aws:cdk:path: DevRenderLambda/IndividualClips/Policy/Resource
   clipapi7DD8DA51:
     Type: AWS::ApiGateway::RestApi
     Properties:
       Description: Service handles combining clips
       Name: Clips service
     Metadata:
-      aws:cdk:path: RenderLambdaStack/clip-api/Resource
+      aws:cdk:path: DevRenderLambda/clip-api/Resource
   clipapiCloudWatchRole1056C53A:
     Type: AWS::IAM::Role
     Properties:
@@ -49,7 +49,7 @@ Resources:
               - Ref: AWS::Partition
               - :iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs
     Metadata:
-      aws:cdk:path: RenderLambdaStack/clip-api/CloudWatchRole/Resource
+      aws:cdk:path: DevRenderLambda/clip-api/CloudWatchRole/Resource
   clipapiAccountFEFA9648:
     Type: AWS::ApiGateway::Account
     Properties:
@@ -60,8 +60,8 @@ Resources:
     DependsOn:
       - clipapi7DD8DA51
     Metadata:
-      aws:cdk:path: RenderLambdaStack/clip-api/Account
-  clipapiDeploymentE3524B3Dac4a44753c977d441ce0789e03f51303:
+      aws:cdk:path: DevRenderLambda/clip-api/Account
+  clipapiDeploymentE3524B3D18475bae997d8959d3fd208c26d4756a:
     Type: AWS::ApiGateway::Deployment
     Properties:
       RestApiId:
@@ -73,17 +73,17 @@ Resources:
       - clipapiclips86AE1BB1
       - clipapiOPTIONSDE740D60
     Metadata:
-      aws:cdk:path: RenderLambdaStack/clip-api/Deployment/Resource
+      aws:cdk:path: DevRenderLambda/clip-api/Deployment/Resource
   clipapiDeploymentStageprodECE8F136:
     Type: AWS::ApiGateway::Stage
     Properties:
       RestApiId:
         Ref: clipapi7DD8DA51
       DeploymentId:
-        Ref: clipapiDeploymentE3524B3Dac4a44753c977d441ce0789e03f51303
+        Ref: clipapiDeploymentE3524B3D18475bae997d8959d3fd208c26d4756a
       StageName: prod
     Metadata:
-      aws:cdk:path: RenderLambdaStack/clip-api/DeploymentStage.prod/Resource
+      aws:cdk:path: DevRenderLambda/clip-api/DeploymentStage.prod/Resource
   clipapiOPTIONSDE740D60:
     Type: AWS::ApiGateway::Method
     Properties:
@@ -112,7 +112,7 @@ Resources:
             method.response.header.Access-Control-Allow-Methods: true
           StatusCode: "204"
     Metadata:
-      aws:cdk:path: RenderLambdaStack/clip-api/Default/OPTIONS/Resource
+      aws:cdk:path: DevRenderLambda/clip-api/Default/OPTIONS/Resource
   clipapiclips86AE1BB1:
     Type: AWS::ApiGateway::Resource
     Properties:
@@ -124,7 +124,7 @@ Resources:
       RestApiId:
         Ref: clipapi7DD8DA51
     Metadata:
-      aws:cdk:path: RenderLambdaStack/clip-api/Default/clips/Resource
+      aws:cdk:path: DevRenderLambda/clip-api/Default/clips/Resource
   clipapiclipsOPTIONS8D8CC9B6:
     Type: AWS::ApiGateway::Method
     Properties:
@@ -151,8 +151,8 @@ Resources:
             method.response.header.Access-Control-Allow-Methods: true
           StatusCode: "204"
     Metadata:
-      aws:cdk:path: RenderLambdaStack/clip-api/Default/clips/OPTIONS/Resource
-  clipapiclipsPOSTApiPermissionRenderLambdaStackclipapi300D2810POSTclipsB1E17A5C:
+      aws:cdk:path: DevRenderLambda/clip-api/Default/clips/OPTIONS/Resource
+  clipapiclipsPOSTApiPermissionDevRenderLambdaclipapi6401A6FCPOSTclips6FC03DC0:
     Type: AWS::Lambda::Permission
     Properties:
       Action: lambda:InvokeFunction
@@ -166,18 +166,14 @@ Resources:
           - ""
           - - "arn:"
             - Ref: AWS::Partition
-            - ":execute-api:"
-            - Ref: AWS::Region
-            - ":"
-            - Ref: AWS::AccountId
-            - ":"
+            - ":execute-api:us-east-1:576758376358:"
             - Ref: clipapi7DD8DA51
             - /
             - Ref: clipapiDeploymentStageprodECE8F136
             - /POST/clips
     Metadata:
-      aws:cdk:path: RenderLambdaStack/clip-api/Default/clips/POST/ApiPermission.RenderLambdaStackclipapi300D2810.POST..clips
-  clipapiclipsPOSTApiPermissionTestRenderLambdaStackclipapi300D2810POSTclips3947204A:
+      aws:cdk:path: DevRenderLambda/clip-api/Default/clips/POST/ApiPermission.DevRenderLambdaclipapi6401A6FC.POST..clips
+  clipapiclipsPOSTApiPermissionTestDevRenderLambdaclipapi6401A6FCPOSTclips11A642EE:
     Type: AWS::Lambda::Permission
     Properties:
       Action: lambda:InvokeFunction
@@ -191,15 +187,11 @@ Resources:
           - ""
           - - "arn:"
             - Ref: AWS::Partition
-            - ":execute-api:"
-            - Ref: AWS::Region
-            - ":"
-            - Ref: AWS::AccountId
-            - ":"
+            - ":execute-api:us-east-1:576758376358:"
             - Ref: clipapi7DD8DA51
             - /test-invoke-stage/POST/clips
     Metadata:
-      aws:cdk:path: RenderLambdaStack/clip-api/Default/clips/POST/ApiPermission.Test.RenderLambdaStackclipapi300D2810.POST..clips
+      aws:cdk:path: DevRenderLambda/clip-api/Default/clips/POST/ApiPermission.Test.DevRenderLambdaclipapi6401A6FC.POST..clips
   clipapiclipsPOST3A3D8B87:
     Type: AWS::ApiGateway::Method
     Properties:
@@ -219,15 +211,13 @@ Resources:
             - ""
             - - "arn:"
               - Ref: AWS::Partition
-              - ":apigateway:"
-              - Ref: AWS::Region
-              - :lambda:path/2015-03-31/functions/
+              - :apigateway:us-east-1:lambda:path/2015-03-31/functions/
               - Fn::GetAtt:
                   - ClipQueuer58A9C9FE
                   - Arn
               - /invocations
     Metadata:
-      aws:cdk:path: RenderLambdaStack/clip-api/Default/clips/POST/Resource
+      aws:cdk:path: DevRenderLambda/clip-api/Default/clips/POST/Resource
   ClipQueuerServiceRole860A233D:
     Type: AWS::IAM::Role
     Properties:
@@ -245,7 +235,7 @@ Resources:
               - Ref: AWS::Partition
               - :iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
     Metadata:
-      aws:cdk:path: RenderLambdaStack/ClipQueuer/ServiceRole/Resource
+      aws:cdk:path: DevRenderLambda/ClipQueuer/ServiceRole/Resource
   ClipQueuerServiceRoleDefaultPolicy480FAA05:
     Type: AWS::IAM::Policy
     Properties:
@@ -260,26 +250,13 @@ Resources:
       Roles:
         - Ref: ClipQueuerServiceRole860A233D
     Metadata:
-      aws:cdk:path: RenderLambdaStack/ClipQueuer/ServiceRole/DefaultPolicy/Resource
+      aws:cdk:path: DevRenderLambda/ClipQueuer/ServiceRole/DefaultPolicy/Resource
   ClipQueuer58A9C9FE:
     Type: AWS::Lambda::Function
     Properties:
       Code:
-        S3Bucket:
-          Ref: AssetParameters488f2e9786a4cd8429588522fb3349a1854bc7d7d458c6f4d5e68dde2c6f67b0S3Bucket429C9E4B
-        S3Key:
-          Fn::Join:
-            - ""
-            - - Fn::Select:
-                  - 0
-                  - Fn::Split:
-                      - "||"
-                      - Ref: AssetParameters488f2e9786a4cd8429588522fb3349a1854bc7d7d458c6f4d5e68dde2c6f67b0S3VersionKeyCA8345F2
-              - Fn::Select:
-                  - 1
-                  - Fn::Split:
-                      - "||"
-                      - Ref: AssetParameters488f2e9786a4cd8429588522fb3349a1854bc7d7d458c6f4d5e68dde2c6f67b0S3VersionKeyCA8345F2
+        S3Bucket: cdk-hnb659fds-assets-576758376358-us-east-1
+        S3Key: 825ccb08e0b3e4c505e912951c60b4bdbadf2ca3eb40c50944f4e9b60f5bcaf5.zip
       Role:
         Fn::GetAtt:
           - ClipQueuerServiceRole860A233D
@@ -298,8 +275,8 @@ Resources:
       - ClipQueuerServiceRoleDefaultPolicy480FAA05
       - ClipQueuerServiceRole860A233D
     Metadata:
-      aws:cdk:path: RenderLambdaStack/ClipQueuer/Resource
-      aws:asset:path: C:\Users\chizz\Documents\render-lambda\cdk.out\asset.488f2e9786a4cd8429588522fb3349a1854bc7d7d458c6f4d5e68dde2c6f67b0
+      aws:cdk:path: DevRenderLambda/ClipQueuer/Resource
+      aws:asset:path: C:\Users\chizz\Documents\pillar\render-lambda\cdk.out\asset.825ccb08e0b3e4c505e912951c60b4bdbadf2ca3eb40c50944f4e9b60f5bcaf5
       aws:asset:property: Code
   lambdaClipDownloaderServiceRole5EE7441F:
     Type: AWS::IAM::Role
@@ -318,7 +295,7 @@ Resources:
               - Ref: AWS::Partition
               - :iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
     Metadata:
-      aws:cdk:path: RenderLambdaStack/lambdaClipDownloader/ServiceRole/Resource
+      aws:cdk:path: DevRenderLambda/lambdaClipDownloader/ServiceRole/Resource
   lambdaClipDownloaderServiceRoleDefaultPolicy042A889D:
     Type: AWS::IAM::Policy
     Properties:
@@ -344,20 +321,13 @@ Resources:
       Roles:
         - Ref: lambdaClipDownloaderServiceRole5EE7441F
     Metadata:
-      aws:cdk:path: RenderLambdaStack/lambdaClipDownloader/ServiceRole/DefaultPolicy/Resource
+      aws:cdk:path: DevRenderLambda/lambdaClipDownloader/ServiceRole/DefaultPolicy/Resource
   lambdaClipDownloaderBB9C8AED:
     Type: AWS::Lambda::Function
     Properties:
       Code:
         ImageUri:
-          Fn::Join:
-            - ""
-            - - Ref: AWS::AccountId
-              - .dkr.ecr.
-              - Ref: AWS::Region
-              - "."
-              - Ref: AWS::URLSuffix
-              - /aws-cdk/assets:cb71c34964d88485514922a7ce6a0f60ca84da7d1e678541c32c2ba913a6fb08
+          Fn::Sub: 576758376358.dkr.ecr.us-east-1.${AWS::URLSuffix}/cdk-hnb659fds-container-assets-576758376358-us-east-1:1f43dcb3898e4bbf1c092bdb39260e8b2655db5a1228fe1d4916425f2ef8637d
       Role:
         Fn::GetAtt:
           - lambdaClipDownloaderServiceRole5EE7441F
@@ -374,13 +344,13 @@ Resources:
       - lambdaClipDownloaderServiceRoleDefaultPolicy042A889D
       - lambdaClipDownloaderServiceRole5EE7441F
     Metadata:
-      aws:cdk:path: RenderLambdaStack/lambdaClipDownloader/Resource
+      aws:cdk:path: DevRenderLambda/lambdaClipDownloader/Resource
   CombinedClips9275AE0A:
     Type: AWS::S3::Bucket
     UpdateReplacePolicy: Retain
     DeletionPolicy: Retain
     Metadata:
-      aws:cdk:path: RenderLambdaStack/CombinedClips/Resource
+      aws:cdk:path: DevRenderLambda/CombinedClips/Resource
   CombinedClipsNotifications50F7C73D:
     Type: Custom::S3BucketNotifications
     Properties:
@@ -399,9 +369,9 @@ Resources:
                 - Notify29C25B1B
                 - Arn
     DependsOn:
-      - CombinedClipsAllowBucketNotificationsToRenderLambdaStackNotify5C6DB0C035CCA184
+      - CombinedClipsAllowBucketNotificationsToDevRenderLambdaNotify3521E3489AB60198
     Metadata:
-      aws:cdk:path: RenderLambdaStack/CombinedClips/Notifications/Resource
+      aws:cdk:path: DevRenderLambda/CombinedClips/Notifications/Resource
   CombinedClipsPolicyB8E2010E:
     Type: AWS::S3::BucketPolicy
     Properties:
@@ -421,8 +391,8 @@ Resources:
                   - /*
         Version: "2012-10-17"
     Metadata:
-      aws:cdk:path: RenderLambdaStack/CombinedClips/Policy/Resource
-  CombinedClipsAllowBucketNotificationsToRenderLambdaStackNotify5C6DB0C035CCA184:
+      aws:cdk:path: DevRenderLambda/CombinedClips/Policy/Resource
+  CombinedClipsAllowBucketNotificationsToDevRenderLambdaNotify3521E3489AB60198:
     Type: AWS::Lambda::Permission
     Properties:
       Action: lambda:InvokeFunction
@@ -431,18 +401,17 @@ Resources:
           - Notify29C25B1B
           - Arn
       Principal: s3.amazonaws.com
-      SourceAccount:
-        Ref: AWS::AccountId
+      SourceAccount: "576758376358"
       SourceArn:
         Fn::GetAtt:
           - CombinedClips9275AE0A
           - Arn
     Metadata:
-      aws:cdk:path: RenderLambdaStack/CombinedClips/AllowBucketNotificationsToRenderLambdaStackNotify5C6DB0C0
+      aws:cdk:path: DevRenderLambda/CombinedClips/AllowBucketNotificationsToDevRenderLambdaNotify3521E348
   ClipCombiner:
     Type: AWS::MediaConvert::Queue
     Metadata:
-      aws:cdk:path: RenderLambdaStack/ClipCombiner
+      aws:cdk:path: DevRenderLambda/ClipCombiner
   MediaConvert6D0D3F90:
     Type: AWS::IAM::Role
     Properties:
@@ -454,7 +423,7 @@ Resources:
               Service: mediaconvert.amazonaws.com
         Version: "2012-10-17"
     Metadata:
-      aws:cdk:path: RenderLambdaStack/MediaConvert/Resource
+      aws:cdk:path: DevRenderLambda/MediaConvert/Resource
   MediaConvertDefaultPolicyDA2B78D9:
     Type: AWS::IAM::Policy
     Properties:
@@ -495,7 +464,7 @@ Resources:
       Roles:
         - Ref: MediaConvert6D0D3F90
     Metadata:
-      aws:cdk:path: RenderLambdaStack/MediaConvert/DefaultPolicy/Resource
+      aws:cdk:path: DevRenderLambda/MediaConvert/DefaultPolicy/Resource
   FinalRendererServiceRoleFB621397:
     Type: AWS::IAM::Role
     Properties:
@@ -513,7 +482,7 @@ Resources:
               - Ref: AWS::Partition
               - :iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
     Metadata:
-      aws:cdk:path: RenderLambdaStack/FinalRenderer/ServiceRole/Resource
+      aws:cdk:path: DevRenderLambda/FinalRenderer/ServiceRole/Resource
   FinalRendererServiceRoleDefaultPolicyAA582D6E:
     Type: AWS::IAM::Policy
     Properties:
@@ -535,26 +504,13 @@ Resources:
       Roles:
         - Ref: FinalRendererServiceRoleFB621397
     Metadata:
-      aws:cdk:path: RenderLambdaStack/FinalRenderer/ServiceRole/DefaultPolicy/Resource
+      aws:cdk:path: DevRenderLambda/FinalRenderer/ServiceRole/DefaultPolicy/Resource
   FinalRendererCB91BC08:
     Type: AWS::Lambda::Function
     Properties:
       Code:
-        S3Bucket:
-          Ref: AssetParameters67b1de841992cb6b6f7f0873449676584e073681044cfa50e30a4ff0a787b74fS3Bucket4FE884B7
-        S3Key:
-          Fn::Join:
-            - ""
-            - - Fn::Select:
-                  - 0
-                  - Fn::Split:
-                      - "||"
-                      - Ref: AssetParameters67b1de841992cb6b6f7f0873449676584e073681044cfa50e30a4ff0a787b74fS3VersionKey6A506C0F
-              - Fn::Select:
-                  - 1
-                  - Fn::Split:
-                      - "||"
-                      - Ref: AssetParameters67b1de841992cb6b6f7f0873449676584e073681044cfa50e30a4ff0a787b74fS3VersionKey6A506C0F
+        S3Bucket: cdk-hnb659fds-assets-576758376358-us-east-1
+        S3Key: 67b1de841992cb6b6f7f0873449676584e073681044cfa50e30a4ff0a787b74f.zip
       Role:
         Fn::GetAtt:
           - FinalRendererServiceRoleFB621397
@@ -580,8 +536,8 @@ Resources:
       - FinalRendererServiceRoleDefaultPolicyAA582D6E
       - FinalRendererServiceRoleFB621397
     Metadata:
-      aws:cdk:path: RenderLambdaStack/FinalRenderer/Resource
-      aws:asset:path: C:\Users\chizz\Documents\render-lambda\cdk.out\asset.67b1de841992cb6b6f7f0873449676584e073681044cfa50e30a4ff0a787b74f
+      aws:cdk:path: DevRenderLambda/FinalRenderer/Resource
+      aws:asset:path: C:\Users\chizz\Documents\pillar\render-lambda\cdk.out\asset.67b1de841992cb6b6f7f0873449676584e073681044cfa50e30a4ff0a787b74f
       aws:asset:property: Code
   NotifyServiceRole5B74FDA4:
     Type: AWS::IAM::Role
@@ -600,26 +556,13 @@ Resources:
               - Ref: AWS::Partition
               - :iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
     Metadata:
-      aws:cdk:path: RenderLambdaStack/Notify/ServiceRole/Resource
+      aws:cdk:path: DevRenderLambda/Notify/ServiceRole/Resource
   Notify29C25B1B:
     Type: AWS::Lambda::Function
     Properties:
       Code:
-        S3Bucket:
-          Ref: AssetParametersb1706f93b75d393e63749124a0d943f510aa6739ca836726f7cfaf46526cd79bS3BucketBE93F8E0
-        S3Key:
-          Fn::Join:
-            - ""
-            - - Fn::Select:
-                  - 0
-                  - Fn::Split:
-                      - "||"
-                      - Ref: AssetParametersb1706f93b75d393e63749124a0d943f510aa6739ca836726f7cfaf46526cd79bS3VersionKeyE4AA3EE1
-              - Fn::Select:
-                  - 1
-                  - Fn::Split:
-                      - "||"
-                      - Ref: AssetParametersb1706f93b75d393e63749124a0d943f510aa6739ca836726f7cfaf46526cd79bS3VersionKeyE4AA3EE1
+        S3Bucket: cdk-hnb659fds-assets-576758376358-us-east-1
+        S3Key: 88f421a32d07695b7247a180eb609f6230ef93ed60962ea2f6000e7f51b7c3b6.zip
       Role:
         Fn::GetAtt:
           - NotifyServiceRole5B74FDA4
@@ -646,8 +589,8 @@ Resources:
     DependsOn:
       - NotifyServiceRole5B74FDA4
     Metadata:
-      aws:cdk:path: RenderLambdaStack/Notify/Resource
-      aws:asset:path: C:\Users\chizz\Documents\render-lambda\cdk.out\asset.b1706f93b75d393e63749124a0d943f510aa6739ca836726f7cfaf46526cd79b
+      aws:cdk:path: DevRenderLambda/Notify/Resource
+      aws:asset:path: C:\Users\chizz\Documents\pillar\render-lambda\cdk.out\asset.88f421a32d07695b7247a180eb609f6230ef93ed60962ea2f6000e7f51b7c3b6
       aws:asset:property: Code
   BucketNotificationsHandler050a0587b7544547bf325f094a3db834RoleB6FB88EC:
     Type: AWS::IAM::Role
@@ -666,7 +609,7 @@ Resources:
               - Ref: AWS::Partition
               - :iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
     Metadata:
-      aws:cdk:path: RenderLambdaStack/BucketNotificationsHandler050a0587b7544547bf325f094a3db834/Role/Resource
+      aws:cdk:path: DevRenderLambda/BucketNotificationsHandler050a0587b7544547bf325f094a3db834/Role/Resource
   BucketNotificationsHandler050a0587b7544547bf325f094a3db834RoleDefaultPolicy2CF63D36:
     Type: AWS::IAM::Policy
     Properties:
@@ -680,7 +623,7 @@ Resources:
       Roles:
         - Ref: BucketNotificationsHandler050a0587b7544547bf325f094a3db834RoleB6FB88EC
     Metadata:
-      aws:cdk:path: RenderLambdaStack/BucketNotificationsHandler050a0587b7544547bf325f094a3db834/Role/DefaultPolicy/Resource
+      aws:cdk:path: DevRenderLambda/BucketNotificationsHandler050a0587b7544547bf325f094a3db834/Role/DefaultPolicy/Resource
   BucketNotificationsHandler050a0587b7544547bf325f094a3db8347ECC3691:
     Type: AWS::Lambda::Function
     Properties:
@@ -763,7 +706,7 @@ Resources:
       - BucketNotificationsHandler050a0587b7544547bf325f094a3db834RoleDefaultPolicy2CF63D36
       - BucketNotificationsHandler050a0587b7544547bf325f094a3db834RoleB6FB88EC
     Metadata:
-      aws:cdk:path: RenderLambdaStack/BucketNotificationsHandler050a0587b7544547bf325f094a3db834/Resource
+      aws:cdk:path: DevRenderLambda/BucketNotificationsHandler050a0587b7544547bf325f094a3db834/Resource
   RendererRole4A084C2E:
     Type: AWS::IAM::Role
     Properties:
@@ -772,15 +715,10 @@ Resources:
           - Action: sts:AssumeRole
             Effect: Allow
             Principal:
-              Service:
-                Fn::Join:
-                  - ""
-                  - - states.
-                    - Ref: AWS::Region
-                    - .amazonaws.com
+              Service: states.us-east-1.amazonaws.com
         Version: "2012-10-17"
     Metadata:
-      aws:cdk:path: RenderLambdaStack/Renderer/Role/Resource
+      aws:cdk:path: DevRenderLambda/Renderer/Role/Resource
   RendererRoleDefaultPolicy74B3D00C:
     Type: AWS::IAM::Policy
     Properties:
@@ -809,7 +747,7 @@ Resources:
       Roles:
         - Ref: RendererRole4A084C2E
     Metadata:
-      aws:cdk:path: RenderLambdaStack/Renderer/Role/DefaultPolicy/Resource
+      aws:cdk:path: DevRenderLambda/Renderer/Role/DefaultPolicy/Resource
   RendererE9DA6252:
     Type: AWS::StepFunctions::StateMachine
     Properties:
@@ -843,14 +781,13 @@ Resources:
       - RendererRoleDefaultPolicy74B3D00C
       - RendererRole4A084C2E
     Metadata:
-      aws:cdk:path: RenderLambdaStack/Renderer/Resource
+      aws:cdk:path: DevRenderLambda/Renderer/Resource
   CDKMetadata:
     Type: AWS::CDK::Metadata
     Properties:
-      Analytics: v2:deflate64:H4sIAAAAAAAACl1Ry27CMBD8Fu6OAXHhWB6qhFRUCl/gOguYxA9516Aoyr/XTmJAPe3swzuz4zmfz+Z8NvkQDyxkWU1baT3w9kRCVmxjDZIPktjmbL4DuUBshQgU2xdlLuwIaIOXkPoH4YUGAp+S90bcUipS1nQssbS44O06yAr6tSMawsHWSjav8pDHd05dBMFDNLyNq2nl1MiS4UpKGwyxLbjaNhpMv/wtS5J7OQPIAtcCge2BrrZMzRG9y8+4Y0roSG/roZziS29WWgv9WwrephJ4rRDj4WngMxiZTGAZ5NnCNZHT8EMfnmO4KESyGnnvOAPpc2Frozd+p+Mdzx4/grOoyPqmP0lDqYS05g6eeKT/CRCAIYE7jwxYkMAK+VevYmfutvo3wNu9cOwUpASI7lytio5E+wj2Ql6VyXY+867r2HDGdMGXfDm5oVKFj/+iNPDjEP8AMjAo0XMCAAA=
+      Analytics: v2:deflate64:H4sIAAAAAAAACm1Ry27CMBD8lt6dBcSFY3moElJRKXyB6yzgJrEt7xoURfn32gmGquppZx+enR3PYDadwfTlVd6oUGU16ZT1CN2RparE2hpiHxSL9cl8BHaBxZIIObbP2pzFAckGrzD1M+5F4upoDt0qqAqHx3c0hr2ttWqf5TGP75w+S8abbKGLbLx0+k6c4VIpGwyLDbratg2agfxXloQNakaQNa0kodghX2yZmnf0v3otm7je1mM5xaferLSWzVcpoUsl9I0m0takgbdgFCecQZ4tXBt3GtgP4TFG80ImQwkGXwUqnwsbG73x2ybe8ejBAZ0lzda3w0kNlloqa67oGeL6z4ABBTG6030DFSypIngfVGzN1VZ/BqDbSSeOQSnE6M7F6uhItI9xJ9VFm2znI+/7XoxnTOawgMXLN2ld+PgvukE4jPEHWSOFcVkCAAA=
     Metadata:
-      aws:cdk:path: RenderLambdaStack/CDKMetadata/Default
-    Condition: CDKMetadataAvailable
+      aws:cdk:path: DevRenderLambda/CDKMetadata/Default
 Outputs:
   clipapiEndpoint3F130996:
     Value:
@@ -858,111 +795,25 @@ Outputs:
         - ""
         - - https://
           - Ref: clipapi7DD8DA51
-          - .execute-api.
-          - Ref: AWS::Region
-          - "."
+          - .execute-api.us-east-1.
           - Ref: AWS::URLSuffix
           - /
           - Ref: clipapiDeploymentStageprodECE8F136
           - /
 Parameters:
-  AssetParameters488f2e9786a4cd8429588522fb3349a1854bc7d7d458c6f4d5e68dde2c6f67b0S3Bucket429C9E4B:
-    Type: String
-    Description: S3 bucket for asset "488f2e9786a4cd8429588522fb3349a1854bc7d7d458c6f4d5e68dde2c6f67b0"
-  AssetParameters488f2e9786a4cd8429588522fb3349a1854bc7d7d458c6f4d5e68dde2c6f67b0S3VersionKeyCA8345F2:
-    Type: String
-    Description: S3 key for asset version "488f2e9786a4cd8429588522fb3349a1854bc7d7d458c6f4d5e68dde2c6f67b0"
-  AssetParameters488f2e9786a4cd8429588522fb3349a1854bc7d7d458c6f4d5e68dde2c6f67b0ArtifactHash736CE354:
-    Type: String
-    Description: Artifact hash for asset "488f2e9786a4cd8429588522fb3349a1854bc7d7d458c6f4d5e68dde2c6f67b0"
-  AssetParameters67b1de841992cb6b6f7f0873449676584e073681044cfa50e30a4ff0a787b74fS3Bucket4FE884B7:
-    Type: String
-    Description: S3 bucket for asset "67b1de841992cb6b6f7f0873449676584e073681044cfa50e30a4ff0a787b74f"
-  AssetParameters67b1de841992cb6b6f7f0873449676584e073681044cfa50e30a4ff0a787b74fS3VersionKey6A506C0F:
-    Type: String
-    Description: S3 key for asset version "67b1de841992cb6b6f7f0873449676584e073681044cfa50e30a4ff0a787b74f"
-  AssetParameters67b1de841992cb6b6f7f0873449676584e073681044cfa50e30a4ff0a787b74fArtifactHash19AEEB30:
-    Type: String
-    Description: Artifact hash for asset "67b1de841992cb6b6f7f0873449676584e073681044cfa50e30a4ff0a787b74f"
-  AssetParametersb1706f93b75d393e63749124a0d943f510aa6739ca836726f7cfaf46526cd79bS3BucketBE93F8E0:
-    Type: String
-    Description: S3 bucket for asset "b1706f93b75d393e63749124a0d943f510aa6739ca836726f7cfaf46526cd79b"
-  AssetParametersb1706f93b75d393e63749124a0d943f510aa6739ca836726f7cfaf46526cd79bS3VersionKeyE4AA3EE1:
-    Type: String
-    Description: S3 key for asset version "b1706f93b75d393e63749124a0d943f510aa6739ca836726f7cfaf46526cd79b"
-  AssetParametersb1706f93b75d393e63749124a0d943f510aa6739ca836726f7cfaf46526cd79bArtifactHash8D7451E4:
-    Type: String
-    Description: Artifact hash for asset "b1706f93b75d393e63749124a0d943f510aa6739ca836726f7cfaf46526cd79b"
-Conditions:
-  CDKMetadataAvailable:
-    Fn::Or:
-      - Fn::Or:
-          - Fn::Equals:
-              - Ref: AWS::Region
-              - af-south-1
-          - Fn::Equals:
-              - Ref: AWS::Region
-              - ap-east-1
-          - Fn::Equals:
-              - Ref: AWS::Region
-              - ap-northeast-1
-          - Fn::Equals:
-              - Ref: AWS::Region
-              - ap-northeast-2
-          - Fn::Equals:
-              - Ref: AWS::Region
-              - ap-south-1
-          - Fn::Equals:
-              - Ref: AWS::Region
-              - ap-southeast-1
-          - Fn::Equals:
-              - Ref: AWS::Region
-              - ap-southeast-2
-          - Fn::Equals:
-              - Ref: AWS::Region
-              - ca-central-1
-          - Fn::Equals:
-              - Ref: AWS::Region
-              - cn-north-1
-          - Fn::Equals:
-              - Ref: AWS::Region
-              - cn-northwest-1
-      - Fn::Or:
-          - Fn::Equals:
-              - Ref: AWS::Region
-              - eu-central-1
-          - Fn::Equals:
-              - Ref: AWS::Region
-              - eu-north-1
-          - Fn::Equals:
-              - Ref: AWS::Region
-              - eu-south-1
-          - Fn::Equals:
-              - Ref: AWS::Region
-              - eu-west-1
-          - Fn::Equals:
-              - Ref: AWS::Region
-              - eu-west-2
-          - Fn::Equals:
-              - Ref: AWS::Region
-              - eu-west-3
-          - Fn::Equals:
-              - Ref: AWS::Region
-              - me-south-1
-          - Fn::Equals:
-              - Ref: AWS::Region
-              - sa-east-1
-          - Fn::Equals:
-              - Ref: AWS::Region
-              - us-east-1
-          - Fn::Equals:
-              - Ref: AWS::Region
-              - us-east-2
-      - Fn::Or:
-          - Fn::Equals:
-              - Ref: AWS::Region
-              - us-west-1
-          - Fn::Equals:
-              - Ref: AWS::Region
-              - us-west-2
+  BootstrapVersion:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /cdk-bootstrap/hnb659fds/version
+    Description: Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store.
+Rules:
+  CheckBootstrapVersion:
+    Assertions:
+      - Assert:
+          Fn::Not:
+            - Fn::Contains:
+                - - "1"
+                  - "2"
+                  - "3"
+                - Ref: BootstrapVersion
+        AssertDescription: CDK bootstrap stack version 4 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI.
 

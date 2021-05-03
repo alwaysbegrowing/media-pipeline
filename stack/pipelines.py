@@ -37,10 +37,7 @@ class RenderLambdaPipeline(cdk.Stack):
             synth_action=pipelines.SimpleSynthAction(
                 install_commands=[
                     'npm i -g aws-cdk',
-                    'pip install -r ./requirements.txt',
-                    'aws s3 cp s3://pillar-codebuild-assets/docker-access.key .docker.key',
-                    'docker login -u chand1012 --password-stdin < .docker.key',
-                    'rm .docker.key'
+                    'pip install -r ./requirements.txt'
                 ],
                 synth_command="cdk synth",
                 source_artifact=source_artifact,

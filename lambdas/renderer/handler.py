@@ -36,13 +36,13 @@ def make_input(name):
     }
 
 
-def make_job(inputs):
+def make_job(inputs, name_modifier):
 
     job_str = ''
     with open('job.json') as f:
         job_str = f.read()
 
-    job_str = job_str.replace('**name_modifier**', 'final-render')
+    job_str = job_str.replace('**name_modifier**', name_modifier)
     job_str = job_str.replace('**bucketname**', OUT_BUCKET)
     job = json.loads(job_str)
     job["Settings"]["Inputs"] = inputs
@@ -77,13 +77,16 @@ def handler(event, context):
         if not payload is None:
             clips.append(payload)
 
+    clip = clips[0]
+    twitch_video_id = clip['name'].split('/')[0]
+
     sorted(clips, key=lambda clip: clip['position'])
 
     inputs = []
     for clip in clips:
         inputs.append(make_input(clip['name']))
 
-    job_object = make_job(inputs)
+    job_object = make_job(inputs, twitch_video_id)
 
     mediaconvert_client = boto3.client(  # need endpoint url to start mediaconvert
         'mediaconvert', endpoint_url='https://lxlxpswfb.mediaconvert.us-east-1.amazonaws.com')

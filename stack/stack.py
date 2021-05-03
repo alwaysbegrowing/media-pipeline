@@ -113,9 +113,15 @@ class RenderLambdaStack(cdk.Stack):
                                        runtime=lambda_.Runtime.PYTHON_3_8,
                                        environment={
                                            'COMBINED_BUCKET_DNS': combined_clips.bucket_domain_name,
-                                           'INDIVIDUAL_BUCKET_DNS': individual_clips.bucket_domain_name
+                                           'INDIVIDUAL_BUCKET_DNS': individual_clips.bucket_domain_name,
+                                           'DB_NAME': 'pillar',
+                                           'FROM_EMAIL': 'steven@pillar.gg',
+                                           "TWITCH_CLIENT_ID": "2nakqoqdxka9v5oekyo6742bmnxt2o",
+                                           "TWITCH_CLIENT_SECRET_ARN": "arn:aws:secretsmanager:us-east-1:576758376358:secret:TWITCH_CLIENT_SECRET-OyAp7V",
+                                           "MONGODB_URI_SECRET_ARN": "arn:aws:secretsmanager:us-east-1:576758376358:secret:MONGODB_FULL_URI-DBSAtt"
                                        },
-                                       memory_size=128)
+                                       memory_size=256,
+                                       timeout=cdk.Duration.seconds(60))
 
         item_added = s3_notify.LambdaDestination(notify_lambda)
 

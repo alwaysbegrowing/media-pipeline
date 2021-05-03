@@ -52,7 +52,7 @@ $ cdk synth
 ```
 
 To add additional dependencies, for example other CDK libraries, just add
-them to your `setup.py` file and rerun the `pip install -r requirements.txt`
+them to your `setup.py` file and run the `pipenv update -e .`
 command.
 
 ## Useful commands

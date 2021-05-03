@@ -1,58 +1,26 @@
-import json
 import os
-import re
 
 import boto3
+from dbclient import DBClient
+import twitch
+
+from lib import get_secret
 
 COMBINED_BUCKET_DNS = os.getenv('COMBINED_BUCKET_DNS')
 INDIVIDUAL_BUCKET_DNS = os.getenv('INDIVIDUAL_BUCKET_DNS')
-
+FROM_EMAIL = os.getenv('FROM_EMAIL') # prod
+# FROM_EMAIL = 'steven@pillar.gg' # dev
+MONGODB_CONNECT_STR = get_secret(os.getenv('MONGODB_URI_SECRET_ARN'))
+MONGODB_DBNAME = os.getenv('DB_NAME')
+TWITCH_CLIENT_ID = os.getenv('TWITCH_CLIENT_ID')
+TWITCH_CLIENT_SECRET = get_secret(os.getenv('TWITCH_CLIENT_SECRET_ARN'))
 
 def handler(event, context):
     '''
     Will take the event and transform it into a notification for SES.
     Will take S3 notifications and manual invocation from "skip_render".
-    Here an an example of the S3 notification event invocation:
-    ```
-    {
-        "Records": [
-            {
-                "eventVersion": "2.1",
-                "eventSource": "aws:s3",
-                "awsRegion": "us-east-1",
-                "eventTime": "2021-04-13T16:37:25.401Z",
-                "eventName": "ObjectCreated:CompleteMultipartUpload",
-                "userIdentity": {
-                    "principalId": "AWS:AROAYMSL2M6TO7VFAQ4RM:EmeSession_dc715bb615de7955cb45c69a0419b4ed"
-                },
-                "requestParameters": {
-                    "sourceIPAddress": "172.31.80.10"
-                },
-                "responseElements": {
-                    "x-amz-request-id": "FGCCXK04H91BZ49G",
-                    "x-amz-id-2": "NAdivVjM6kA7U/aiZjQZFkpeHD9K11PxHd9IQF2nlqSPgvU0uacKom9WTs44V9cUfpAzh2Q7OYrPTnym/CrS8oQ+E3Q/6Wwe"
-                },
-                "s3": {
-                    "s3SchemaVersion": "1.0",
-                    "configurationId": "ZDljMjAyNGMtMjczZS00ODBhLTk1YjktMGQxMGIxNjY3Nzcx",
-                    "bucket": {
-                        "name": "renderlambdastack-combinedclips9275ae0a-exc6csik1g96",
-                        "ownerIdentity": {
-                            "principalId": "AK7KQUDP8IB11"
-                        },
-                        "arn": "arn:aws:s3:::renderlambdastack-combinedclips9275ae0a-exc6csik1g96"
-                    },
-                    "object": {
-                        "key": "964350897-clip1final-render.mp4",
-                        "size": 190323650,
-                        "eTag": "84893e6aec730542232ab9d8eee7a864-8",
-                        "sequencer": "006075C8C76192A3D0"
-                    }
-                }
-            }
-        ]
-    }
-    ```
+    An example of the S3 and the state machine invokers can be found in the 
+    `events` folder, as `notifyS3Event.json` and `notifyStepEvent.json` respectively.
     '''
 
     body = {}
@@ -93,7 +61,6 @@ def handler(event, context):
             'video': None
         }
 
-    print(body)
     '''
     Here is what the Body will look like:
     ```
@@ -131,6 +98,77 @@ def handler(event, context):
     ```
     '''
 
-    # do notification stuffs
+    dbclient = DBClient(db_name=MONGODB_DBNAME, connect_str=MONGODB_CONNECT_STR)
+    helix = twitch.Helix(TWITCH_CLIENT_ID, TWITCH_CLIENT_SECRET)
+
+    twitch_video_id = ''
+
+    video_links = ''
+
+    if body['clips'] != []:
+        print('Input is clips.')
+        clip = body['clips'][0]
+        name = clip['name'].split('-')[0]
+        twitch_video_id = name.split('/')[0]
+        video_links = '<table><caption> Your Pillar Videos </caption>'
+        for clip in body['clips']:
+            video_links += f'<tr><td>{clip["name"]}</td><td>{clip["url"]}</td></tr>'
+        video_links += '</table>'
+
+    else:
+        print('Input is video.')
+        name = body['video'].split('/')[-1]
+        twitch_video_id = name.split('-')[0]
+        video_links = body['video']
+
+    video = helix.video(twitch_video_id)
+
+    user_twitch_id = video.user.id
+
+    user = dbclient.get_user_by_twitch_id(user_twitch_id)
+
+    email = user['email']
+    name = user['display_name']
+    
+    email_client = boto3.client('ses')
+
+    html = f'''
+    <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+  <meta http-equiv="Content-Type" content="text/html charset=UTF-8" />
+  <head>
+  </head>
+  <body>
+  {name}, <br>
+  Here are your Pillar videos: <br>
+  
+  {video_links}
+  <br>
+  Thanks for using Pillar! <br>
+  If you'd like to leave feedback, let us know how your experience was (any bugs, questions, etc? ) by replying to the 2 minute survey we will send you soon. <br>
+  See you soon, <br>
+  The Pillar Team
+      </body>
+</html>
+    '''
+
+    email_client.send_email(
+        Source=FROM_EMAIL,
+        Destination={
+            'BccAddresses': [
+                email,
+            ]
+        },
+        Message={
+            'Subject': {
+                'Data': 'Your PillarGG Job is Ready!'
+            },
+            'Body': {
+                'Html': {
+                    'Data': html
+                }
+            }
+        }
+    )
 
     return {}

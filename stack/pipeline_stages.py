@@ -9,4 +9,9 @@ class PreprodStage(Stage):
 
         service = RenderLambdaStack(self, 'RenderStack')
 
-        
+class ProdStage(Stage):
+    def __init__(self, scope: Construct, id: str) -> None:
+        super().__init__(scope, id)
+
+        service = RenderLambdaStack(self, 'RenderLambdaStack')
+    

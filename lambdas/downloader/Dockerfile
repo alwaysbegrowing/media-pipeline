@@ -1,4 +1,4 @@
-FROM python:3
+FROM public.ecr.aws/bitnami/python:3.8-prod
 
 RUN apt-get update && apt-get install --no-install-recommends -y build-essential ffmpeg \
     && apt-get clean && \

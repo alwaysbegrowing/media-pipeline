@@ -13,7 +13,6 @@ RenderLambdaStack(app, "RenderLambdaStack",
                   env=cdk.Environment(account='576758376358', region='us-east-1')
 )
 
-
 # staging pipeline
 RenderLambdaPipeline(app, 'RenderLambdaPipeline')
 

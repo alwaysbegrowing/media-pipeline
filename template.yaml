@@ -256,7 +256,7 @@ Resources:
     Properties:
       Code:
         S3Bucket: cdk-hnb659fds-assets-576758376358-us-east-1
-        S3Key: 487c0736230e97bbbd7302382a207ff31958998f217f42a850fd25ee291ca3b9.zip
+        S3Key: 8881bceff40dde3030ae474092ac56f90e8e9728304d7a9d40b0d3d13be3e380.zip
       Role:
         Fn::GetAtt:
           - ClipQueuerServiceRole860A233D
@@ -270,13 +270,13 @@ Resources:
       Handler: handler.handler
       MemorySize: 256
       Runtime: python3.8
-      Timeout: 15
+      Timeout: 60
     DependsOn:
       - ClipQueuerServiceRoleDefaultPolicy480FAA05
       - ClipQueuerServiceRole860A233D
     Metadata:
       aws:cdk:path: RenderLambdaStack/ClipQueuer/Resource
-      aws:asset:path: C:\Users\chizz\Documents\pillar\render-lambda\cdk.out\asset.487c0736230e97bbbd7302382a207ff31958998f217f42a850fd25ee291ca3b9
+      aws:asset:path: C:\Users\chizz\Documents\pillar\render-lambda\cdk.out\asset.8881bceff40dde3030ae474092ac56f90e8e9728304d7a9d40b0d3d13be3e380
       aws:asset:property: Code
   lambdaClipDownloaderServiceRole5EE7441F:
     Type: AWS::IAM::Role
@@ -327,7 +327,7 @@ Resources:
     Properties:
       Code:
         ImageUri:
-          Fn::Sub: 576758376358.dkr.ecr.us-east-1.${AWS::URLSuffix}/cdk-hnb659fds-container-assets-576758376358-us-east-1:1f43dcb3898e4bbf1c092bdb39260e8b2655db5a1228fe1d4916425f2ef8637d
+          Fn::Sub: 576758376358.dkr.ecr.us-east-1.${AWS::URLSuffix}/cdk-hnb659fds-container-assets-576758376358-us-east-1:e8c19bd05daf96c544ed91d53a4186ee9c22f6b4e55e38f61f42ea83143f3da0
       Role:
         Fn::GetAtt:
           - lambdaClipDownloaderServiceRole5EE7441F
@@ -785,7 +785,7 @@ Resources:
   CDKMetadata:
     Type: AWS::CDK::Metadata
     Properties:
-      Analytics: v2:deflate64:H4sIAAAAAAAACm1Ry27CMBD8lt6dBcSFY3moElJRKXyB6yzgJrEt7xoURfn32gmGquppZx+enR3PYDadwfTlVd6oUGU16ZT1CN2RparE2hpiHxSL9cl8BHaBxZIIObbP2pzFAckGrzD1M+5F4upoDt0qqAqHx3c0hr2ttWqf5TGP75w+S8abbKGLbLx0+k6c4VIpGwyLDbratg2agfxXloQNakaQNa0kodghX2yZmnf0v3otm7je1mM5xaferLSWzVcpoUsl9I0m0takgbdgFCecQZ4tXBt3GtgP4TFG80ImQwkGXwUqnwsbG73x2ybe8ejBAZ0lzda3w0kNlloqa67oGeL6z4ABBTG6030DFSypIngfVGzN1VZ/BqDbSSeOQSnE6M7F6uhItI9xJ9VFm2znI+/7XoxnTOawgMXLN2ld+PgvukE4jPEHWSOFcVkCAAA=
+      Analytics: v2:deflate64:H4sIAAAAAAAACm1Ry27CMBD8Fu6OAXFpb+WhSkhFpfAF7mYLbhLb8q5BUZR/r51gqKqedvbh2dnxXM5nczmbvKgrFVBW0w6sR9kdWUEl1tYQ+wAs1l/mPbALLJZEyLF90uYkDkg2eMDUz7gXiaujhexWASocHt/QGPa21tA+ymMe3zl9UoxX1cousvHS6RtxhksAGwyLDbratg2agfxXloQNakaQNa0Uodghn22Zmjf0v3qtmrje1mM5xYferLRWzWepZJdK6BtNpK1JA6/BACecQZ4tXBt3Grkfwn2MFoVKhpIcfBUIPhc2Nnrjt028496TB3SWNFvfDic1WGoF1lzQs4zrPwIGFMTovm4bqGBFFcm3QcXWXGz1Z0B2O+XEMQAgRnfOVkdHon2MOwVnbbKd97zvezGeMV3IJ/k8+SatCx//RTcoD2P8AZlHrWZZAgAA
     Metadata:
       aws:cdk:path: RenderLambdaStack/CDKMetadata/Default
 Outputs:

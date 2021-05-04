@@ -6,6 +6,8 @@ from datetime import datetime
 import boto3
 import streamlink
 
+from verify import verify_request_body
+
 STATE_MACHINE_ARN = os.getenv('STEPFUNCTION_ARN')
 
 
@@ -30,6 +32,19 @@ def handler(event, context):
     from the request to create the state machine appended to the state input
     '''
     job = json.loads(event.get('body'))
+
+    err_msg = verify_request_body(job)
+
+    if err_msg != '':
+        return {
+            'statusCode': 400,
+            'headers': {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Methods': 'OPTIONS,POST,GET',
+                'Access-Control-Allow-Origin': '*',
+            },
+            'body': json.dumps({'error': err_msg})
+        }
 
     dry_run = job.get('dry_run')
 

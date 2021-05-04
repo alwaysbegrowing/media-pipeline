@@ -38,7 +38,7 @@ class RenderLambdaStack(cdk.Stack):
                                      environment={
                                          'BUCKET': individual_clips.bucket_name
                                      },
-                                     timeout=cdk.Duration.seconds(15),
+                                     timeout=cdk.Duration.seconds(60),
                                      memory_size=256)
 
         addToQueue = apigateway.LambdaIntegration(clip_queuer,

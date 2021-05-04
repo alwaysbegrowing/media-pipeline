@@ -31,3 +31,14 @@ jobs:
 
       - name: Install CDK
         run: sudo npm i -g aws-cdk
+
+      - name: Install Dependencies
+        run: pip3 install -r requirements.txt
+
+      - name: CDK Synth
+        run: cdk synth --no-staging > template.yaml
+
+      - name: Notification Lambda
+        run: |
+          sam local invoke Notify29C25B1B --env-vars env.json --event ./events/notifyS3Event.json
+          sam local invoke Notify29C25B1B --env-vars env.json --event ./events/notifyStepEvent.json

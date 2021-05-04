@@ -71,6 +71,7 @@ def handler(event, context):
     All of that data will be concatenated into the `clips` variable that will be used to construct the
     MediaConvert Object.
     '''
+    dry_run = event[0]['Payload'].get('dry_run')
     clips = []
     for item in event:
         payload = item.get('Payload')
@@ -90,6 +91,8 @@ def handler(event, context):
 
     mediaconvert_client = boto3.client(  # need endpoint url to start mediaconvert
         'mediaconvert', endpoint_url='https://lxlxpswfb.mediaconvert.us-east-1.amazonaws.com')
-    mediaconvert_client.create_job(**job_object)
+    if not dry_run:
+        mediaconvert_client.create_job(**job_object)
+        return {}
 
-    return {}
+    return job_object

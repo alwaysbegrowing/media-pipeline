@@ -38,10 +38,14 @@ jobs:
       - name: CDK Synth
         run: cdk synth RenderLambdaStack --no-staging > template.yaml
 
+      - name: Clip Queuer Lambda
+        run: sam local invoke ClipQueuer58A9C9FE --env-vars env.json --event ./events/clipQueuerEvent.json
+
+      - name: Render Lambda
+        run: sam local invoke FinalRendererCB91BC08 --env-vars env.json --event ./events/renderEvent.json
+
       - name: Notification Lambda
         run: |
           sam local invoke Notify29C25B1B --env-vars env.json --event ./events/notifyS3Event.json
           sam local invoke Notify29C25B1B --env-vars env.json --event ./events/notifyStepEvent.json
         
-      - name: Render Lambda
-        run: sam local invoke FinalRendererCB91BC08 --env-vars env.json --event ./events/renderEvent.json

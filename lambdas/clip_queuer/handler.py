@@ -20,15 +20,18 @@ def handler(event, context):
     '''
     Here is what the request body will look like.
     {
-        'clips': [{'start_time': 55, 'end_time': 90, 'name': 'clip12', 'position': 12}],
+        'clips': [{'startTime': 55, 'endTime': 90}],
         'videoId': '964350897',
-        'render': true
+        'render': true,
+        'dry_run': false
     }
 
     The response body will be the state input body with the response
     from the request to create the state machine appended to the state input
     '''
     job = json.loads(event.get('body'))
+
+    dry_run = job.get('dry_run')
 
     prefix = 'https://twitch.tv/videos/'
 
@@ -70,13 +73,14 @@ def handler(event, context):
         state['clips'].append(data)
         position += 1
 
-    resp = sfn.start_execution(
-        stateMachineArn=STATE_MACHINE_ARN,
-        name=str(uuid.uuid4()),
-        input=json.dumps(state, default=json_handler)
-    )
+    if not dry_run:
+        resp = sfn.start_execution(
+            stateMachineArn=STATE_MACHINE_ARN,
+            name=str(uuid.uuid4()),
+            input=json.dumps(state, default=json_handler)
+        )
 
-    state.update(resp)
+        state.update(resp)
 
     return {
         'statusCode': 200,

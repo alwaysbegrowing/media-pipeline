@@ -42,3 +42,6 @@ jobs:
         run: |
           sam local invoke Notify29C25B1B --env-vars env.json --event ./events/notifyS3Event.json
           sam local invoke Notify29C25B1B --env-vars env.json --event ./events/notifyStepEvent.json
+        
+      - name: Render Lambda
+        run: sam local invoke FinalRendererCB91BC08 --env-vars env.json --event ./events/renderEvent.json

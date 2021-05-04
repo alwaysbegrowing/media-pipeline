@@ -13,5 +13,5 @@ RUN pip install awslambdaric
 RUN apt-get purge build-essential -y && apt-get autoremove -y
 
 WORKDIR /
-ENTRYPOINT [ "/usr/local/bin/python", "-m", "awslambdaric" ]
+ENTRYPOINT [ "python", "-m", "awslambdaric" ]
 CMD ["main.handler"]

@@ -13,5 +13,5 @@ class ProdStage(Stage):
     def __init__(self, scope: Construct, id: str) -> None:
         super().__init__(scope, id)
 
-        service = RenderLambdaStack(self, 'RenderLambdaStack')
+        service = RenderLambdaStack(self, 'ProdRenderLambdaStack')
     

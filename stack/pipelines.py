@@ -59,9 +59,9 @@ class ProdRenderLambdaPipeline(cdk.Stack):
         source_artifact = codepipeline.Artifact()
         cloudAssemblyArtifact = codepipeline.Artifact()
 
-        pipeline = pipelines.CdkPipeline(self, 'RenderLambdaPipeline',
+        pipeline = pipelines.CdkPipeline(self, 'ProdRenderLambdaPipeline',
             # pipeline name and assembly
-            pipeline_name='RenderLambdaPipeline',
+            pipeline_name='ProdRenderLambdaPipeline',
             cloud_assembly_artifact=cloudAssemblyArtifact,
 
             # where the code comes from

@@ -1,2 +1,2 @@
 @echo off
-cdk synth DevRenderLambda --no-staging > template.yaml
+cdk synth RenderLambdaStack --no-staging > template.yaml

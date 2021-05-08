@@ -32,6 +32,7 @@ setuptools.setup(
         "aws-cdk.aws-stepfunctions-tasks==1.101.0",
         "aws-cdk.pipelines==1.101.0",
         "aws-cdk.aws-codepipeline-actions==1.101.0",
+        "aws_cdk.aws_ses==1.101.0",
         "boto3==1.17.39"
     ],
 

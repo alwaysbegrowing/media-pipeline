@@ -1,17 +1,20 @@
-FROM public.ecr.aws/bitnami/python:3.8-prod
+FROM public.ecr.aws/lts/ubuntu:20.04
 
-RUN apt-get update && apt-get install --no-install-recommends -y build-essential ffmpeg \
+ENV TZ="America/New_York"
+ARG DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install --no-install-recommends -y python3-pip python3 build-essential ffmpeg \
     && apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
 COPY . .
 
-RUN pip install --upgrade pip
-RUN pip install -r requirements.txt
-RUN pip install awslambdaric
+RUN pip3 install --upgrade pip
+RUN pip3 install -r requirements.txt
+RUN pip3 install awslambdaric
 
 RUN apt-get purge build-essential -y && apt-get autoremove -y
 
 WORKDIR /
-ENTRYPOINT [ "python", "-m", "awslambdaric" ]
+ENTRYPOINT [ "python3", "-m", "awslambdaric" ]
 CMD ["main.handler"]

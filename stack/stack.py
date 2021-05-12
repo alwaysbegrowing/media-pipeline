@@ -133,6 +133,9 @@ class RenderLambdaStack(cdk.Stack):
         mongodb_full_uri.grant_read(notify_lambda)
         twitch_client_secret.grant_read(notify_lambda)
 
+        ses_email_role = iam.PolicyStatement(actions=['ses:SendEmail', 'ses:SendRawEmail'], resources=['*'])
+        notify_lambda.add_to_role_policy(ses_email_role)
+
         item_added = s3_notify.LambdaDestination(notify_lambda)
 
         combined_clips.add_event_notification(

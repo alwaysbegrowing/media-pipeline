@@ -34,6 +34,7 @@ class RenderLambdaStack(cdk.Stack):
                                       description="Service handles combining clips", default_cors_preflight_options=cors)
 
         clip_queuer = PythonFunction(self, 'ClipQueuer',
+                                     description='REST API Clip Processor Lambda',
                                      handler='handler',
                                      index='handler.py',
                                      entry=os.path.join(
@@ -53,16 +54,12 @@ class RenderLambdaStack(cdk.Stack):
         clips_endpoint.add_method("POST", addToQueue)
 
         # Clip Downloader Container
-
-        image_name = "lambdaClipDownloader"
-        # image_version = "latest"
-
         ecr_image = lambda_.EcrImageCode.from_asset_image(
             directory=os.path.join(os.getcwd(), 'lambdas', 'downloader')
         )
 
         downloader = lambda_.Function(self,
-                                      id=image_name,
+                                      'ClipDownloader',
                                       description="Containerized Clip Downloader",
                                       code=ecr_image,
                                       handler=lambda_.Handler.FROM_IMAGE,
@@ -93,6 +90,7 @@ class RenderLambdaStack(cdk.Stack):
             actions=["iam:PassRole", "iam:ListRoles"], resources=["arn:aws:iam::*:role/*"])
 
         renderer = PythonFunction(self, 'FinalRenderer',
+                                  description='MediaConvert job queuer',
                                   handler='handler',
                                   index='handler.py',
                                   initial_policy=[
@@ -113,6 +111,7 @@ class RenderLambdaStack(cdk.Stack):
 
         # notification lambda
         notify_lambda = PythonFunction(self, 'Notify',
+                                       description='SES Email Lambda',
                                        handler='handler',
                                        index='handler.py',
                                        entry=os.path.join(

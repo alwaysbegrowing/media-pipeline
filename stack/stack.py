@@ -80,7 +80,8 @@ class RenderLambdaStack(cdk.Stack):
 
         combined_clips = s3.Bucket(scope=self,
                                    id="CombinedClips",
-                                   public_read_access=True)
+                                   public_read_access=True, 
+                                   lifecycle_rules=[lifetime])
 
         mediaconvert_queue = mediaconvert.CfnQueue(self, id="ClipCombiner")
 

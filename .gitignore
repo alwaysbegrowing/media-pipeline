@@ -12,5 +12,3 @@ env
 cdk.out
 .vscode
 local_test.py
-
-docker-access.key

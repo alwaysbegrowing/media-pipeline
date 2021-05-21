@@ -1,4 +1,5 @@
 import os
+import json
 
 import boto3
 from dbclient import DBClient
@@ -61,6 +62,8 @@ def handler(event, context):
             'video': None
         }
 
+    print(json.dumps({'body': body}))
+
     '''
     Here is what the Body will look like:
     ```
@@ -106,7 +109,7 @@ def handler(event, context):
     video_links = ''
 
     if body['clips'] != []:
-        print('Input is clips.')
+        print(json.dumps({'input': 'clips'}))
         clip = body['clips'][0]
         name = clip['name'].split('-')[0]
         twitch_video_id = name.split('/')[0]
@@ -116,7 +119,7 @@ def handler(event, context):
         video_links += '</table>'
 
     else:
-        print('Input is video.')
+        print(json.dumps({'input': 'video'}))
         name = body['video'].split('-')[-1]
         twitch_video_id = name.split('.')[0]
         video_links = body['video']
@@ -124,6 +127,8 @@ def handler(event, context):
     video = helix.video(twitch_video_id)
 
     user_twitch_id = video.user.id
+
+    print(json.dumps({'videoId': twitch_video_id, 'userId': user_twitch_id}))
 
     user = dbclient.get_user_by_twitch_id(user_twitch_id)
 
@@ -151,6 +156,8 @@ def handler(event, context):
       </body>
 </html>
     '''
+
+    print(json.dumps({'email_body': html}))
 
     email_client.send_email(
         Source=FROM_EMAIL,

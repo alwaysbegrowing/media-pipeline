@@ -27,6 +27,8 @@ def handler(event, context):
     start_time = str(job.get('start_time'))
     duration = str(job.get('end_time') - job.get('start_time'))
 
+    print(json.dumps({'download_name': download_name, 'job': job}))
+
     render = job.get('render', True)
     stream_manifest_url = job.get('stream_manifest_url')
 
@@ -37,12 +39,14 @@ def handler(event, context):
     ffmpeg_outputs = {
         download_name:  ['-t', duration, '-y', '-c', 'copy']
     }
-    #ffmpeg_global_options = ['-hide_banner', '-loglevel', 'panic']
 
     ffmpeg_global_options = []
 
     ffmpeg = FFmpeg(inputs=ffmpeg_inputs, outputs=ffmpeg_outputs,
                     global_options=ffmpeg_global_options)
+
+    print(json.dumps({'ffmpeg_command': ffmpeg.cmd}))
+
     ffmpeg.run()
 
     s3_name = download_name.replace('-', '/', 1)
@@ -50,8 +54,13 @@ def handler(event, context):
     s3 = boto3.client('s3')
     s3.upload_file(download_name, BUCKET, s3_name)
     os.remove(download_name)
-    return {
+
+    body = {
         'position': job.get('position'),
         'name': s3_name,
-        'render': render
+        'render': render,
+        'bucket': BUCKET
     }
+
+    print(json.dumps(body))
+    return body

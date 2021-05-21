@@ -38,6 +38,8 @@ def handler(event, context):
 
     clips = job.get('clips')
 
+    print(json.dumps({'videoId': video_id, 'original_url': original_url, 'clips': clips}))
+
     streams = streamlink.streams(original_url)
     best_stream = streams.get('best').url
     render = job.get('render', True)
@@ -69,6 +71,8 @@ def handler(event, context):
         }
         state['clips'].append(data)
         position += 1
+
+    print(json.dumps(state, default=json_handler))
 
     resp = sfn.start_execution(
         stateMachineArn=STATE_MACHINE_ARN,

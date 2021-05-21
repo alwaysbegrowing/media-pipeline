@@ -14,7 +14,7 @@ RenderLambdaStack(app, "RenderLambdaStack",
 )
 
 # staging pipeline
-RenderLambdaPipeline(app, 'RenderLambdaPipeline')
+RenderLambdaPipeline(app, 'PreProdRenderLambdaPipeline')
 
 # production pipeline
 ProdRenderLambdaPipeline(app, 'ProdRenderLambdaPipeline')

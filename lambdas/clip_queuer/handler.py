@@ -31,11 +31,13 @@ def handler(event, context):
     The response body will be the state input body with the response
     from the request to create the state machine appended to the state input
     '''
-    job = json.loads(event.get('body'))
+    job = json.loads(event.get('body')) # event['body'] is a string
 
     err_msg = verify_request_body(job)
 
     if err_msg != '':
+        body = json.dumps({'error': err_msg})
+        print(body)
         return {
             'statusCode': 400,
             'headers': {
@@ -43,7 +45,7 @@ def handler(event, context):
                 'Access-Control-Allow-Methods': 'OPTIONS,POST,GET',
                 'Access-Control-Allow-Origin': '*',
             },
-            'body': json.dumps({'error': err_msg})
+            'body': body
         }
 
     dry_run = job.get('dry_run')

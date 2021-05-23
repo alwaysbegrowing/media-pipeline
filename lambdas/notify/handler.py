@@ -24,6 +24,45 @@ def handler(event, context):
     `events` folder, as `notifyS3Event.json` and `notifyStepEvent.json` respectively.
     '''
 
+    print(json.dumps({'event': event}, default=str))
+
+    '''
+    Here is what the Body will look like:
+    ```
+    {
+        'clips': [],
+        'video': 'https://renderlambdastack-combinedclips9275ae0a-exc6csik1g96.s3.amazonaws.com/964350897-clip1final-render.mp4',
+        'render': true
+    }
+    ```
+    If "clips" is empty and "render" is true, "video" should be populated with a link to the final rendered video.   
+
+    If "clips" is populated and "render" is true, "video" should be null. Here is another example:
+    ```
+    {
+        "clips": [
+            {
+                "position": 1,
+                "name": "964350897-clip1.mkv",
+                "url": "https://renderlambdastack-individualclips96d9129c-1m2rui0jjqo4r.s3.amazonaws.com/964350897-clip1.mkv"
+            },
+            {
+                "position": 2,
+                "name": "964350897-clip2.mkv",
+                "url": "https://renderlambdastack-individualclips96d9129c-1m2rui0jjqo4r.s3.amazonaws.com/964350897-clip2.mkv"
+            },
+            {
+                "position": 3,
+                "name": "964350897-clip3.mkv",
+                "url": "https://renderlambdastack-individualclips96d9129c-1m2rui0jjqo4r.s3.amazonaws.com/964350897-clip3.mkv"
+            }
+        ],
+        "render": false,
+        "video": null
+    } 
+    ```
+    '''
+
     body = {}
 
     # if triggered by S3
@@ -63,43 +102,6 @@ def handler(event, context):
         }
 
     print(json.dumps({'body': body}))
-
-    '''
-    Here is what the Body will look like:
-    ```
-    {
-        'clips': [],
-        'video': 'https://renderlambdastack-combinedclips9275ae0a-exc6csik1g96.s3.amazonaws.com/964350897-clip1final-render.mp4',
-        'render': true
-    }
-    ```
-    If "clips" is empty and "render" is true, "video" should be populated with a link to the final rendered video.   
-
-    If "clips" is populated and "render" is true, "video" should be null. Here is another example:
-    ```
-    {
-        "clips": [
-            {
-                "position": 1,
-                "name": "964350897-clip1.mkv",
-                "url": "https://renderlambdastack-individualclips96d9129c-1m2rui0jjqo4r.s3.amazonaws.com/964350897-clip1.mkv"
-            },
-            {
-                "position": 2,
-                "name": "964350897-clip2.mkv",
-                "url": "https://renderlambdastack-individualclips96d9129c-1m2rui0jjqo4r.s3.amazonaws.com/964350897-clip2.mkv"
-            },
-            {
-                "position": 3,
-                "name": "964350897-clip3.mkv",
-                "url": "https://renderlambdastack-individualclips96d9129c-1m2rui0jjqo4r.s3.amazonaws.com/964350897-clip3.mkv"
-            }
-        ],
-        "render": false,
-        "video": null
-    } 
-    ```
-    '''
 
     dbclient = DBClient(db_name=MONGODB_DBNAME, connect_str=MONGODB_CONNECT_STR)
     helix = twitch.Helix(TWITCH_CLIENT_ID, TWITCH_CLIENT_SECRET)

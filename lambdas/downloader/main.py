@@ -1,6 +1,5 @@
 import os
 import json
-import uuid
 
 import boto3
 from ffmpy import FFmpeg
@@ -27,7 +26,9 @@ def handler(event, context):
     start_time = str(job.get('start_time'))
     duration = str(job.get('end_time') - job.get('start_time'))
 
-    print(json.dumps({'download_name': download_name, 'job': job}))
+    # local_download_name is the name that FFMPEG will use to temporarily process the object
+    # "job" is the JSON used to process the download
+    print(json.dumps({'local_download_name': download_name, 'job': job}))
 
     render = job.get('render', True)
     stream_manifest_url = job.get('stream_manifest_url')
@@ -45,7 +46,7 @@ def handler(event, context):
     ffmpeg = FFmpeg(inputs=ffmpeg_inputs, outputs=ffmpeg_outputs,
                     global_options=ffmpeg_global_options)
 
-    print(json.dumps({'ffmpeg_command': ffmpeg.cmd}))
+    print(json.dumps({'ffmpeg_command_used': ffmpeg.cmd}))
 
     ffmpeg.run()
 
@@ -62,5 +63,7 @@ def handler(event, context):
         'bucket': BUCKET
     }
 
-    print(json.dumps(body))
+    # this part of the object that will be passed either to the 
+    # renderer or passed to the notification lambda
+    print(json.dumps({'render_job_metadata':body}))
     return body

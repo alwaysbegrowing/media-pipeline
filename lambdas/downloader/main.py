@@ -47,11 +47,51 @@ def handler(event, context):
 
     s3_name = download_name.replace('-', '/', 1)
 
-    s3 = boto3.client('s3')
-    s3.upload_file(download_name, BUCKET, s3_name)
+    if not job.get('dry_run'):
+        print('Dry run, skipping upload.')
+        s3 = boto3.client('s3')
+        s3.upload_file(download_name, BUCKET, s3_name)
+
     os.remove(download_name)
     return {
         'position': job.get('position'),
         'name': s3_name,
         'render': render
     }
+
+if __name__=='__main__':
+    import twitch
+    import streamlink
+    # This is for testing.
+    # Will run if you build Dockerfile.test
+    event = {}
+    context = {}
+
+    print('Generating test data...')
+    
+    with open('downloadEvent.json') as f:
+        event = json.loads(f.read())
+
+    helix = twitch.Helix(os.getenv('TWITCH_CLIENT_ID'), os.getenv('TWITCH_CLIENT_SECRET'))
+
+    video_id = None
+
+    while video_id is None:
+        top_game = helix.top_game()
+        videos = top_game.videos()
+        # videos is a generator.
+        # this is the easiest way to get a video id
+        for video in videos:
+            video_id = video.id
+            break
+
+    video_url = f'https://twitch.tv/videos/{video_id}'
+
+    streams = streamlink.streams(video_url)
+    event['stream_manifest_url'] = streams.get('best').url
+    event['name'] = f'{video_id}-test'
+    event['dry_run'] = True
+
+    print('Done. Test data:')
+    print(json.dumps(event, indent=4))
+    handler(event, context)

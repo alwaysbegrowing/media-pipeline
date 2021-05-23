@@ -117,8 +117,8 @@ def handler(event, context):
 
     else:
         print('Input is video.')
-        name = body['video'].split('/')[-1]
-        twitch_video_id = name.split('-')[0]
+        name = body['video'].split('-')[-1]
+        twitch_video_id = name.split('.')[0]
         video_links = body['video']
 
     video = helix.video(twitch_video_id)
@@ -161,7 +161,7 @@ def handler(event, context):
         },
         Message={
             'Subject': {
-                'Data': 'Your PillarGG Job is Ready!'
+                'Data': 'Pillar - Your video is ready (link inside)'
             },
             'Body': {
                 'Html': {

@@ -18,7 +18,7 @@ class RenderLambdaPipeline(cdk.Stack):
 
         pipeline = pipelines.CdkPipeline(self, 'RenderLambdaPipeline',
             # pipeline name and assembly
-            pipeline_name='RenderLambdaPipeline',
+            pipeline_name='PreProdRenderLambdaPipeline',
             cloud_assembly_artifact=cloudAssemblyArtifact,
 
             # where the code comes from

@@ -48,4 +48,11 @@ jobs:
         run: |
           sam local invoke Notify29C25B1B --env-vars env.json --event ./events/notifyS3Event.json
           sam local invoke Notify29C25B1B --env-vars env.json --event ./events/notifyStepEvent.json
+
+      - name: Downloader Lambda
+        run: |
+          cd lambdas/downloader
+          docker build -f Dockerfile.test -t downloader-test .
+          docker run -e TWITCH_CLIENT_ID=${{ secrets.TWITCH_CLIENT_ID }} -e TWITCH_CLIENT_SECRET=${{ secrets.TWITCH_CLIENT_SECRET }} downloader-test
+          cd ../..
         

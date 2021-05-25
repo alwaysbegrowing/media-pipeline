@@ -7,11 +7,11 @@ class PreprodStage(Stage):
     def __init__(self, scope: Construct, id: str) -> None:
         super().__init__(scope, id)
 
-        service = RenderLambdaStack(self, 'PreProdRenderStack')
+        service = RenderLambdaStack(self, 'PreProdRenderStack', 'preprod')
 
 class ProdStage(Stage):
     def __init__(self, scope: Construct, id: str) -> None:
         super().__init__(scope, id)
 
-        service = RenderLambdaStack(self, 'ProdRenderStack')
+        service = RenderLambdaStack(self, 'ProdRenderStack', 'pillar')
     

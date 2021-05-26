@@ -71,6 +71,10 @@ def handler(event, context):
     All of that data will be concatenated into the `clips` variable that will be used to construct the
     MediaConvert Object.
     '''
+
+    # print event object
+    print(json.dumps(event, default=str))
+
     clips = []
     for item in event:
         payload = item.get('Payload')
@@ -80,13 +84,21 @@ def handler(event, context):
     clip = clips[0]
     twitch_video_id = clip['name'].split('/')[0]
 
+    print(json.dumps({'videoId': twitch_video_id}))
+
     sorted(clips, key=lambda clip: clip['position'])
+
+    # print clips being sent to MediaConvert
+    print(json.dumps({'sorted_clips': clips}))
 
     inputs = []
     for clip in clips:
         inputs.append(make_input(clip['name']))
 
     job_object = make_job(inputs, twitch_video_id)
+
+    # print job that gets sent to MediaConvert
+    print(json.dumps({'job_object': job_object}))
 
     mediaconvert_client = boto3.client(  # need endpoint url to start mediaconvert
         'mediaconvert', endpoint_url='https://lxlxpswfb.mediaconvert.us-east-1.amazonaws.com')

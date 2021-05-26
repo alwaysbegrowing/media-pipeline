@@ -30,6 +30,9 @@ def handler(event, context):
     '''
     job = json.loads(event.get('body'))
 
+    # print event body
+    print(json.dumps(event, default=str))
+
     prefix = 'https://twitch.tv/videos/'
 
     video_id = job.get('videoId')
@@ -37,6 +40,9 @@ def handler(event, context):
     original_url = f'{prefix}{video_id}'
 
     clips = job.get('clips')
+
+    # outputs the video ID, the original stream URL, and the list of clips that the user wishes to process
+    print(json.dumps({'videoId': video_id, 'original_stream_url': original_url, 'clips': clips}))
 
     streams = streamlink.streams(original_url)
     best_stream = streams.get('best').url
@@ -69,6 +75,10 @@ def handler(event, context):
         }
         state['clips'].append(data)
         position += 1
+
+    # the state is what gets sent initially to the 
+    # state machine
+    print(json.dumps(state, default=json_handler))
 
     resp = sfn.start_execution(
         stateMachineArn=STATE_MACHINE_ARN,

@@ -11,6 +11,7 @@ RUN apt-get update && apt-get install --no-install-recommends -y python3-pip pyt
     rm -rf /var/lib/apt/lists/*
 
 COPY . .
+RUN chmod +x ./entrypoint.sh
 
 RUN pip3 install --upgrade pip
 RUN pip3 install -r requirements.txt
@@ -19,5 +20,5 @@ RUN pip3 install awslambdaric
 RUN apt-get purge build-essential -y && apt-get autoremove -y
 
 WORKDIR /
-ENTRYPOINT [ "entrypoint.sh" ]
+ENTRYPOINT [ "./entrypoint.sh" ]
 CMD ["main.handler"]

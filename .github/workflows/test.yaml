@@ -52,7 +52,8 @@ jobs:
       - name: Downloader Lambda
         run: |
           cd lambdas/downloader
-          docker build -f Dockerfile.test -t downloader-test .
-          docker run -e TWITCH_CLIENT_ID=${{ secrets.TWITCH_CLIENT_ID }} -e TWITCH_CLIENT_SECRET=${{ secrets.TWITCH_CLIENT_SECRET }} downloader-test
-          cd ../..
+          docker build -t downloader-test .
+          docker run -d -p 9000:8080 --env-file docker.env downloader-test
+          export data=$(jq '.' -c ../../events/downloadEvent.json)
+          curl -XPOST "http://localhost:9000/2015-03-31/functions/function/invocations" -d $data
         

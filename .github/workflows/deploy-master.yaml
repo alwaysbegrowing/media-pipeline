@@ -1,6 +1,9 @@
 name: Deploy
 
-on: [push]
+on: 
+  push:
+    branches:
+      - master
 
 jobs:
   deploy:
@@ -39,4 +42,4 @@ jobs:
         run: cdk synth
 
       - name: CDK Deploy
-        run: cdk deploy RenderLambdaStack --require-approval="never"
+        run: cdk deploy Prod-Render --require-approval="never"

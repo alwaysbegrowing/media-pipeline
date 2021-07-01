@@ -41,19 +41,15 @@ jobs:
       - name: Clip Queuer Lambda
         run: |
           sam local invoke ClipQueuer58A9C9FE --env-vars env.json --event ./events/clipQueuerEvent.json
-          echo $?
 
       - name: Render Lambda
         run: |
           sam local invoke FinalRendererCB91BC08 --env-vars env.json --event ./events/renderEvent.json
-          echo $?
 
       - name: Notification Lambda
         run: |
           sam local invoke Notify29C25B1B --env-vars env.json --event ./events/notifyS3Event.json
-          echo $?
           sam local invoke Notify29C25B1B --env-vars env.json --event ./events/notifyStepEvent.json
-          echo $?
 
       - name: Downloader Lambda
         run: |

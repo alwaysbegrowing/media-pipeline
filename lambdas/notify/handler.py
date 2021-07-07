@@ -171,4 +171,4 @@ def handler(event, context):
         }
     )
 
-    return {}
+    return {'statusCode': 200}

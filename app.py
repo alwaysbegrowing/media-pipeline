@@ -13,10 +13,18 @@ RenderLambdaStack(app, "RenderLambdaStack",
                   env=cdk.Environment(account='576758376358', region='us-east-1')
 )
 
-# staging pipeline
-RenderLambdaPipeline(app, 'PreProdRenderLambdaPipeline')
+RenderLambdaStack(app, "Prod-Render",
+                  env=cdk.Environment(account='576758376358', region='us-east-1')
+)
 
-# production pipeline
-ProdRenderLambdaPipeline(app, 'ProdRenderLambdaPipeline')
+RenderLambdaStack(app, "QA-Render",
+                  env=cdk.Environment(account='576758376358', region='us-east-1')
+)
+
+# # staging pipeline
+# RenderLambdaPipeline(app, 'PreProdRenderLambdaPipeline')
+
+# # production pipeline
+# ProdRenderLambdaPipeline(app, 'ProdRenderLambdaPipeline')
 
 app.synth()

@@ -161,7 +161,7 @@ def handler(event, context):
         },
         Message={
             'Subject': {
-                'Data': 'Your PillarGG Job is Ready!'
+                'Data': 'Pillar - Your video is ready (link inside)'
             },
             'Body': {
                 'Html': {
@@ -171,4 +171,4 @@ def handler(event, context):
         }
     )
 
-    return {}
+    return {'statusCode': 200}

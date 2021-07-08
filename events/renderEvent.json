@@ -4,7 +4,8 @@
       "Payload": {
         "position": 1,
         "name": "964746682/60-90.mkv",
-        "render": true
+        "render": true,
+        "dry_run": true
       },
       "SdkHttpMetadata": {
         "AllHttpHeaders": {

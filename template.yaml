@@ -256,7 +256,7 @@ Resources:
     Properties:
       Code:
         S3Bucket: cdk-hnb659fds-assets-576758376358-us-east-1
-        S3Key: 825ccb08e0b3e4c505e912951c60b4bdbadf2ca3eb40c50944f4e9b60f5bcaf5.zip
+        S3Key: 8881bceff40dde3030ae474092ac56f90e8e9728304d7a9d40b0d3d13be3e380.zip
       Role:
         Fn::GetAtt:
           - ClipQueuerServiceRole860A233D
@@ -270,13 +270,13 @@ Resources:
       Handler: handler.handler
       MemorySize: 256
       Runtime: python3.8
-      Timeout: 15
+      Timeout: 60
     DependsOn:
       - ClipQueuerServiceRoleDefaultPolicy480FAA05
       - ClipQueuerServiceRole860A233D
     Metadata:
       aws:cdk:path: RenderLambdaStack/ClipQueuer/Resource
-      aws:asset:path: C:\Users\chizz\Documents\pillar\render-lambda\cdk.out\asset.825ccb08e0b3e4c505e912951c60b4bdbadf2ca3eb40c50944f4e9b60f5bcaf5
+      aws:asset:path: C:\Users\chizz\Documents\pillar\render-lambda\cdk.out\asset.8881bceff40dde3030ae474092ac56f90e8e9728304d7a9d40b0d3d13be3e380
       aws:asset:property: Code
   lambdaClipDownloaderServiceRole5EE7441F:
     Type: AWS::IAM::Role
@@ -327,7 +327,7 @@ Resources:
     Properties:
       Code:
         ImageUri:
-          Fn::Sub: 576758376358.dkr.ecr.us-east-1.${AWS::URLSuffix}/cdk-hnb659fds-container-assets-576758376358-us-east-1:e1f85e90d76462379571333530d886b1abbe7cc4cc9dc4d692c4e16fa9c3450b
+          Fn::Sub: 576758376358.dkr.ecr.us-east-1.${AWS::URLSuffix}/cdk-hnb659fds-container-assets-576758376358-us-east-1:e8c19bd05daf96c544ed91d53a4186ee9c22f6b4e55e38f61f42ea83143f3da0
       Role:
         Fn::GetAtt:
           - lambdaClipDownloaderServiceRole5EE7441F
@@ -510,7 +510,7 @@ Resources:
     Properties:
       Code:
         S3Bucket: cdk-hnb659fds-assets-576758376358-us-east-1
-        S3Key: 67b1de841992cb6b6f7f0873449676584e073681044cfa50e30a4ff0a787b74f.zip
+        S3Key: 70a4bda8f9d32f00650a99f98021783f8488a7e2a0e65534812e0cb86e31cb13.zip
       Role:
         Fn::GetAtt:
           - FinalRendererServiceRoleFB621397
@@ -537,7 +537,7 @@ Resources:
       - FinalRendererServiceRoleFB621397
     Metadata:
       aws:cdk:path: RenderLambdaStack/FinalRenderer/Resource
-      aws:asset:path: C:\Users\chizz\Documents\pillar\render-lambda\cdk.out\asset.67b1de841992cb6b6f7f0873449676584e073681044cfa50e30a4ff0a787b74f
+      aws:asset:path: C:\Users\chizz\Documents\pillar\render-lambda\cdk.out\asset.70a4bda8f9d32f00650a99f98021783f8488a7e2a0e65534812e0cb86e31cb13
       aws:asset:property: Code
   NotifyServiceRole5B74FDA4:
     Type: AWS::IAM::Role
@@ -612,7 +612,7 @@ Resources:
       - NotifyServiceRole5B74FDA4
     Metadata:
       aws:cdk:path: RenderLambdaStack/Notify/Resource
-      aws:asset:path: C:\Users\chizz\Documents\pillar\render-lambda\cdk.out\asset.5da4790326895cbdac314306d7a4b63e7c2597a26769521607e9889756650bff
+      aws:asset:path: C:\Users\chizz\Documents\pillar\render-lambda\cdk.out\asset.88f421a32d07695b7247a180eb609f6230ef93ed60962ea2f6000e7f51b7c3b6
       aws:asset:property: Code
   BucketNotificationsHandler050a0587b7544547bf325f094a3db834RoleB6FB88EC:
     Type: AWS::IAM::Role

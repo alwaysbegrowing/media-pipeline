@@ -22,9 +22,12 @@ class RenderLambdaStack(cdk.Stack):
     def __init__(self, scope: cdk.Construct, construct_id: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
+        lifetime = s3.LifecycleRule(expiration=cdk.Duration.days(30), enabled=True, id='30-Day-Retention')
+
         individual_clips = s3.Bucket(scope=self,
                                      id="IndividualClips",
-                                     public_read_access=True)
+                                     public_read_access=True, 
+                                     lifecycle_rules=[lifetime])
 
         cors = apigateway.CorsOptions(allow_origins=apigateway.Cors.ALL_ORIGINS)
 
@@ -43,7 +46,7 @@ class RenderLambdaStack(cdk.Stack):
                                      environment={
                                          'BUCKET': individual_clips.bucket_name
                                      },
-                                     timeout=cdk.Duration.seconds(15),
+                                     timeout=cdk.Duration.seconds(60),
                                      memory_size=256)
 
         addToQueue = apigateway.LambdaIntegration(clip_queuer,
@@ -74,7 +77,8 @@ class RenderLambdaStack(cdk.Stack):
 
         combined_clips = s3.Bucket(scope=self,
                                    id="CombinedClips",
-                                   public_read_access=True)
+                                   public_read_access=True, 
+                                   lifecycle_rules=[lifetime])
 
         mediaconvert_queue = mediaconvert.CfnQueue(self, id="ClipCombiner")
 

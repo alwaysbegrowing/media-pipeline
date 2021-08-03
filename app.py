@@ -17,7 +17,7 @@ RenderLambdaStack(app, "Prod-Render", 'pillar',
                   env=cdk.Environment(account='576758376358', region='us-east-1')
 )
 
-RenderLambdaStack(app, "QA-Render", 'preprod',
+RenderLambdaStack(app, "QA-Render", 'staging',
                   env=cdk.Environment(account='576758376358', region='us-east-1')
 )
 

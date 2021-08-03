@@ -1,6 +1,12 @@
 Resources:
   IndividualClips96D9129C:
     Type: AWS::S3::Bucket
+    Properties:
+      LifecycleConfiguration:
+        Rules:
+          - ExpirationInDays: 30
+            Id: 30-Day-Retention
+            Status: Enabled
     UpdateReplacePolicy: Retain
     DeletionPolicy: Retain
     Metadata:
@@ -256,11 +262,12 @@ Resources:
     Properties:
       Code:
         S3Bucket: cdk-hnb659fds-assets-576758376358-us-east-1
-        S3Key: 8881bceff40dde3030ae474092ac56f90e8e9728304d7a9d40b0d3d13be3e380.zip
+        S3Key: 57da22d3dc7d46125f517edcb1e48342af47eae2cd2b33d51b02320e7be14c66.zip
       Role:
         Fn::GetAtt:
           - ClipQueuerServiceRole860A233D
           - Arn
+      Description: REST API Clip Processor Lambda
       Environment:
         Variables:
           BUCKET:
@@ -276,9 +283,9 @@ Resources:
       - ClipQueuerServiceRole860A233D
     Metadata:
       aws:cdk:path: RenderLambdaStack/ClipQueuer/Resource
-      aws:asset:path: C:\Users\chizz\Documents\pillar\render-lambda\cdk.out\asset.8881bceff40dde3030ae474092ac56f90e8e9728304d7a9d40b0d3d13be3e380
+      aws:asset:path: /home/chandler/Documents/pillar/render-lambda/cdk.out/asset.57da22d3dc7d46125f517edcb1e48342af47eae2cd2b33d51b02320e7be14c66
       aws:asset:property: Code
-  lambdaClipDownloaderServiceRole5EE7441F:
+  ClipDownloaderServiceRole70A302B9:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
@@ -295,8 +302,8 @@ Resources:
               - Ref: AWS::Partition
               - :iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
     Metadata:
-      aws:cdk:path: RenderLambdaStack/lambdaClipDownloader/ServiceRole/Resource
-  lambdaClipDownloaderServiceRoleDefaultPolicy042A889D:
+      aws:cdk:path: RenderLambdaStack/ClipDownloader/ServiceRole/Resource
+  ClipDownloaderServiceRoleDefaultPolicy28DFB31B:
     Type: AWS::IAM::Policy
     Properties:
       PolicyDocument:
@@ -317,20 +324,20 @@ Resources:
                         - Arn
                     - /*
         Version: "2012-10-17"
-      PolicyName: lambdaClipDownloaderServiceRoleDefaultPolicy042A889D
+      PolicyName: ClipDownloaderServiceRoleDefaultPolicy28DFB31B
       Roles:
-        - Ref: lambdaClipDownloaderServiceRole5EE7441F
+        - Ref: ClipDownloaderServiceRole70A302B9
     Metadata:
-      aws:cdk:path: RenderLambdaStack/lambdaClipDownloader/ServiceRole/DefaultPolicy/Resource
-  lambdaClipDownloaderBB9C8AED:
+      aws:cdk:path: RenderLambdaStack/ClipDownloader/ServiceRole/DefaultPolicy/Resource
+  ClipDownloader3E3BE2D9:
     Type: AWS::Lambda::Function
     Properties:
       Code:
         ImageUri:
-          Fn::Sub: 576758376358.dkr.ecr.us-east-1.${AWS::URLSuffix}/cdk-hnb659fds-container-assets-576758376358-us-east-1:e8c19bd05daf96c544ed91d53a4186ee9c22f6b4e55e38f61f42ea83143f3da0
+          Fn::Sub: 576758376358.dkr.ecr.us-east-1.${AWS::URLSuffix}/cdk-hnb659fds-container-assets-576758376358-us-east-1:d69d70e60e4e751fffb9227e3711184c44f0927f45638ec2ba22696c20ad9dbf
       Role:
         Fn::GetAtt:
-          - lambdaClipDownloaderServiceRole5EE7441F
+          - ClipDownloaderServiceRole70A302B9
           - Arn
       Description: Containerized Clip Downloader
       Environment:
@@ -341,12 +348,18 @@ Resources:
       PackageType: Image
       Timeout: 60
     DependsOn:
-      - lambdaClipDownloaderServiceRoleDefaultPolicy042A889D
-      - lambdaClipDownloaderServiceRole5EE7441F
+      - ClipDownloaderServiceRoleDefaultPolicy28DFB31B
+      - ClipDownloaderServiceRole70A302B9
     Metadata:
-      aws:cdk:path: RenderLambdaStack/lambdaClipDownloader/Resource
+      aws:cdk:path: RenderLambdaStack/ClipDownloader/Resource
   CombinedClips9275AE0A:
     Type: AWS::S3::Bucket
+    Properties:
+      LifecycleConfiguration:
+        Rules:
+          - ExpirationInDays: 30
+            Id: 30-Day-Retention
+            Status: Enabled
     UpdateReplacePolicy: Retain
     DeletionPolicy: Retain
     Metadata:
@@ -510,11 +523,12 @@ Resources:
     Properties:
       Code:
         S3Bucket: cdk-hnb659fds-assets-576758376358-us-east-1
-        S3Key: 70a4bda8f9d32f00650a99f98021783f8488a7e2a0e65534812e0cb86e31cb13.zip
+        S3Key: 7493ae6843f6ea225b2ba40c73fc484bbf4c4d513a7efcd156eb1b6064af3bca.zip
       Role:
         Fn::GetAtt:
           - FinalRendererServiceRoleFB621397
           - Arn
+      Description: MediaConvert job queuer
       Environment:
         Variables:
           IN_BUCKET:
@@ -537,7 +551,7 @@ Resources:
       - FinalRendererServiceRoleFB621397
     Metadata:
       aws:cdk:path: RenderLambdaStack/FinalRenderer/Resource
-      aws:asset:path: C:\Users\chizz\Documents\pillar\render-lambda\cdk.out\asset.70a4bda8f9d32f00650a99f98021783f8488a7e2a0e65534812e0cb86e31cb13
+      aws:asset:path: /home/chandler/Documents/pillar/render-lambda/cdk.out/asset.7493ae6843f6ea225b2ba40c73fc484bbf4c4d513a7efcd156eb1b6064af3bca
       aws:asset:property: Code
   NotifyServiceRole5B74FDA4:
     Type: AWS::IAM::Role
@@ -572,6 +586,11 @@ Resources:
               - secretsmanager:DescribeSecret
             Effect: Allow
             Resource: arn:aws:secretsmanager:us-east-1:576758376358:secret:TWITCH_SECRET-xylhKu
+          - Action:
+              - ses:SendEmail
+              - ses:SendRawEmail
+            Effect: Allow
+            Resource: "*"
         Version: "2012-10-17"
       PolicyName: NotifyServiceRoleDefaultPolicy29A5A742
       Roles:
@@ -583,11 +602,12 @@ Resources:
     Properties:
       Code:
         S3Bucket: cdk-hnb659fds-assets-576758376358-us-east-1
-        S3Key: 5da4790326895cbdac314306d7a4b63e7c2597a26769521607e9889756650bff.zip
+        S3Key: b9ca04cc19f2ba0d2049fbd74986def03d189b1732cafba7e6c5c3d4603d9257.zip
       Role:
         Fn::GetAtt:
           - NotifyServiceRole5B74FDA4
           - Arn
+      Description: SES Email Lambda
       Environment:
         Variables:
           COMBINED_BUCKET_DNS:
@@ -598,7 +618,7 @@ Resources:
             Fn::GetAtt:
               - IndividualClips96D9129C
               - DomainName
-          DB_NAME: pillar
+          DB_NAME: dev
           FROM_EMAIL: steven@pillar.gg
           TWITCH_CLIENT_ID: 2nakqoqdxka9v5oekyo6742bmnxt2o
           TWITCH_CLIENT_SECRET_ARN: arn:aws:secretsmanager:us-east-1:576758376358:secret:TWITCH_SECRET-xylhKu
@@ -612,7 +632,7 @@ Resources:
       - NotifyServiceRole5B74FDA4
     Metadata:
       aws:cdk:path: RenderLambdaStack/Notify/Resource
-      aws:asset:path: C:\Users\chizz\Documents\pillar\render-lambda\cdk.out\asset.88f421a32d07695b7247a180eb609f6230ef93ed60962ea2f6000e7f51b7c3b6
+      aws:asset:path: /home/chandler/Documents/pillar/render-lambda/cdk.out/asset.b9ca04cc19f2ba0d2049fbd74986def03d189b1732cafba7e6c5c3d4603d9257
       aws:asset:property: Code
   BucketNotificationsHandler050a0587b7544547bf325f094a3db834RoleB6FB88EC:
     Type: AWS::IAM::Role
@@ -762,7 +782,7 @@ Resources:
             Effect: Allow
             Resource:
               Fn::GetAtt:
-                - lambdaClipDownloaderBB9C8AED
+                - ClipDownloader3E3BE2D9
                 - Arn
         Version: "2012-10-17"
       PolicyName: RendererRoleDefaultPolicy74B3D00C
@@ -784,7 +804,7 @@ Resources:
             - Ref: AWS::Partition
             - :states:::lambda:invoke","Parameters":{"FunctionName":"
             - Fn::GetAtt:
-                - lambdaClipDownloaderBB9C8AED
+                - ClipDownloader3E3BE2D9
                 - Arn
             - '","Payload.$":"$"}}}}},"Render?":{"Type":"Choice","Choices":[{"Variable":"$[0].Payload.render","BooleanEquals":false,"Next":"Send notification"},{"Variable":"$[0].Payload.render","BooleanEquals":true,"Next":"Render Video"}]},"Send notification":{"End":true,"Retry":[{"ErrorEquals":["Lambda.ServiceException","Lambda.AWSLambdaException","Lambda.SdkClientException"],"IntervalSeconds":2,"MaxAttempts":6,"BackoffRate":2}],"Type":"Task","Resource":"arn:'
             - Ref: AWS::Partition
@@ -807,7 +827,7 @@ Resources:
   CDKMetadata:
     Type: AWS::CDK::Metadata
     Properties:
-      Analytics: v2:deflate64:H4sIAAAAAAAACm1Ry27CMBD8Fu6OAXFpb+WhSkhFpfAF7mYLbhLb8q5BUZR/r51gqKqedvbh2dnxXM5nczmbvKgrFVBW0w6sR9kdWUEl1tYQ+wAs1l/mPbALLJZEyLF90uYkDkg2eMDUz7gXiaujhexWASocHt/QGPa21tA+ymMe3zl9UoxX1cousvHS6RtxhksAGwyLDbratg2agfxXloQNakaQNa0Uodghn22Zmjf0v3qtmrje1mM5xYferLRWzWepZJdK6BtNpK1JA6/BACecQZ4tXBt3Grkfwn2MFoVKhpIcfBUIPhc2Nnrjt028496TB3SWNFvfDic1WGoF1lzQs4zrPwIGFMTovm4bqGBFFcm3QcXWXGz1Z0B2O+XEMQAgRnfOVkdHon2MOwVnbbKd97zvezGeMV3IJ/k8+SatCx//RTcoD2P8AZlHrWZZAgAA
+      Analytics: v2:deflate64:H4sIAAAAAAAAA21R227CMAz9Ft7TAEKatLdx0SSkoTH4gsz1IGubRLEDqqr++5KWwDTtyceXHB+fzOV8NpezyYu6UgFlNe3AepTdkRVUYm0NsQ/AYv1l3gO7wGJJhBzbJ21O4oBkgwdM/Yx7kbg6WshuFaDC4fENjWFvaw3tozzm8Z3TJ8V4Va3sIhsvnb4RZ7gEsMGw2KCrbdugGch/ZUnYoGYEWdNKEYod8tmWqXlD/6vXqonrbT2WU3zozUpr1XyWSnaphL7RRNqaNPAaDHDCGeTZwrVxp5H7IdzHaFGoZCjJwVeB4HNhY6M3ftvEO+49eUBnSbP17XBSg6VWYM0FPcu4/iNgQEGM7uu2gQpWVJF8G1RszcVWfwZkt1NOHAMAYnTnbHV0JNrHuFNw1ibbec/7vhfjGdOFfJZPk2/SuvDxX3SD8jDGH/46EjtZAgAA
     Metadata:
       aws:cdk:path: RenderLambdaStack/CDKMetadata/Default
 Outputs:

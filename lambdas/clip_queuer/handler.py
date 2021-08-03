@@ -79,14 +79,15 @@ def handler(event, context):
     # the state is what gets sent initially to the 
     # state machine
     print(json.dumps(state, default=json_handler))
+    
+    if not "test" in STATE_MACHINE_ARN:
+        resp = sfn.start_execution(
+            stateMachineArn=STATE_MACHINE_ARN,
+            name=str(uuid.uuid4()),
+            input=json.dumps(state, default=json_handler)
+        )
 
-    resp = sfn.start_execution(
-        stateMachineArn=STATE_MACHINE_ARN,
-        name=str(uuid.uuid4()),
-        input=json.dumps(state, default=json_handler)
-    )
-
-    state.update(resp)
+        state.update(resp)
 
     return {
         'statusCode': 200,

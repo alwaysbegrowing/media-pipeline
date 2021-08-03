@@ -9,22 +9,16 @@ from stack.pipelines import RenderLambdaPipeline, ProdRenderLambdaPipeline
 app = cdk.App()
 
 # Testing Stack
-RenderLambdaStack(app, "RenderLambdaStack", 
+RenderLambdaStack(app, "RenderLambdaStack", 'dev',
                   env=cdk.Environment(account='576758376358', region='us-east-1')
 )
 
-RenderLambdaStack(app, "Prod-Render",
+RenderLambdaStack(app, "Prod-Render", 'pillar',
                   env=cdk.Environment(account='576758376358', region='us-east-1')
 )
 
-RenderLambdaStack(app, "QA-Render",
+RenderLambdaStack(app, "QA-Render", 'preprod',
                   env=cdk.Environment(account='576758376358', region='us-east-1')
 )
-
-# # staging pipeline
-# RenderLambdaPipeline(app, 'PreProdRenderLambdaPipeline')
-
-# # production pipeline
-# ProdRenderLambdaPipeline(app, 'ProdRenderLambdaPipeline')
 
 app.synth()

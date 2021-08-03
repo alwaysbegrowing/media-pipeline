@@ -1,6 +1,5 @@
 import os
 import json
-import uuid
 
 import boto3
 from ffmpy import FFmpeg
@@ -27,6 +26,10 @@ def handler(event, context):
     start_time = str(job.get('start_time'))
     duration = str(job.get('end_time') - job.get('start_time'))
 
+    # local_download_name is the name that FFMPEG will use to temporarily process the object
+    # "job" is the JSON used to process the download
+    print(json.dumps({'local_download_name': download_name, 'job': job}))
+
     render = job.get('render', True)
     stream_manifest_url = job.get('stream_manifest_url')
 
@@ -37,12 +40,14 @@ def handler(event, context):
     ffmpeg_outputs = {
         download_name:  ['-t', duration, '-y', '-c', 'copy']
     }
-    #ffmpeg_global_options = ['-hide_banner', '-loglevel', 'panic']
 
     ffmpeg_global_options = []
 
     ffmpeg = FFmpeg(inputs=ffmpeg_inputs, outputs=ffmpeg_outputs,
                     global_options=ffmpeg_global_options)
+
+    print(json.dumps({'ffmpeg_command_used': ffmpeg.cmd}))
+
     ffmpeg.run()
 
     s3_name = download_name.replace('-', '/', 1)
@@ -55,8 +60,15 @@ def handler(event, context):
         print('Dry run, skipping upload.')
 
     os.remove(download_name)
-    return {
+
+    body = {
         'position': job.get('position'),
         'name': s3_name,
-        'render': render
+        'render': render,
+        'bucket': BUCKET
     }
+
+    # this part of the object that will be passed either to the 
+    # renderer or passed to the notification lambda
+    print(json.dumps({'render_job_metadata':body}))
+    return body

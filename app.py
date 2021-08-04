@@ -4,21 +4,29 @@ import os
 from aws_cdk import core as cdk
 
 from stack.stack import RenderLambdaStack
-from stack.pipelines import RenderLambdaPipeline, ProdRenderLambdaPipeline
 
 app = cdk.App()
 
-# Testing Stack
+# Dev Stack
+# This is the development or the "Hack stack"
+# and will change regularly.
 RenderLambdaStack(app, "RenderLambdaStack", 'dev',
                   env=cdk.Environment(account='576758376358', region='us-east-1')
 )
 
+# Prod Stack
+# this is the production stack and 
+# gets automatically deployed by CI.
+# DO NOT TOUCH!
 RenderLambdaStack(app, "Prod-Render", 'pillar',
                   env=cdk.Environment(account='576758376358', region='us-east-1')
 )
 
-RenderLambdaStack(app, "QA-Render", 'staging',
-                  env=cdk.Environment(account='576758376358', region='us-east-1')
-)
+# Staging Stack
+# This stack will act as our
+# staging branch when the team expands.
+# RenderLambdaStack(app, "QA-Render", 'staging',
+#                   env=cdk.Environment(account='576758376358', region='us-east-1')
+# )
 
 app.synth()

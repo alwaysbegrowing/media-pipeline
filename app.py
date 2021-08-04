@@ -22,11 +22,4 @@ RenderLambdaStack(app, "Prod-Render", 'pillar',
                   env=cdk.Environment(account='576758376358', region='us-east-1')
 )
 
-# Staging Stack
-# This stack will act as our
-# staging branch when the team expands.
-# RenderLambdaStack(app, "QA-Render", 'staging',
-#                   env=cdk.Environment(account='576758376358', region='us-east-1')
-# )
-
 app.synth()

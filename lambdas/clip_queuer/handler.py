@@ -41,7 +41,6 @@ def handler(event, context):
 
     clips = job.get('clips')
 
-    # outputs the video ID, the original stream URL, and the list of clips that the user wishes to process
     print(json.dumps({'videoId': video_id, 'original_stream_url': original_url, 'clips': clips}))
 
     streams = streamlink.streams(original_url)

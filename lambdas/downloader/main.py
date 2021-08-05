@@ -52,8 +52,13 @@ def handler(event, context):
 
     s3_name = download_name.replace('-', '/', 1)
 
-    s3 = boto3.client('s3')
-    s3.upload_file(download_name, BUCKET, s3_name)
+    if not job.get('dry_run'):
+        print('Uploading....')
+        s3 = boto3.client('s3')
+        s3.upload_file(download_name, BUCKET, s3_name)
+    else:
+        print('Dry run, skipping upload.')
+
     os.remove(download_name)
 
     body = {

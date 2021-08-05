@@ -19,7 +19,7 @@ MONGODB_FULL_URI_ARN = 'arn:aws:secretsmanager:us-east-1:576758376358:secret:MON
 
 class RenderLambdaStack(cdk.Stack):
 
-    def __init__(self, scope: cdk.Construct, construct_id: str, mongodb_database: str = "dev",  **kwargs) -> None:
+    def __init__(self, scope: cdk.Construct, construct_id: str, db_name: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
         lifetime = s3.LifecycleRule(expiration=cdk.Duration.days(30), enabled=True, id='30-Day-Retention')
@@ -46,7 +46,7 @@ class RenderLambdaStack(cdk.Stack):
                                      environment={
                                          'BUCKET': individual_clips.bucket_name
                                      },
-                                     timeout=cdk.Duration.seconds(15),
+                                     timeout=cdk.Duration.seconds(60),
                                      memory_size=256)
 
         addToQueue = apigateway.LambdaIntegration(clip_queuer,
@@ -124,7 +124,7 @@ class RenderLambdaStack(cdk.Stack):
                                        environment={
                                            'COMBINED_BUCKET_DNS': combined_clips.bucket_domain_name,
                                            'INDIVIDUAL_BUCKET_DNS': individual_clips.bucket_domain_name,
-                                           'DB_NAME': mongodb_database,
+                                           'DB_NAME': db_name,
                                            'FROM_EMAIL': 'steven@pillar.gg',
                                            "TWITCH_CLIENT_ID": TWITCH_CLIENT_ID,
                                            "TWITCH_CLIENT_SECRET_ARN": TWITCH_CLIENT_SECRET_ARN,

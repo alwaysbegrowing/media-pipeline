@@ -1,1 +1,1 @@
-cdk synth --no-staging > template.yaml
+cdk synth RenderLambdaStack --no-staging > template.yaml

@@ -27,7 +27,7 @@
                     "arn": "arn:aws:s3:::renderlambdastack-combinedclips9275ae0a-exc6csik1g96"
                 },
                 "object": {
-                    "key": "1769.26-1877.534-1005346788.mp4",
+                    "key": "1769.26-1877.534-1072467181.mp4",
                     "size": 190323650,
                     "eTag": "84893e6aec730542232ab9d8eee7a864-8",
                     "sequencer": "006075C8C76192A3D0"

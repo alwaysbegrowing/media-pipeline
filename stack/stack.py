@@ -54,7 +54,6 @@ class RenderLambdaStack(cdk.Stack):
 
         clips_endpoint = clip_api.root.add_resource("clips")
 
-   
         ecr_image = lambda_.EcrImageCode.from_asset_image(
             directory=os.path.join(os.getcwd(), 'lambdas', 'downloader')
         )
@@ -180,6 +179,8 @@ class RenderLambdaStack(cdk.Stack):
         integrationResponses = [
             apigateway.IntegrationResponse(selection_pattern="200",
                                            status_code="200",
+                                           response_parameters={
+                                               "method.response.header.Access-Control-Allow-Origin": "'*'"},
                                            response_templates={
                                                "application/json": "$input.json('$')"
 
@@ -188,7 +189,7 @@ class RenderLambdaStack(cdk.Stack):
         integration = apigateway.AwsIntegration(service='states', action='StartExecution', options=apigateway.IntegrationOptions(
             credentials_role=api_role, request_templates=request_template, integration_responses=integrationResponses))
 
-        method_responses = [apigateway.MethodResponse(status_code="200", response_models={
+        method_responses = [apigateway.MethodResponse(status_code="200", response_parameters={"method.response.header.Access-Control-Allow-Origin": True}, response_models={
                                                       "application/json": apigateway.EmptyModel()})]
         clips_endpoint.add_method(
             "POST", integration, method_responses=method_responses)

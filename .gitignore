@@ -14,3 +14,4 @@ cdk.out
 local_test.py
 
 secrets.env
+template.yaml

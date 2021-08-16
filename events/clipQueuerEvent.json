@@ -1,3 +1,13 @@
 {
-    "body": "{\"clips\": [{\"start_time\": 55, \"end_time\": 90}], \"videoId\": \"1072467181\", \"render\": true, \"dry_run\": true}"
+  "clips": [
+    {
+      "startTime": 60,
+      "endTime": 95
+    },
+    {
+      "startTime": 100,
+      "endTime": 110
+    }
+  ],
+  "videoId": "1072467181"
 }

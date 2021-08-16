@@ -6,10 +6,19 @@ from datetime import datetime
 import boto3
 import streamlink
 
+from verify import verify_request_body
+
+STATE_MACHINE_ARN = os.getenv('STEPFUNCTION_ARN')
+
+
+def json_handler(item):
+    if type(item) is datetime:
+        return item.isoformat()
+    else:
+        return str(item)
 
 
 def handler(event, context):
-    print("event", event)
     '''
     Here is what the request body will look like.
     {
@@ -18,22 +27,40 @@ def handler(event, context):
         'render': true,
         'dry_run': false
     }
+
+    The response body will be the state input body with the response
+    from the request to create the state machine appended to the state input
     '''
+    job = json.loads(event.get('body')) # event['body'] is a string
 
+    err_msg = verify_request_body(job)
 
-    dry_run = event.get('dry_run')
+    if err_msg != '':
+        body = json.dumps({'error': err_msg})
+        print(body)
+        return {
+            'statusCode': 400,
+            'headers': {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Methods': 'OPTIONS,POST,GET',
+                'Access-Control-Allow-Origin': '*',
+            },
+            'body': body
+        }
+
+    dry_run = job.get('dry_run')
 
     prefix = 'https://twitch.tv/videos/'
 
-    video_id = event.get('videoId')
+    video_id = job.get('videoId')
 
     original_url = f'{prefix}{video_id}'
 
-    clips = event.get('clips')
+    clips = job.get('clips')
 
     streams = streamlink.streams(original_url)
     best_stream = streams.get('best').url
-    render = event.get('render', True)
+    render = job.get('render', True)
 
     state = {
         'render': render,
@@ -41,6 +68,7 @@ def handler(event, context):
         'clips': []
     }
 
+    sfn = boto3.client('stepfunctions')
 
     position = 1
 
@@ -62,5 +90,22 @@ def handler(event, context):
         state['clips'].append(data)
         position += 1
 
+    if not dry_run:
+        resp = sfn.start_execution(
+            stateMachineArn=STATE_MACHINE_ARN,
+            name=str(uuid.uuid4()),
+            input=json.dumps(state, default=json_handler)
+        )
 
-    return state
+        state.update(resp)
+
+    return {
+        'statusCode': 200,
+        'headers': {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Methods': 'OPTIONS,POST,GET',
+            'Access-Control-Allow-Origin': '*',
+            
+        },
+        'body': json.dumps(state, default=json_handler)
+    }

@@ -150,7 +150,7 @@ class RenderLambdaStack(cdk.Stack):
                                                    )
 
         request_template = {"application/json": json.dumps(
-            {"stateMachineArn": state_machine.state_machine_arn, "input": "{\"req\": $util.escapeJavaScript($input.json('$')), \"req1\": \"$context.authorizer.principalId\"}"})}
+            {"stateMachineArn": state_machine.state_machine_arn, "input": "{\"data\": $util.escapeJavaScript($input.json('$')), \"user\": $util.escapeJavaScript($context.authorizer.user)}"})}
         api_role = iam.Role(self, "ClipApiRole", assumed_by=iam.ServicePrincipal(
             "apigateway.amazonaws.com"))
         state_machine.grant_start_execution(api_role)

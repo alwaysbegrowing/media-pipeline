@@ -12,6 +12,7 @@ or in the "license" file accompanying this file. This file is distributed on an 
 from __future__ import print_function
 
 import re
+import json
 
 
 def handler(event, context):
@@ -52,7 +53,6 @@ def handler(event, context):
     policy.restApiId = apiGatewayArnTmp[0]
     policy.region = tmp[3]
     policy.stage = apiGatewayArnTmp[1]
-    # policy.denyAllMethods()
     policy.allowMethod(HttpVerb.POST, "/clips")
 
 
@@ -63,6 +63,8 @@ def handler(event, context):
     # these are made available by APIGW like so: $context.authorizer.<key>
     # additional context is cached
     context = {
+        'user': json.dumps({"id": "test_user"}),
+        'user2': '{"id": "test_user"}',
         'key': 'value', # $context.authorizer.key -> value
         'number' : 1,
         'bool' : True

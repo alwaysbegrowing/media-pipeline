@@ -41,7 +41,6 @@ class RenderLambdaStack(cdk.Stack):
                                       rest_api_name="Clips service",
                                       description="Service handles combining clips", default_cors_preflight_options=cors)
 
-
         transcoding_finished = PythonFunction(self, 'transcoding_finished',
                                               handler='handler',
                                               index='handler.py',
@@ -100,7 +99,6 @@ class RenderLambdaStack(cdk.Stack):
                                       os.getcwd(), 'lambdas', 'renderer'),
                                   runtime=lambda_.Runtime.PYTHON_3_8,
                                   environment={
-                                      'IN_BUCKET': individual_clips.bucket_name,
                                       'OUT_BUCKET': combined_clips.bucket_name,
                                       'QUEUE_ARN': mediaconvert_queue.attr_arn,
                                       'QUEUE_ROLE': mediaconvert_role.role_arn
@@ -148,22 +146,17 @@ class RenderLambdaStack(cdk.Stack):
                                                 )
 
         render_video_task = stp_tasks.LambdaInvoke(self, "Render Video", heartbeat=cdk.Duration.seconds(600),
-                                                   lambda_function=renderer, integration_pattern=stepfunctions.IntegrationPattern.WAIT_FOR_TASK_TOKEN, payload=stepfunctions.TaskInput.from_object({"Input": stepfunctions.JsonPath.entire_payload, "TaskToken": stepfunctions.JsonPath.task_token}))
+                                                   result_path="$.mediaConvertResult", lambda_function=renderer, integration_pattern=stepfunctions.IntegrationPattern.WAIT_FOR_TASK_TOKEN, payload=stepfunctions.TaskInput.from_object({"individualClips.$": "$.downloadResult.individualClips", "TaskToken": stepfunctions.JsonPath.task_token}))
 
         notify_task = stp_tasks.LambdaInvoke(self, "Send notification",
                                              lambda_function=notify_lambda)
 
         process_clips = stepfunctions.Map(
-            self, "Process Clips", items_path="$.clips",  result_path="$.MapResult", parameters={"clip.$": "$$.Map.Item.Value", "index.$": "$$.Map.Item.Index", "videoId.$": "$.videoId"}).iterator(get_clips_task)
+            self, "Process Clips", items_path="$.clips",  result_selector={"individualClips.$": "$[*].Payload"}, result_path="$.downloadResult",  parameters={"clip.$": "$$.Map.Item.Value", "index.$": "$$.Map.Item.Index", "videoId.$": "$.videoId"}).iterator(get_clips_task)
 
-        choice = stepfunctions.Choice(self, "Render?")
 
-        choice.when(stepfunctions.Condition.boolean_equals(
-            "$[0].Payload.render", False), notify_task)
-        choice.when(stepfunctions.Condition.boolean_equals(
-            "$[0].Payload.render", True), render_video_task)
 
-        definition = process_clips.next(choice)
+        definition = process_clips.next(render_video_task   )
         state_machine = stepfunctions.StateMachine(self, "Renderer",
                                                    definition=definition
                                                    )

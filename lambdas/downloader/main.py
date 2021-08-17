@@ -64,6 +64,6 @@ def handler(event, context):
     os.remove(download_name)
     return {
         'position': clip_index,
-        'name': download_name,
+        'file': f's3://{BUCKET}/{download_name}',
         'render': True
     }

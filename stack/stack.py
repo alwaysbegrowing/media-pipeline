@@ -119,7 +119,7 @@ class RenderLambdaStack(cdk.Stack):
                                        runtime=lambda_.Runtime.PYTHON_3_8,
                                        environment={
                                            'FROM_EMAIL': 'steven@pillar.gg',
-                                      
+
                                        },
                                        memory_size=256,
                                        timeout=cdk.Duration.seconds(60))
@@ -130,11 +130,6 @@ class RenderLambdaStack(cdk.Stack):
         ses_email_role = iam.PolicyStatement(
             actions=['ses:SendEmail', 'ses:SendRawEmail'], resources=['*'])
         notify_lambda.add_to_role_policy(ses_email_role)
-
-        # item_added = s3_notify.LambdaDestination(notify_lambda)
-
-        # combined_clips.add_event_notification(
-        #     s3.EventType.OBJECT_CREATED, item_added)
 
         get_clips_task = stp_tasks.LambdaInvoke(self, "Download Individual Clips",
                                                 lambda_function=downloader
@@ -149,15 +144,13 @@ class RenderLambdaStack(cdk.Stack):
         process_clips = stepfunctions.Map(
             self, "Process Clips", items_path="$.clips",  result_selector={"individualClips.$": "$[*].Payload"}, result_path="$.downloadResult",  parameters={"clip.$": "$$.Map.Item.Value", "index.$": "$$.Map.Item.Index", "videoId.$": "$.videoId"}).iterator(get_clips_task)
 
-
-
         definition = process_clips.next(render_video_task).next(notify_task)
         state_machine = stepfunctions.StateMachine(self, "Renderer",
                                                    definition=definition
                                                    )
 
         request_template = {"application/json": json.dumps(
-            {"stateMachineArn": state_machine.state_machine_arn, "input": "$util.escapeJavaScript($input.json('$')) "})}
+            {"stateMachineArn": state_machine.state_machine_arn, "input": "{\"req\": $util.escapeJavaScript($input.json('$')), \"req1\": \"$context.authorizer.principalId\"}"})}
         api_role = iam.Role(self, "ClipApiRole", assumed_by=iam.ServicePrincipal(
             "apigateway.amazonaws.com"))
         state_machine.grant_start_execution(api_role)
@@ -167,7 +160,7 @@ class RenderLambdaStack(cdk.Stack):
                                            response_parameters={
                                                "method.response.header.Access-Control-Allow-Origin": "'*'"},
                                            response_templates={
-                                               "application/json": "$input.json('$')"
+                                               "application/json": "$input.json('$')",
 
                                            })
         ]
@@ -176,8 +169,21 @@ class RenderLambdaStack(cdk.Stack):
 
         method_responses = [apigateway.MethodResponse(status_code="200", response_parameters={"method.response.header.Access-Control-Allow-Origin": True}, response_models={
                                                       "application/json": apigateway.EmptyModel()})]
+
+        auth_fn = PythonFunction(self, 'Authorizer',
+                                 handler='handler',
+                                 index='handler.py',
+                                 entry=os.path.join(
+                                     os.getcwd(), 'lambdas', 'authorizer'),
+                                 runtime=lambda_.Runtime.PYTHON_3_8,
+                                 timeout=cdk.Duration.seconds(30),
+                                 memory_size=128)
+
+        auth = apigateway.TokenAuthorizer(
+            self, 'Token Authorizer', handler=auth_fn)
+
         clips_endpoint.add_method(
-            "POST", integration, method_responses=method_responses)
+            "POST", integration, method_responses=method_responses, authorizer=auth)
 
         events_rule = events.Rule(self, "TranscodingFinished", rule_name="MediaConvertFinished", event_pattern=events.EventPattern(source=[
                                   "aws.mediaconvert"], detail_type=["MediaConvert Job State Change"], detail={"queue": [mediaconvert_queue.attr_arn]}), targets=[events_targets.LambdaFunction(transcoding_finished)])

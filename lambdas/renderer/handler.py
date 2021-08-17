@@ -34,7 +34,7 @@ def make_input(filename):
     }
 
 
-def make_job(inputs, task_token):
+def make_job(inputs, task_token, requester_id):
     task_token1 = task_token[0:256]
     task_token2 = task_token[256:512]
     task_token3 = task_token[512:768]
@@ -43,10 +43,13 @@ def make_job(inputs, task_token):
         job_str = f.read()
 
     job_str = job_str.replace('**name_modifier**', 'basic-combiner')
-    job_str = job_str.replace('**bucketname**', OUT_BUCKET)
+    job_str = job_str.replace('**bucketname**', f'{OUT_BUCKET}/{requester_id}')
     job_str = job_str.replace('**task_token1**', task_token1)
     job_str = job_str.replace('**task_token2**', task_token2)
     job_str = job_str.replace('**task_token3**', task_token3)
+    job_str = job_str.replace('**requester_id**', str(requester_id))
+    job_str = job_str.replace('**bucket**', OUT_BUCKET)
+
 
     job = json.loads(job_str)
     job["Settings"]["Inputs"] = inputs
@@ -63,7 +66,7 @@ def handler(event, context):
 
     print(event)
     task_token = event['TaskToken']
-
+    requester_id = event['requesterId']
     individual_clips = event['individualClips']
     sorted(individual_clips, key=lambda clip: clip['position'])
 
@@ -75,7 +78,7 @@ def handler(event, context):
     for clip in individual_clips:
         inputs.append(make_input(clip['file']))
 
-    job_object = make_job(inputs, task_token)
+    job_object = make_job(inputs, task_token, requester_id)
 
     mediaconvert_client = boto3.client(  # need endpoint url to start mediaconvert
         'mediaconvert', endpoint_url='https://lxlxpswfb.mediaconvert.us-east-1.amazonaws.com')

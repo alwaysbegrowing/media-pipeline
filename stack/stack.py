@@ -118,13 +118,8 @@ class RenderLambdaStack(cdk.Stack):
                                            os.getcwd(), 'lambdas', 'notify'),
                                        runtime=lambda_.Runtime.PYTHON_3_8,
                                        environment={
-                                           'COMBINED_BUCKET_DNS': combined_clips.bucket_domain_name,
-                                           'INDIVIDUAL_BUCKET_DNS': individual_clips.bucket_domain_name,
-                                           'DB_NAME': 'pillar',
                                            'FROM_EMAIL': 'steven@pillar.gg',
-                                           "TWITCH_CLIENT_ID": TWITCH_CLIENT_ID,
-                                           "TWITCH_CLIENT_SECRET_ARN": TWITCH_CLIENT_SECRET_ARN,
-                                           "MONGODB_URI_SECRET_ARN": mongodb_full_uri.secret_arn
+                                      
                                        },
                                        memory_size=256,
                                        timeout=cdk.Duration.seconds(60))
@@ -136,19 +131,19 @@ class RenderLambdaStack(cdk.Stack):
             actions=['ses:SendEmail', 'ses:SendRawEmail'], resources=['*'])
         notify_lambda.add_to_role_policy(ses_email_role)
 
-        item_added = s3_notify.LambdaDestination(notify_lambda)
+        # item_added = s3_notify.LambdaDestination(notify_lambda)
 
-        combined_clips.add_event_notification(
-            s3.EventType.OBJECT_CREATED, item_added)
+        # combined_clips.add_event_notification(
+        #     s3.EventType.OBJECT_CREATED, item_added)
 
-        get_clips_task = stp_tasks.LambdaInvoke(self, "Download Clip",
+        get_clips_task = stp_tasks.LambdaInvoke(self, "Download Individual Clips",
                                                 lambda_function=downloader
                                                 )
 
-        render_video_task = stp_tasks.LambdaInvoke(self, "Render Video", heartbeat=cdk.Duration.seconds(600),
-                                                   result_path="$.mediaConvertResult", lambda_function=renderer, integration_pattern=stepfunctions.IntegrationPattern.WAIT_FOR_TASK_TOKEN, payload=stepfunctions.TaskInput.from_object({"individualClips.$": "$.downloadResult.individualClips", "TaskToken": stepfunctions.JsonPath.task_token}))
+        render_video_task = stp_tasks.LambdaInvoke(self, "Call Mediaconvert", heartbeat=cdk.Duration.seconds(600),
+                                                   result_path="$.mediaConvertResult", lambda_function=renderer, integration_pattern=stepfunctions.IntegrationPattern.WAIT_FOR_TASK_TOKEN, payload=stepfunctions.TaskInput.from_object({"individualClips.$": "$.downloadResult.individualClips", "requesterId.$": "$.requestUser._id", "TaskToken": stepfunctions.JsonPath.task_token}))
 
-        notify_task = stp_tasks.LambdaInvoke(self, "Send notification",
+        notify_task = stp_tasks.LambdaInvoke(self, "Send Email",
                                              lambda_function=notify_lambda)
 
         process_clips = stepfunctions.Map(
@@ -156,7 +151,7 @@ class RenderLambdaStack(cdk.Stack):
 
 
 
-        definition = process_clips.next(render_video_task   )
+        definition = process_clips.next(render_video_task).next(notify_task)
         state_machine = stepfunctions.StateMachine(self, "Renderer",
                                                    definition=definition
                                                    )

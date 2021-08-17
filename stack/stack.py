@@ -207,7 +207,6 @@ class RenderLambdaStack(cdk.Stack):
             "POST", integration, method_responses=method_responses)
 
         events_rule = events.Rule(self, "TranscodingFinished", rule_name="MediaConvertFinished", event_pattern=events.EventPattern(source=[
-                                  "aws.mediaconvert"], detail_type=["MediaConvert Job State Change"]), targets=[events_targets.LambdaFunction(transcoding_finished)])
+                                  "aws.mediaconvert"], detail_type=["MediaConvert Job State Change"], detail={"queue": [mediaconvert_queue.attr_arn]}), targets=[events_targets.LambdaFunction(transcoding_finished)])
         transcoding_finished.add_to_role_policy(iam.PolicyStatement(effect=iam.Effect.ALLOW, actions=[
                                                 "states:SendTask*"], resources=[state_machine.state_machine_arn]))
-

@@ -1,9 +1,8 @@
 {
-  "dry_run": true,
-  "end_time": 44.183,
-  "start_time": 0,
-  "stream_manifest_url": "https://d1ymi26ma8va5x.cloudfront.net/9377f92830230e464527_chand1012_39673072332_8156530717/chunked/highlight-1067515714.m3u8",
-  "name": "1015750167-0-44.183",
-  "position": 1,
-  "render": true
+  "index": 0,
+  "videoId": "964746682",
+  "clip": {
+    "startTime": 60,
+    "endTime": 65
+  }
 }

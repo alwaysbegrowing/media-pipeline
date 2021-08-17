@@ -41,18 +41,6 @@ class RenderLambdaStack(cdk.Stack):
                                       rest_api_name="Clips service",
                                       description="Service handles combining clips", default_cors_preflight_options=cors)
 
-        clip_queuer = PythonFunction(self, 'ClipQueuer',
-                                     description='REST API Clip Processor Lambda',
-                                     handler='handler',
-                                     index='handler.py',
-                                     entry=os.path.join(
-                                         os.getcwd(), 'lambdas', 'clip_queuer'),
-                                     runtime=lambda_.Runtime.PYTHON_3_8,
-                                     environment={
-                                         'BUCKET': individual_clips.bucket_name
-                                     },
-                                     timeout=cdk.Duration.seconds(60),
-                                     memory_size=256)
 
         transcoding_finished = PythonFunction(self, 'transcoding_finished',
                                               handler='handler',
@@ -155,9 +143,6 @@ class RenderLambdaStack(cdk.Stack):
         combined_clips.add_event_notification(
             s3.EventType.OBJECT_CREATED, item_added)
 
-        split_clips_task = stp_tasks.LambdaInvoke(self, "Split Clips",
-                                                  lambda_function=clip_queuer
-                                                  )
         get_clips_task = stp_tasks.LambdaInvoke(self, "Download Clip",
                                                 lambda_function=downloader
                                                 )
@@ -169,7 +154,7 @@ class RenderLambdaStack(cdk.Stack):
                                              lambda_function=notify_lambda)
 
         process_clips = stepfunctions.Map(
-            self, "Process Clips", input_path="$.Payload.clips").iterator(get_clips_task)
+            self, "Process Clips", items_path="$.clips",  result_path="$.MapResult", parameters={"clip.$": "$$.Map.Item.Value", "index.$": "$$.Map.Item.Index", "videoId.$": "$.videoId"}).iterator(get_clips_task)
 
         choice = stepfunctions.Choice(self, "Render?")
 
@@ -178,7 +163,7 @@ class RenderLambdaStack(cdk.Stack):
         choice.when(stepfunctions.Condition.boolean_equals(
             "$[0].Payload.render", True), render_video_task)
 
-        definition = split_clips_task.next(process_clips).next(choice)
+        definition = process_clips.next(choice)
         state_machine = stepfunctions.StateMachine(self, "Renderer",
                                                    definition=definition
                                                    )

@@ -13,10 +13,26 @@ from __future__ import print_function
 
 import re
 import json
+import requests
+import os
 
+TWITCH_CLIENT_ID = os.getenv('TWITCH_CLIENT_ID')
+
+
+
+def get_user(authorization_token):
+    headers = {
+        'Client-Id': TWITCH_CLIENT_ID,
+        'Authorization': authorization_token
+    }
+    resp = requests.get('https://api.twitch.tv/helix/users', headers=headers)
+    if resp.status_code == 200:
+        return resp.json()["data"][0]
+    else:
+        raise Exception('Unauthorized')
+    
 
 def handler(event, context):
-    print(event)
     """Do not print the auth token unless absolutely necessary """
     #print("Client token: " + event['authorizationToken'])
     print("Method ARN: " + event['methodArn'])
@@ -27,10 +43,11 @@ def handler(event, context):
     """1. Call out to OAuth provider"""
     """2. Decode a JWT token inline"""
     """3. Lookup in a self-managed DB"""
-    principalId = "user|a1b2c3d4"
+    user = get_user(event['authorizationToken'])
+    principalId = user['id']
 
     """you can send a 401 Unauthorized response to the client by failing like so:"""
-    """raise Exception('Unauthorized')"""
+    """raise Exception('Unauthoized')"""
 
     """if the token is valid, a policy must be generated which will allow or deny access to the client"""
 
@@ -63,8 +80,7 @@ def handler(event, context):
     # these are made available by APIGW like so: $context.authorizer.<key>
     # additional context is cached
     context = {
-        'user': json.dumps({"id": "test_user"}),
-        'user2': '{"id": "test_user"}',
+        'user': json.dumps(user),
         'key': 'value', # $context.authorizer.key -> value
         'number' : 1,
         'bool' : True

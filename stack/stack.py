@@ -16,8 +16,7 @@ from aws_cdk import (core as cdk,
 
 from aws_cdk.aws_lambda_python import PythonFunction
 
-TWITCH_CLIENT_SECRET_ARN = "arn:aws:secretsmanager:us-east-1:576758376358:secret:TWITCH_SECRET-xylhKu"
-TWITCH_CLIENT_ID = "2nakqoqdxka9v5oekyo6742bmnxt2o"
+TWITCH_CLIENT_ID = "phpnjz4llxez4zpw3iurfthoi573c8"
 MONGODB_FULL_URI_ARN = 'arn:aws:secretsmanager:us-east-1:576758376358:secret:MONGODB-6SPDyv'
 
 
@@ -107,8 +106,6 @@ class RenderLambdaStack(cdk.Stack):
 
         mongodb_full_uri = secretsmanager.Secret.from_secret_complete_arn(
             self, 'MONGODB_FULL_URI', MONGODB_FULL_URI_ARN)
-        twitch_client_secret = secretsmanager.Secret.from_secret_complete_arn(
-            self, 'TWITCH_CLIENT_SECRET', TWITCH_CLIENT_SECRET_ARN)
 
         notify_lambda = PythonFunction(self, 'Notify',
                                        description='SES Email Lambda',
@@ -125,7 +122,6 @@ class RenderLambdaStack(cdk.Stack):
                                        timeout=cdk.Duration.seconds(60))
 
         mongodb_full_uri.grant_read(notify_lambda)
-        twitch_client_secret.grant_read(notify_lambda)
 
         ses_email_role = iam.PolicyStatement(
             actions=['ses:SendEmail', 'ses:SendRawEmail'], resources=['*'])
@@ -177,7 +173,10 @@ class RenderLambdaStack(cdk.Stack):
                                      os.getcwd(), 'lambdas', 'authorizer'),
                                  runtime=lambda_.Runtime.PYTHON_3_8,
                                  timeout=cdk.Duration.seconds(30),
-                                 memory_size=128)
+                                 memory_size=128,
+                                  environment={
+                                           'TWITCH_CLIENT_ID': TWITCH_CLIENT_ID,
+                                       },)
 
         auth = apigateway.TokenAuthorizer(
             self, 'Token Authorizer', handler=auth_fn)

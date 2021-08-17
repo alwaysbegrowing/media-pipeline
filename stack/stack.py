@@ -10,6 +10,8 @@ from aws_cdk import (core as cdk,
                      aws_stepfunctions as stepfunctions,
                      aws_stepfunctions_tasks as stp_tasks,
                      aws_iam as iam,
+                     aws_events as events,
+                     aws_events_targets as events_targets,
                      aws_secretsmanager as secretsmanager)
 
 from aws_cdk.aws_lambda_python import PythonFunction
@@ -51,6 +53,16 @@ class RenderLambdaStack(cdk.Stack):
                                      },
                                      timeout=cdk.Duration.seconds(60),
                                      memory_size=256)
+
+        transcoding_finished = PythonFunction(self, 'transcoding_finished',
+                                              handler='handler',
+                                              index='handler.py',
+                                              entry=os.path.join(
+                                                  os.getcwd(), 'lambdas', 'transcoding_progress'),
+                                              runtime=lambda_.Runtime.PYTHON_3_8,
+
+                                              timeout=cdk.Duration.seconds(60),
+                                              memory_size=128)
 
         clips_endpoint = clip_api.root.add_resource("clips")
 
@@ -150,8 +162,8 @@ class RenderLambdaStack(cdk.Stack):
                                                 lambda_function=downloader
                                                 )
 
-        render_video_task = stp_tasks.LambdaInvoke(self, "Render Video",
-                                                   lambda_function=renderer)
+        render_video_task = stp_tasks.LambdaInvoke(self, "Render Video", heartbeat=cdk.Duration.seconds(600),
+                                                   lambda_function=renderer, integration_pattern=stepfunctions.IntegrationPattern.WAIT_FOR_TASK_TOKEN, payload=stepfunctions.TaskInput.from_object({"Input": stepfunctions.JsonPath.entire_payload, "TaskToken": stepfunctions.JsonPath.task_token}))
 
         notify_task = stp_tasks.LambdaInvoke(self, "Send notification",
                                              lambda_function=notify_lambda)
@@ -193,3 +205,8 @@ class RenderLambdaStack(cdk.Stack):
                                                       "application/json": apigateway.EmptyModel()})]
         clips_endpoint.add_method(
             "POST", integration, method_responses=method_responses)
+
+        events_rule = events.Rule(self, "TranscodingFinished", rule_name="MediaConvertFinished", event_pattern=events.EventPattern(source=[
+                                  "aws.mediaconvert"], detail_type=["MediaConvert Job State Change"], detail={"queue": [mediaconvert_queue.attr_arn]}), targets=[events_targets.LambdaFunction(transcoding_finished)])
+        transcoding_finished.add_to_role_policy(iam.PolicyStatement(effect=iam.Effect.ALLOW, actions=[
+                                                "states:SendTask*"], resources=[state_machine.state_machine_arn]))

@@ -16,12 +16,10 @@ def handler(event, context):
         'clips': [{'startTime': 55, 'endTime': 90}],
         'videoId': '964350897',
         'render': true,
-        'dry_run': false
     }
     '''
 
 
-    dry_run = event.get('dry_run')
 
     prefix = 'https://twitch.tv/videos/'
 

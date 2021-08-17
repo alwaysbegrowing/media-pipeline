@@ -1,0 +1,26 @@
+{
+    "version":"0",
+    "id":"cb9140c5-3592-430b-c087-48fa49d2db82",
+    "detail-type":"MediaConvert Job State Change",
+    "source":"aws.mediaconvert",
+    "account":"576758376358",
+    "time":"2021-08-17T00:16:20Z",
+    "region":"us-east-1",
+    "resources":[
+       "arn:aws:mediaconvert:us-east-1:576758376358:jobs/1629159350937-twc7bt"
+    ],
+    "detail":{
+       "timestamp":1629159379906,
+       "accountId":"576758376358",
+       "queue":"arn:aws:mediaconvert:us-east-1:576758376358:queues/ClipCombiner-JtJsXiUfm3YJ",
+       "jobId":"1629159350937-twc7bt",
+       "status":"ERROR",
+       "errorCode":1404,
+       "errorMessage":"Unable to open input file [s3://renderlambdastack-individualclips96d9129c-1m2rui0jjqo4r/964746682/60-95.mkv]: [Failed probe/open: [Can't read input stream: [Failed to read data: Could not identify region for bucket renderlambdastack-individualclips96d9129c-1m2rui0jjqo4r: Failed to lookup region of bucket renderlambdastack-individualclips96d9129c-1m2rui0jjqo4r]]]",
+       "userMetadata":{
+          "TaskToken1":"AAAAKgAAAAIAAAAAAAAAAYGlS7L8DvCUCZJHQwSAd0N6rCIFCQHNQTzyuujBqoxEWAEGin6LeZEoiDH0NFJVfoy1pMNXkAikZTonLyQCFiff8vLh91hATjQlWd+yAu1jedliZMakwZsLus7X+qMmf2F58E86p9IZU0EVEaiFR7y7bXjylqQC0c4o9EXcrEZddN7jEnP0rtXMjsBXrnPOGLPNqX6b+oEJMgZQKXQ9gQjebOOa0vlrpg1JP4rCyt3n",
+          "TaskToken2":"BbMRhhe3jTKNEAwdQRV4d5z8W3RnhI/1fDyZUw9gv/Rz2ySB5zL3/BwHVWgEouQxJlzW1iDQCRXQobYawrCDbV+DRYmPGZSTNAQ197dqDn2J5naPy73VeNJcn5HXj8SQQLADET+7jiT+2BHfoAgWQ9X7F6gn7QZu9jJcdBYjeip8WZyAvVajmUL9KHOPoHa/lij+CQMjbNXV7iT5P3Y/fNL4pP6pQAc/2VzpyOkz5bx7jLEnvvs8B8L8wjtwkJ/0",
+          "TaskToken3":"n0lw0ikHkpvdignTvQTo4hw/GnECWb2QdSHlI15fdCW2OSVMRlFtFvqwyEJz7kMhi7zWOuRKJw2y+IQS8DC3/QoEjXebmHjzgeiQyONQxB19nfKRbVnnZeNARqTQhnl1tTGkcrw7XdqgGFVS65vcJA=="
+       }
+    }
+ }

@@ -1,5 +1,7 @@
 {
-        "UserMetadata": {},
+        "UserMetadata": {"TaskToken1": "**task_token1**",
+                    "TaskToken2": "**task_token2**",
+                    "TaskToken3": "**task_token3**"},
         "Settings": {
             "TimecodeConfig": {
                 "Source": "ZEROBASED"

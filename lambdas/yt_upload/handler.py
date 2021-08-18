@@ -6,7 +6,7 @@ import boto3
 import base64
 from botocore.exceptions import ClientError
 from db import connect_to_db
-from youtube_upload.client import YouTubeUploader
+from youtube_upload.client import YoutubeUploader
 
 
 
@@ -35,8 +35,7 @@ def get_yt_secrets():
 
 def handler(event, context):
     print(event)
-    print(get_yt_secrets())
-
+    os.chdir('/tmp')
 
     db = connect_to_db()
     search = {"twitch_id": "128675916"}
@@ -49,7 +48,7 @@ def handler(event, context):
     access_token = yt_access_tokens['access_token']
     refresh_token = yt_access_tokens['refresh_token']
 
-    uploader = YoutubeUploader(client_id,client_secret)
+    uploader = YoutubeUploader(YT_CLIENT_ID,YT_CLIENT_SECRET)
 
     options = {
     "title" : "Example title", # The video title

@@ -23,12 +23,11 @@ def handler(event, context):
   </head>
   <body>
   {display_name}, <br>
-  Here's your pillar compilation: <br>
+  Here is your Pillar compilation: <br>
   
   {compilation_file_url}
   <br>
   Thanks for using Pillar! <br>
-  If you'd like to leave feedback, let us know how your experience was (any bugs, questions, etc? ) by replying to the 2 minute survey we will send you soon. <br>
   See you soon, <br>
   The Pillar Team
       </body>

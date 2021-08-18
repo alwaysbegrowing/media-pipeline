@@ -6,17 +6,10 @@ FROM_EMAIL = os.getenv('FROM_EMAIL')
 email_client = boto3.client('ses')
 
 def handler(event, context):
-    '''
-    Will take the event and transform it into a notification for SES.
-    Will take S3 notifications and manual invocation from "skip_render".
-    An example of the S3 and the state machine invokers can be found in the 
-    `events` folder, as `notifyS3Event.json` and `notifyStepEvent.json` respectively.
-    '''
-
     bucket = event['mediaConvertResult']['Bucket']
     Key = event['mediaConvertResult']['Key']
-    request_email = event['requestUser']['email']
-    display_name = event['requestUser']['display_name']
+    request_email = event['user']['email']
+    display_name = event['user']['display_name']
 
 
     compilation_file_url = 'https://' + bucket + '.s3.amazonaws.com' + '/' + Key

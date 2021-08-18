@@ -132,13 +132,13 @@ class RenderLambdaStack(cdk.Stack):
                                                 )
 
         render_video_task = stp_tasks.LambdaInvoke(self, "Call Mediaconvert", heartbeat=cdk.Duration.seconds(600),
-                                                   result_path="$.mediaConvertResult", lambda_function=renderer, integration_pattern=stepfunctions.IntegrationPattern.WAIT_FOR_TASK_TOKEN, payload=stepfunctions.TaskInput.from_object({"individualClips.$": "$.downloadResult.individualClips", "requesterId.$": "$.requestUser._id", "TaskToken": stepfunctions.JsonPath.task_token}))
+                                                   result_path="$.mediaConvertResult", lambda_function=renderer, integration_pattern=stepfunctions.IntegrationPattern.WAIT_FOR_TASK_TOKEN, payload=stepfunctions.TaskInput.from_object({"individualClips.$": "$.downloadResult.individualClips", "userId.$": "$.user.id", "TaskToken": stepfunctions.JsonPath.task_token}))
 
         notify_task = stp_tasks.LambdaInvoke(self, "Send Email",
                                              lambda_function=notify_lambda)
 
         process_clips = stepfunctions.Map(
-            self, "Process Clips", items_path="$.clips",  result_selector={"individualClips.$": "$[*].Payload"}, result_path="$.downloadResult",  parameters={"clip.$": "$$.Map.Item.Value", "index.$": "$$.Map.Item.Index", "videoId.$": "$.videoId"}).iterator(get_clips_task)
+            self, "Process Clips", items_path="$.data.clips",  result_selector={"individualClips.$": "$[*].Payload"}, result_path="$.downloadResult",  parameters={"clip.$": "$$.Map.Item.Value", "index.$": "$$.Map.Item.Index", "videoId.$": "$.data.videoId"}).iterator(get_clips_task)
 
         definition = process_clips.next(render_video_task).next(notify_task)
         state_machine = stepfunctions.StateMachine(self, "Renderer",

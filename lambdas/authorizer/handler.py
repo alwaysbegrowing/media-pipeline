@@ -29,7 +29,7 @@ def get_user(authorization_token):
     if resp.status_code == 200:
         return resp.json()["data"][0]
     else:
-        raise Exception('Unauthorized')
+        raise Exception('Unauthorized Request')
     
 
 def handler(event, context):

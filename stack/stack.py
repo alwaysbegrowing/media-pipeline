@@ -50,6 +50,7 @@ class RenderLambdaStack(cdk.Stack):
                                               timeout=cdk.Duration.seconds(60),
                                               memory_size=128)
 
+
         clips_endpoint = clip_api.root.add_resource("clips")
 
         ecr_image = lambda_.EcrImageCode.from_asset_image(

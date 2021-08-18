@@ -11,7 +11,6 @@ from youtube_upload.client import YoutubeUploader
 
 
 
-import boto3
 
 cached_yt_secrets = None
 

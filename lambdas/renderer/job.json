@@ -1,7 +1,10 @@
 {
         "UserMetadata": {"TaskToken1": "**task_token1**",
                     "TaskToken2": "**task_token2**",
-                    "TaskToken3": "**task_token3**"},
+                    "TaskToken3": "**task_token3**",
+                    "UserId": "**requester_id**",
+                    "Bucket": "**bucket**"
+                },
         "Settings": {
             "TimecodeConfig": {
                 "Source": "ZEROBASED"

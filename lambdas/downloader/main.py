@@ -1,12 +1,19 @@
 import os
-import json
 import uuid
 
 import boto3
+import streamlink
+
 from ffmpy import FFmpeg
 
 BUCKET = os.getenv('BUCKET')
 
+
+def get_stream_manifest_url(video_id):
+    prefix = 'https://twitch.tv/videos/'
+    original_url = f'{prefix}{video_id}'
+    streams = streamlink.streams(original_url)
+    return streams.get('best').url
 
 def handler(event, context):
     '''
@@ -20,24 +27,25 @@ def handler(event, context):
         'render': True
     }
     '''
+    
     os.chdir('/tmp')
-    job = event
-    name = job.get('name')
-    download_name = f'{name}.mkv'
-    start_time = str(job.get('start_time'))
-    duration = str(job.get('end_time') - job.get('start_time'))
-
-    render = job.get('render', True)
-    stream_manifest_url = job.get('stream_manifest_url')
+    
+    clip = event['clip']
+    video_id = event['videoId']
+    clip_index = event['index']
+    download_name = f'{uuid.uuid4()}.mkv'
+    start_time = clip['startTime']
+    end_time = clip['endTime']
+    duration = str(end_time - start_time)
+    stream_manifest_url = get_stream_manifest_url(video_id)
 
     ffmpeg_inputs = {
-        stream_manifest_url: ['-ss', start_time]
+        stream_manifest_url: ['-ss', str(start_time)]
     }
 
     ffmpeg_outputs = {
         download_name:  ['-t', duration, '-y', '-c', 'copy']
     }
-    #ffmpeg_global_options = ['-hide_banner', '-loglevel', 'panic']
 
     ffmpeg_global_options = []
 
@@ -45,18 +53,17 @@ def handler(event, context):
                     global_options=ffmpeg_global_options)
     ffmpeg.run()
 
-    s3_name = download_name.replace('-', '/', 1)
 
-    if not job.get('dry_run'):
+    if not event.get('dry_run'):
         print('Uploading....')
         s3 = boto3.client('s3')
-        s3.upload_file(download_name, BUCKET, s3_name)
+        s3.upload_file(download_name, BUCKET, download_name)
     else:
         print('Dry run, skipping upload.')
 
     os.remove(download_name)
     return {
-        'position': job.get('position'),
-        'name': s3_name,
-        'render': render
+        'position': clip_index,
+        'file': f's3://{BUCKET}/{download_name}',
+        'render': True
     }

@@ -16,8 +16,7 @@ from aws_cdk import (core as cdk,
 
 from aws_cdk.aws_lambda_python import PythonFunction
 
-TWITCH_CLIENT_SECRET_ARN = "arn:aws:secretsmanager:us-east-1:576758376358:secret:TWITCH_SECRET-xylhKu"
-TWITCH_CLIENT_ID = "2nakqoqdxka9v5oekyo6742bmnxt2o"
+TWITCH_CLIENT_ID = "phpnjz4llxez4zpw3iurfthoi573c8"
 MONGODB_FULL_URI_ARN = 'arn:aws:secretsmanager:us-east-1:576758376358:secret:MONGODB-6SPDyv'
 
 
@@ -41,19 +40,6 @@ class RenderLambdaStack(cdk.Stack):
                                       rest_api_name="Clips service",
                                       description="Service handles combining clips", default_cors_preflight_options=cors)
 
-        clip_queuer = PythonFunction(self, 'ClipQueuer',
-                                     description='REST API Clip Processor Lambda',
-                                     handler='handler',
-                                     index='handler.py',
-                                     entry=os.path.join(
-                                         os.getcwd(), 'lambdas', 'clip_queuer'),
-                                     runtime=lambda_.Runtime.PYTHON_3_8,
-                                     environment={
-                                         'BUCKET': individual_clips.bucket_name
-                                     },
-                                     timeout=cdk.Duration.seconds(60),
-                                     memory_size=256)
-
         transcoding_finished = PythonFunction(self, 'transcoding_finished',
                                               handler='handler',
                                               index='handler.py',
@@ -63,6 +49,7 @@ class RenderLambdaStack(cdk.Stack):
 
                                               timeout=cdk.Duration.seconds(60),
                                               memory_size=128)
+
 
         clips_endpoint = clip_api.root.add_resource("clips")
 
@@ -112,7 +99,6 @@ class RenderLambdaStack(cdk.Stack):
                                       os.getcwd(), 'lambdas', 'renderer'),
                                   runtime=lambda_.Runtime.PYTHON_3_8,
                                   environment={
-                                      'IN_BUCKET': individual_clips.bucket_name,
                                       'OUT_BUCKET': combined_clips.bucket_name,
                                       'QUEUE_ARN': mediaconvert_queue.attr_arn,
                                       'QUEUE_ROLE': mediaconvert_role.role_arn
@@ -121,8 +107,6 @@ class RenderLambdaStack(cdk.Stack):
 
         mongodb_full_uri = secretsmanager.Secret.from_secret_complete_arn(
             self, 'MONGODB_FULL_URI', MONGODB_FULL_URI_ARN)
-        twitch_client_secret = secretsmanager.Secret.from_secret_complete_arn(
-            self, 'TWITCH_CLIENT_SECRET', TWITCH_CLIENT_SECRET_ARN)
 
         notify_lambda = PythonFunction(self, 'Notify',
                                        description='SES Email Lambda',
@@ -132,59 +116,38 @@ class RenderLambdaStack(cdk.Stack):
                                            os.getcwd(), 'lambdas', 'notify'),
                                        runtime=lambda_.Runtime.PYTHON_3_8,
                                        environment={
-                                           'COMBINED_BUCKET_DNS': combined_clips.bucket_domain_name,
-                                           'INDIVIDUAL_BUCKET_DNS': individual_clips.bucket_domain_name,
-                                           'DB_NAME': 'pillar',
                                            'FROM_EMAIL': 'steven@pillar.gg',
-                                           "TWITCH_CLIENT_ID": TWITCH_CLIENT_ID,
-                                           "TWITCH_CLIENT_SECRET_ARN": TWITCH_CLIENT_SECRET_ARN,
-                                           "MONGODB_URI_SECRET_ARN": mongodb_full_uri.secret_arn
+
                                        },
                                        memory_size=256,
                                        timeout=cdk.Duration.seconds(60))
 
         mongodb_full_uri.grant_read(notify_lambda)
-        twitch_client_secret.grant_read(notify_lambda)
 
         ses_email_role = iam.PolicyStatement(
             actions=['ses:SendEmail', 'ses:SendRawEmail'], resources=['*'])
         notify_lambda.add_to_role_policy(ses_email_role)
 
-        item_added = s3_notify.LambdaDestination(notify_lambda)
-
-        combined_clips.add_event_notification(
-            s3.EventType.OBJECT_CREATED, item_added)
-
-        split_clips_task = stp_tasks.LambdaInvoke(self, "Split Clips",
-                                                  lambda_function=clip_queuer
-                                                  )
-        get_clips_task = stp_tasks.LambdaInvoke(self, "Download Clip",
+        get_clips_task = stp_tasks.LambdaInvoke(self, "Download Individual Clips",
                                                 lambda_function=downloader
                                                 )
 
-        render_video_task = stp_tasks.LambdaInvoke(self, "Render Video", heartbeat=cdk.Duration.seconds(600),
-                                                   lambda_function=renderer, integration_pattern=stepfunctions.IntegrationPattern.WAIT_FOR_TASK_TOKEN, payload=stepfunctions.TaskInput.from_object({"Input": stepfunctions.JsonPath.entire_payload, "TaskToken": stepfunctions.JsonPath.task_token}))
+        render_video_task = stp_tasks.LambdaInvoke(self, "Call Mediaconvert", heartbeat=cdk.Duration.seconds(600),
+                                                   result_path="$.mediaConvertResult", lambda_function=renderer, integration_pattern=stepfunctions.IntegrationPattern.WAIT_FOR_TASK_TOKEN, payload=stepfunctions.TaskInput.from_object({"individualClips.$": "$.downloadResult.individualClips", "userId.$": "$.user.id", "TaskToken": stepfunctions.JsonPath.task_token}))
 
-        notify_task = stp_tasks.LambdaInvoke(self, "Send notification",
+        notify_task = stp_tasks.LambdaInvoke(self, "Send Email",
                                              lambda_function=notify_lambda)
 
         process_clips = stepfunctions.Map(
-            self, "Process Clips", input_path="$.Payload.clips").iterator(get_clips_task)
+            self, "Process Clips", items_path="$.data.clips",  result_selector={"individualClips.$": "$[*].Payload"}, result_path="$.downloadResult",  parameters={"clip.$": "$$.Map.Item.Value", "index.$": "$$.Map.Item.Index", "videoId.$": "$.data.videoId"}).iterator(get_clips_task)
 
-        choice = stepfunctions.Choice(self, "Render?")
-
-        choice.when(stepfunctions.Condition.boolean_equals(
-            "$[0].Payload.render", False), notify_task)
-        choice.when(stepfunctions.Condition.boolean_equals(
-            "$[0].Payload.render", True), render_video_task)
-
-        definition = split_clips_task.next(process_clips).next(choice)
+        definition = process_clips.next(render_video_task).next(notify_task)
         state_machine = stepfunctions.StateMachine(self, "Renderer",
                                                    definition=definition
                                                    )
 
         request_template = {"application/json": json.dumps(
-            {"stateMachineArn": state_machine.state_machine_arn, "input": "$util.escapeJavaScript($input.json('$')) "})}
+            {"stateMachineArn": state_machine.state_machine_arn, "input": "{\"data\": $util.escapeJavaScript($input.json('$')), \"user\": $util.escapeJavaScript($context.authorizer.user)}"})}
         api_role = iam.Role(self, "ClipApiRole", assumed_by=iam.ServicePrincipal(
             "apigateway.amazonaws.com"))
         state_machine.grant_start_execution(api_role)
@@ -194,7 +157,7 @@ class RenderLambdaStack(cdk.Stack):
                                            response_parameters={
                                                "method.response.header.Access-Control-Allow-Origin": "'*'"},
                                            response_templates={
-                                               "application/json": "$input.json('$')"
+                                               "application/json": "$input.json('$')",
 
                                            })
         ]
@@ -203,8 +166,24 @@ class RenderLambdaStack(cdk.Stack):
 
         method_responses = [apigateway.MethodResponse(status_code="200", response_parameters={"method.response.header.Access-Control-Allow-Origin": True}, response_models={
                                                       "application/json": apigateway.EmptyModel()})]
+
+        auth_fn = PythonFunction(self, 'Authorizer',
+                                 handler='handler',
+                                 index='handler.py',
+                                 entry=os.path.join(
+                                     os.getcwd(), 'lambdas', 'authorizer'),
+                                 runtime=lambda_.Runtime.PYTHON_3_8,
+                                 timeout=cdk.Duration.seconds(30),
+                                 memory_size=128,
+                                  environment={
+                                           'TWITCH_CLIENT_ID': TWITCH_CLIENT_ID,
+                                       },)
+
+        auth = apigateway.TokenAuthorizer(
+            self, 'Token Authorizer', handler=auth_fn)
+
         clips_endpoint.add_method(
-            "POST", integration, method_responses=method_responses)
+            "POST", integration, method_responses=method_responses, authorizer=auth)
 
         events_rule = events.Rule(self, "TranscodingFinished", rule_name="MediaConvertFinished", event_pattern=events.EventPattern(source=[
                                   "aws.mediaconvert"], detail_type=["MediaConvert Job State Change"], detail={"queue": [mediaconvert_queue.attr_arn]}), targets=[events_targets.LambdaFunction(transcoding_finished)])

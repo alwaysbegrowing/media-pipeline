@@ -1,17 +1,15 @@
 import json
 import os
-
+import uuid
 import boto3
 from botocore.exceptions import ClientError
 
-INPUT_BUCKET = os.getenv('IN_BUCKET')
 OUT_BUCKET = os.getenv('OUT_BUCKET')
 QUEUE_ARN = os.getenv('QUEUE_ARN')
 QUEUE_ROLE = os.getenv('QUEUE_ROLE')
 
 
-def make_input(name):
-    filename = f's3://{INPUT_BUCKET}/{name}'
+def make_input(filename):
     return {
         "AudioSelectors": {
             "Audio Selector 1": {
@@ -36,7 +34,7 @@ def make_input(name):
     }
 
 
-def make_job(inputs, name_modifier, task_token):
+def make_job(inputs, task_token, user_id):
     task_token1 = task_token[0:256]
     task_token2 = task_token[256:512]
     task_token3 = task_token[512:768]
@@ -44,11 +42,13 @@ def make_job(inputs, name_modifier, task_token):
     with open('job.json') as f:
         job_str = f.read()
 
-    job_str = job_str.replace('**name_modifier**', name_modifier)
-    job_str = job_str.replace('**bucketname**', OUT_BUCKET)
+    job_str = job_str.replace('**name_modifier**', 'basic-combiner')
+    job_str = job_str.replace('**bucketname**', f'{OUT_BUCKET}/{user_id}')
     job_str = job_str.replace('**task_token1**', task_token1)
     job_str = job_str.replace('**task_token2**', task_token2)
     job_str = job_str.replace('**task_token3**', task_token3)
+    job_str = job_str.replace('**user_id**', str(user_id))
+    job_str = job_str.replace('**bucket**', OUT_BUCKET)
 
 
     job = json.loads(job_str)
@@ -63,26 +63,22 @@ def handler(event, context):
     '''
     Check renderEvent.json to see structure of event
     '''
-    
+
     print(event)
-    clips = []
     task_token = event['TaskToken']
+    user_id = event['userId']
+    individual_clips = event['individualClips']
+    sorted(individual_clips, key=lambda clip: clip['position'])
 
-    for item in event['Input']:
-        payload = item.get('Payload')
-        if not payload is None:
-            clips.append(payload)
 
-    clip = clips[0]
-    twitch_video_id = clip['name'].split('/')[0]
 
-    sorted(clips, key=lambda clip: clip['position'])
+
 
     inputs = []
-    for clip in clips:
-        inputs.append(make_input(clip['name']))
+    for clip in individual_clips:
+        inputs.append(make_input(clip['file']))
 
-    job_object = make_job(inputs, twitch_video_id, task_token)
+    job_object = make_job(inputs, task_token, user_id)
 
     mediaconvert_client = boto3.client(  # need endpoint url to start mediaconvert
         'mediaconvert', endpoint_url='https://lxlxpswfb.mediaconvert.us-east-1.amazonaws.com')

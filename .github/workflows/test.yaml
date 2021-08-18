@@ -41,15 +41,6 @@ jobs:
       - name: CDK Synth
         run: cdk synth RenderLambdaStack --no-staging > template.yaml
 
-      - name: Clip Queuer Lambda
-        run: |
-          sam local invoke ClipQueuer58A9C9FE --env-vars env.json --event ./events/clipQueuerEvent.json -l ./logs/clipQueuer.txt
-
-      - name: Test Clip Queuer 
-        uses: pillargg/sam-ots@master
-        with:
-          file: ./logs/clipQueuer.txt
-
       - name: Render Lambda
         run: |
           sam local invoke FinalRendererCB91BC08 --env-vars env.json --event ./events/renderEvent.json -l ./logs/render.txt

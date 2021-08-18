@@ -6,12 +6,16 @@ import boto3
 import base64
 from botocore.exceptions import ClientError
 from db import connect_to_db
+from youtube_upload.client import YouTubeUploader
+
 
 
 
 import boto3
 
 cached_yt_secrets = None
+
+
 
 def get_yt_secrets():
     global cached_yt_secrets
@@ -33,10 +37,33 @@ def handler(event, context):
     print(event)
     print(get_yt_secrets())
 
+
     db = connect_to_db()
     search = {"twitch_id": "128675916"}
+    yt_secrets = get_yt_secrets()
+    YT_CLIENT_ID = yt_secrets['YT_CLIENT_ID']
+    YT_CLIENT_SECRET = yt_secrets['YT_CLIENT_SECRET']
 
-    result = db['youtube_tokens'].find_one(search)
+
+    yt_access_tokens = db['youtube_tokens'].find_one(search)
+    access_token = yt_access_tokens['access_token']
+    refresh_token = yt_access_tokens['refresh_token']
+
+    uploader = YoutubeUploader(client_id,client_secret)
+
+    options = {
+    "title" : "Example title", # The video title
+    "description" : "Example description", # The video description
+    "tags" : ["tag1", "tag2", "tag3"],
+    "categoryId" : "22",
+    "privacyStatus" : "private", # Video privacy. Can either be "public", "private", or "unlisted"
+    "kids" : False, # Specifies if the Video if for kids or not. Defaults to False.
+    "thumbnailLink" : "https://cdn.havecamerawilltravel.com/photographer/files/2020/01/youtube-logo-new-1068x510.jpg" # Optional. Specifies video thumbnail.
+    }
+    file_path = "https://qa-render-combinedclips9275ae0a-13myjw544jfv0.s3.amazonaws.com/128675916/ea534c46-68f8-4b78-a984-c61e7d242fc9-basic-combiner.mp4"
+    uploader.authenticate(access_token=access_token, refresh_token=refresh_token)
+    result= uploader.upload(file_path, options)
+
     print(result)
     return result
 

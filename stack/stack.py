@@ -121,8 +121,6 @@ class RenderLambdaStack(cdk.Stack):
                                        memory_size=256,
                                        timeout=cdk.Duration.seconds(60))
 
-        mongodb_full_uri.grant_read(notify_lambda)
-
         ses_email_role = iam.PolicyStatement(
             actions=['ses:SendEmail', 'ses:SendRawEmail'], resources=['*'])
         notify_lambda.add_to_role_policy(ses_email_role)
@@ -140,7 +138,27 @@ class RenderLambdaStack(cdk.Stack):
         process_clips = stepfunctions.Map(
             self, "Process Clips", items_path="$.data.clips",  result_selector={"individualClips.$": "$[*].Payload"}, result_path="$.downloadResult",  parameters={"clip.$": "$$.Map.Item.Value", "index.$": "$$.Map.Item.Index", "videoId.$": "$.data.videoId"}).iterator(get_clips_task)
 
-        definition = process_clips.next(render_video_task).next(notify_task)
+        yt_upload_fn = PythonFunction(self, 'Youtube Upload',
+                                      handler='handler',
+                                      index='handler.py',
+                                      entry=os.path.join(
+                                          os.getcwd(), 'lambdas', 'yt_upload'),
+                                      runtime=lambda_.Runtime.PYTHON_3_8,
+                                      timeout=cdk.Duration.seconds(30),
+                                      memory_size=128,
+                                      environment={
+                                          'TWITCH_CLIENT_ID': TWITCH_CLIENT_ID,
+                                      })
+        upload_to_youtube_question = stepfunctions.Choice(
+            self, "Upload To Youtube?"
+        )
+
+
+        upload_to_yt_task = stp_tasks.LambdaInvoke(self, "Upload To Youtube",
+                                             lambda_function=yt_upload_fn)
+        mongodb_full_uri.grant_read(yt_upload_fn)
+
+        definition = process_clips.next(render_video_task).next(upload_to_youtube_question.when(stepfunctions.Condition.boolean_equals("$.data", True), upload_to_yt_task).otherwise(notify_task))
         state_machine = stepfunctions.StateMachine(self, "Renderer",
                                                    definition=definition
                                                    )
@@ -174,9 +192,9 @@ class RenderLambdaStack(cdk.Stack):
                                  runtime=lambda_.Runtime.PYTHON_3_8,
                                  timeout=cdk.Duration.seconds(30),
                                  memory_size=128,
-                                  environment={
-                                           'TWITCH_CLIENT_ID': TWITCH_CLIENT_ID,
-                                       },)
+                                 environment={
+                                     'TWITCH_CLIENT_ID': TWITCH_CLIENT_ID,
+                                 })
 
         auth = apigateway.TokenAuthorizer(
             self, 'Token Authorizer', handler=auth_fn)

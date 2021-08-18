@@ -50,6 +50,16 @@ class RenderLambdaStack(cdk.Stack):
                                               timeout=cdk.Duration.seconds(60),
                                               memory_size=128)
 
+        transcoding_finished = PythonFunction(self, 'transcoding_finished',
+                                              handler='handler',
+                                              index='handler.py',
+                                              entry=os.path.join(
+                                                  os.getcwd(), 'lambdas', 'transcoding_progress'),
+                                              runtime=lambda_.Runtime.PYTHON_3_8,
+
+                                              timeout=cdk.Duration.seconds(60),
+                                              memory_size=128)
+
         clips_endpoint = clip_api.root.add_resource("clips")
 
         ecr_image = lambda_.EcrImageCode.from_asset_image(

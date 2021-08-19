@@ -166,6 +166,7 @@ class RenderLambdaStack(cdk.Stack):
                                              lambda_function=yt_upload_fn)
         mongodb_full_uri.grant_read(yt_upload_fn)
         youtube_secrets.grant_read(yt_upload_fn)
+        combined_clips.grant_read(yt_upload_fn)
 
 
         definition = process_clips.next(render_video_task).next(upload_to_youtube_question.when(stepfunctions.Condition.boolean_equals("$.data", True), upload_to_yt_task).otherwise(notify_task))

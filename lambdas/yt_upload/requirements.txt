@@ -1,2 +1,3 @@
-pillar-youtube-upload
+pillar-youtube-upload==0.3.0
 pymongo[srv]
+s3fs

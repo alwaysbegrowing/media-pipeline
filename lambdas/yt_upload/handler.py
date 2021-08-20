@@ -16,8 +16,8 @@ def handler(event, context):
     os.chdir('/tmp')
 
     db = connect_to_db()
-    twitch_id = event['user']['display_name']
-    display_name = event['user']['id']
+    twitch_id = event['user']['id']
+    display_name = event['user']['display_name']
     s3_file = event['mediaConvertResult']['outputFilePath']
     
     search = {"twitch_id": twitch_id}

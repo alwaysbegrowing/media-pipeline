@@ -1,7 +1,4 @@
-import base64
-import json
 import os
-import uuid
 from datetime import datetime
 
 import s3fs
@@ -19,7 +16,11 @@ def handler(event, context):
     os.chdir('/tmp')
 
     db = connect_to_db()
-    search = {"twitch_id": "128675916"}
+    twitch_id = event['user']['display_name']
+    display_name = event['user']['id']
+    s3_file = event['mediaConvertResult']['outputFilePath']
+    
+    search = {"twitch_id": twitch_id}
 
     yt_access_tokens = db['youtube_tokens'].find_one(search)
     access_token = yt_access_tokens['access_token']
@@ -28,19 +29,15 @@ def handler(event, context):
     uploader = YoutubeUploader(YT_CLIENT_ID, YT_CLIENT_SECRET)
 
     options = {
-        "title" : "Example title", # The video title
-        "description" : "Example description", # The video description
-        "tags" : ["tag1", "tag2", "tag3"],
-        "categoryId" : "22",
+        "title" : f'{display_name} - Highlights', # The video title
+        "description" : f'Hey {display_name} - I made this compliation of your latest stream, let me know what you think!',
+        "categoryId" : "20",
         "privacyStatus" : "private", # Video privacy. Can either be "public", "private", or "unlisted"
         "kids" : False, # Specifies if the Video if for kids or not. Defaults to False.
-        "thumbnailLink" : "https://cdn.havecamerawilltravel.com/photographer/files/2020/01/youtube-logo-new-1068x510.jpg" # Optional. Specifies video thumbnail.
     }
     
     uploader.authenticate(access_token=access_token, refresh_token=refresh_token)
     
-    # get s3 file path from event
-    s3_file = event['file_path']
 
     # construct s3 fs
     s3 = s3fs.S3FileSystem(anon=False)

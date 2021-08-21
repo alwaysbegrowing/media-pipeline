@@ -65,17 +65,12 @@ class FailureMessage(HtmlTemplate):
 
 
 class YoutubeSuccess(HtmlTemplate):
-    def __init__(self, subject, display_name: str, file: str) -> None:
+    def __init__(self, subject, display_name: str, file: str, s3_file: str) -> None:
         html = f'''
         <body>
         {display_name}, <br>
         Your video has been uploaded to YouTube! <br>
-        View is here: {file}        
+        Youtube URL: {file} <br>
+        Raw File: {s3_file}                
         '''
         super().__init__(subject, html)
-
-
-if __name__ == '__main__':
-    x = S3Success('test', 'wow')
-    y = HtmlTemplate("wtf")
-    print(x.html)

@@ -163,13 +163,13 @@ class RenderLambdaStack(cdk.Stack):
 
 
         upload_to_yt_task = stp_tasks.LambdaInvoke(self, "Upload To Youtube",
-                                             lambda_function=yt_upload_fn)
+                                             lambda_function=yt_upload_fn, result_path="$.UploadToYoutubeResult")
         mongodb_full_uri.grant_read(yt_upload_fn)
         youtube_secrets.grant_read(yt_upload_fn)
         combined_clips.grant_read(yt_upload_fn)
 
 
-        definition = process_clips.next(render_video_task).next(upload_to_youtube_question.when(stepfunctions.Condition.boolean_equals("$.data.uploadToYoutube", True), upload_to_yt_task).otherwise(notify_task))
+        definition = process_clips.next(render_video_task).next(upload_to_youtube_question.when(stepfunctions.Condition.boolean_equals("$.data.uploadToYoutube", True), upload_to_yt_task.next(notify_task)).otherwise(notify_task))
         state_machine = stepfunctions.StateMachine(self, "Renderer",
                                                    definition=definition
                                                    )

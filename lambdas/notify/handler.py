@@ -1,5 +1,5 @@
-from notify.email_templates import S3Success, FailureMessage, YoutubeSuccess
-from notify.utils import s3_to_http
+from email_templates import S3Success, FailureMessage, YoutubeSuccess
+from utils import s3_to_http
 import os
 import boto3
 
@@ -11,7 +11,7 @@ def handler(event, context):
     s3_url = event['mediaConvertResult']['outputFilePath']
     request_email = event['user']['email']
     display_name = event['user']['display_name']
-    youtube_url = event.get('UploadToYoutubeResult', {}).get('edit_url')
+    youtube_url = event.get('UploadToYoutubeResult', {}).get('youtubeData', {}).get('edit_url')
     compilation_file_url = s3_to_http(s3_url)
 
     if (youtube_url):
@@ -20,7 +20,7 @@ def handler(event, context):
     elif (s3_url):
         message = S3Success(display_name, compilation_file_url).message
 
-    email_client.send_email(
+    result = email_client.send_email(
         Source=FROM_EMAIL,
         Destination={
             'BccAddresses': [
@@ -29,5 +29,6 @@ def handler(event, context):
         },
         Message=message
     )
+    print(result)
 
     return {"message": message}

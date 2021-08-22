@@ -131,15 +131,22 @@ class RenderLambdaStack(cdk.Stack):
             actions=['ses:SendEmail', 'ses:SendRawEmail'], resources=['*'])
         notify_lambda.add_to_role_policy(ses_email_role)
 
+
+        notify_task = stp_tasks.LambdaInvoke(self, "Send Email",
+                                             lambda_function=notify_lambda)
+
+        send_failure_email = stp_tasks.LambdaInvoke(self, "Send Failure Email",
+                                             lambda_function=notify_lambda)
+     
+
         get_clips_task = stp_tasks.LambdaInvoke(self, "Download Individual Clips",
                                                 lambda_function=downloader
-                                                )
+                                                ).add_catch(send_failure_email, result_path="$.Error")
 
         render_video_task = stp_tasks.LambdaInvoke(self, "Call Mediaconvert", heartbeat=cdk.Duration.seconds(600),
                                                    result_path="$.mediaConvertResult", lambda_function=renderer, integration_pattern=stepfunctions.IntegrationPattern.WAIT_FOR_TASK_TOKEN, payload=stepfunctions.TaskInput.from_object({"individualClips.$": "$.downloadResult.individualClips", "displayName.$": "$.user.display_name", "TaskToken": stepfunctions.JsonPath.task_token}))
 
-        notify_task = stp_tasks.LambdaInvoke(self, "Send Email",
-                                             lambda_function=notify_lambda)
+       
 
         process_clips = stepfunctions.Map(
             self, "Process Clips", items_path="$.data.clips",  result_selector={"individualClips.$": "$[*].Payload"}, result_path="$.downloadResult",  parameters={"clip.$": "$$.Map.Item.Value", "index.$": "$$.Map.Item.Index", "videoId.$": "$.data.videoId"}).iterator(get_clips_task)
@@ -162,7 +169,7 @@ class RenderLambdaStack(cdk.Stack):
         )
 
 
-        upload_to_yt_task = stp_tasks.LambdaInvoke(self, "Upload To Youtube",
+        upload_to_yt_task = stp_tasks.LambdaInvoke(self, "Upload To Youtube", result_selector={"youtubeData.$": "$.Payload"},
                                              lambda_function=yt_upload_fn, result_path="$.UploadToYoutubeResult")
         mongodb_full_uri.grant_read(yt_upload_fn)
         youtube_secrets.grant_read(yt_upload_fn)

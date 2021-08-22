@@ -32,9 +32,9 @@ class HtmlTemplate():
     </html>
     '''
 
-    def __init__(self, html: str, subject: str) -> None:
-        self._html = html
+    def __init__(self, subject: str, html: str) -> None:
         self.subject = subject
+        self._html = html
 
     @property
     def message(self):
@@ -43,29 +43,35 @@ class HtmlTemplate():
 
 
 class S3Success(HtmlTemplate):
-    def __init__(self, subject, display_name: str, file: str) -> None:
+    subject = 'Your Pillar Export is Ready! (link inside)'
+  
+    def __init__(self, display_name: str, file: str) -> None:
         html = f'''
-        <body>
-        {display_name}, <br>
-        Here is your Pillar compilation: <br>
-        {file}
-        '''
-        super().__init__(subject, html)
+            <body>
+            {display_name}, <br>
+            Here is your Pillar compilation: <br>
+            {file}
+            '''
+        super().__init__(self.subject, html)
 
 
 class FailureMessage(HtmlTemplate):
-    def __init__(self, subject, display_name: str, file: str) -> None:
+    subject = 'Your Pillar compilation failed'
+
+    def __init__(self, display_name: str) -> None:
         html = f'''
-        <body>
-        {display_name}, <br>
-        There was an error creating the compilation :( <br>
-        Please reply to this email and we will be happy to fix it!<br>
-        '''
-        super().__init__(subject, html)
+            <body>
+            {display_name}, <br>
+            There was an error creating the compilation :( <br>
+            Please reply to this email and we will be happy to fix it!<br>
+            '''
+        super().__init__(self.subject, html)
 
 
 class YoutubeSuccess(HtmlTemplate):
-    def __init__(self, subject, display_name: str, file: str, s3_file: str) -> None:
+    subject = 'Your Pillar Video is Ready! (links inside)'
+
+    def __init__(self, display_name: str, file: str, s3_file: str) -> None:
         html = f'''
         <body>
         {display_name}, <br>
@@ -73,4 +79,4 @@ class YoutubeSuccess(HtmlTemplate):
         Youtube URL: {file} <br>
         Raw File: {s3_file}                
         '''
-        super().__init__(subject, html)
+        super().__init__(self.subject, html)

@@ -5,9 +5,7 @@ from youtube_upload.client import YoutubeUploader
 from db import connect_to_db
 from yt_secrets import get_yt_secrets
 
-yt_secrets = get_yt_secrets()
-YT_CLIENT_ID = yt_secrets['YT_CLIENT_ID']
-YT_CLIENT_SECRET = yt_secrets['YT_CLIENT_SECRET']
+yt_client_id, yt_client_secret = get_yt_secrets()
 
 
 def handler(event, context):
@@ -26,7 +24,7 @@ def handler(event, context):
     access_token = yt_access_tokens['access_token']
     refresh_token = yt_access_tokens['refresh_token']
 
-    uploader = YoutubeUploader(YT_CLIENT_ID, YT_CLIENT_SECRET)
+    uploader = YoutubeUploader(yt_client_id, yt_client_secret)
 
     options = {
         "title": f'{display_name} - Highlights',  # The video title

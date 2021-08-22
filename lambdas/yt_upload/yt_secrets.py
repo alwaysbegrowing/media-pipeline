@@ -15,4 +15,7 @@ def get_yt_secrets():
         )
         cached_yt_secrets = secret_client.get_secret_value(
                 SecretId=YT_SECRET_NAME)['SecretString']
-    return json.loads(cached_yt_secrets)
+    yt_secrets = json.loads(cached_yt_secrets)
+    yt_client_id = yt_secrets['YT_CLIENT_ID']
+    yt_client_secret = yt_secrets['YT_CLIENT_SECRET']
+    return yt_client_id, yt_client_secret

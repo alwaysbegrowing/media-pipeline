@@ -6,7 +6,7 @@ import boto3
 cached_uri = None
 cached_db = None
 
-secret_name = 'MONGODB_FULL_URI'
+MONGODB_SECRET_NAME = 'MONGODB_FULL_URI'
 db_name = os.getenv('DB_NAME')
 
 
@@ -22,7 +22,7 @@ def connect_to_db():
             service_name='secretsmanager'
         )
         cached_uri = secret_client.get_secret_value(
-            SecretId=secret_name)['SecretString']
+            SecretId=MONGODB_SECRET_NAME)['SecretString']
     client = pymongo.MongoClient(cached_uri)
     db = client[db_name]
     return db

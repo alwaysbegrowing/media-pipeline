@@ -6,7 +6,7 @@ cached_yt_secrets = None
 
 def get_yt_secrets():
     global cached_yt_secrets
-    yt_secret_name = "YT_CREDENTIALS"
+    YT_SECRET_NAME = "YT_CREDENTIALS"
 
     if (not cached_yt_secrets):
         session = boto3.session.Session()
@@ -14,5 +14,5 @@ def get_yt_secrets():
             service_name='secretsmanager'
         )
         cached_yt_secrets = secret_client.get_secret_value(
-                SecretId=yt_secret_name)['SecretString']
+                SecretId=YT_SECRET_NAME)['SecretString']
     return json.loads(cached_yt_secrets)

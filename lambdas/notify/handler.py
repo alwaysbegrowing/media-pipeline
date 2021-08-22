@@ -1,56 +1,34 @@
+from email_templates import S3Success, FailureMessage, YoutubeSuccess
+from utils import s3_to_http
 import os
 import boto3
-
 
 FROM_EMAIL = os.getenv('FROM_EMAIL')
 email_client = boto3.client('ses')
 
+
 def handler(event, context):
-    bucket = event['mediaConvertResult']['Bucket']
-    Key = event['mediaConvertResult']['Key']
+    s3_url = event['mediaConvertResult']['outputFilePath']
     request_email = event['user']['email']
     display_name = event['user']['display_name']
+    youtube_url = event.get('UploadToYoutubeResult', {}).get('youtubeData', {}).get('edit_url')
+    compilation_file_url = s3_to_http(s3_url)
 
+    if (youtube_url):
+        message = YoutubeSuccess(display_name, youtube_url, compilation_file_url).message
 
-    compilation_file_url = 'https://' + bucket + '.s3.amazonaws.com' + '/' + Key
-   
+    elif (s3_url):
+        message = S3Success(display_name, compilation_file_url).message
 
-    html = f'''
-    <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html>
-  <meta http-equiv="Content-Type" content="text/html charset=UTF-8" />
-  <head>
-  </head>
-  <body>
-  {display_name}, <br>
-  Here is your Pillar compilation: <br>
-  
-  {compilation_file_url}
-  <br>
-  Thanks for using Pillar! <br>
-  See you soon, <br>
-  The Pillar Team
-      </body>
-</html>
-    '''
-
-    email_client.send_email(
+    result = email_client.send_email(
         Source=FROM_EMAIL,
         Destination={
             'BccAddresses': [
                 request_email,
             ]
         },
-        Message={
-            'Subject': {
-                'Data': 'Pillar - Your video is ready (link inside)'
-            },
-            'Body': {
-                'Html': {
-                    'Data': html
-                }
-            }
-        }
+        Message=message
     )
+    print(result)
 
-    return {'statusCode': 200}
+    return {"message": message}

@@ -17,12 +17,14 @@ from aws_cdk import (core as cdk,
 from aws_cdk.aws_lambda_python import PythonFunction
 
 TWITCH_CLIENT_ID = "phpnjz4llxez4zpw3iurfthoi573c8"
-MONGODB_FULL_URI_ARN = 'arn:aws:secretsmanager:us-east-1:576758376358:secret:MONGODB-6SPDyv'
+MONGODB_FULL_URI_ARN = 'arn:aws:secretsmanager:us-east-1:576758376358:secret:MONGODB_FULL_URI-DBSAtt'
+YT_CREDENTIALS = 'arn:aws:secretsmanager:us-east-1:576758376358:secret:YT_CREDENTIALS-7vn4OJ'
+
 
 
 class RenderLambdaStack(cdk.Stack):
 
-    def __init__(self, scope: cdk.Construct, construct_id: str, **kwargs) -> None:
+    def __init__(self, scope: cdk.Construct, construct_id: str, mongo_db_database: str = 'pillar', **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
         lifetime = s3.LifecycleRule(expiration=cdk.Duration.days(
@@ -108,6 +110,9 @@ class RenderLambdaStack(cdk.Stack):
         mongodb_full_uri = secretsmanager.Secret.from_secret_complete_arn(
             self, 'MONGODB_FULL_URI', MONGODB_FULL_URI_ARN)
 
+        youtube_secrets = secretsmanager.Secret.from_secret_complete_arn(
+            self, 'YT_CREDENTIALS', YT_CREDENTIALS)
+
         notify_lambda = PythonFunction(self, 'Notify',
                                        description='SES Email Lambda',
                                        handler='handler',
@@ -122,26 +127,56 @@ class RenderLambdaStack(cdk.Stack):
                                        memory_size=256,
                                        timeout=cdk.Duration.seconds(60))
 
-        mongodb_full_uri.grant_read(notify_lambda)
-
         ses_email_role = iam.PolicyStatement(
             actions=['ses:SendEmail', 'ses:SendRawEmail'], resources=['*'])
         notify_lambda.add_to_role_policy(ses_email_role)
 
-        get_clips_task = stp_tasks.LambdaInvoke(self, "Download Individual Clips",
-                                                lambda_function=downloader
-                                                )
-
-        render_video_task = stp_tasks.LambdaInvoke(self, "Call Mediaconvert", heartbeat=cdk.Duration.seconds(600),
-                                                   result_path="$.mediaConvertResult", lambda_function=renderer, integration_pattern=stepfunctions.IntegrationPattern.WAIT_FOR_TASK_TOKEN, payload=stepfunctions.TaskInput.from_object({"individualClips.$": "$.downloadResult.individualClips", "userId.$": "$.user.id", "TaskToken": stepfunctions.JsonPath.task_token}))
 
         notify_task = stp_tasks.LambdaInvoke(self, "Send Email",
                                              lambda_function=notify_lambda)
 
+        send_failure_email = stp_tasks.LambdaInvoke(self, "Send Failure Email",
+                                             lambda_function=notify_lambda)
+     
+
+        get_clips_task = stp_tasks.LambdaInvoke(self, "Download Individual Clips",
+                                                lambda_function=downloader
+                                                ).add_catch(send_failure_email, result_path="$.Error")
+
+        render_video_task = stp_tasks.LambdaInvoke(self, "Call Mediaconvert", heartbeat=cdk.Duration.seconds(600),
+                                                   result_path="$.mediaConvertResult", lambda_function=renderer, integration_pattern=stepfunctions.IntegrationPattern.WAIT_FOR_TASK_TOKEN, payload=stepfunctions.TaskInput.from_object({"individualClips.$": "$.downloadResult.individualClips", "displayName.$": "$.user.display_name", "TaskToken": stepfunctions.JsonPath.task_token}))
+
+       
+
         process_clips = stepfunctions.Map(
             self, "Process Clips", items_path="$.data.clips",  result_selector={"individualClips.$": "$[*].Payload"}, result_path="$.downloadResult",  parameters={"clip.$": "$$.Map.Item.Value", "index.$": "$$.Map.Item.Index", "videoId.$": "$.data.videoId"}).iterator(get_clips_task)
 
-        definition = process_clips.next(render_video_task).next(notify_task)
+        yt_upload_fn = PythonFunction(self, 'Youtube Upload',
+                                      handler='handler',
+                                      index='handler.py',
+                                      entry=os.path.join(
+                                          os.getcwd(), 'lambdas', 'yt_upload'),
+                                      runtime=lambda_.Runtime.PYTHON_3_8,
+                                      timeout=cdk.Duration.seconds(30),
+                                      memory_size=1024,
+                                      environment={
+                                          'TWITCH_CLIENT_ID': TWITCH_CLIENT_ID,
+                                        'DB_NAME': mongo_db_database,
+
+                                      })
+        upload_to_youtube_question = stepfunctions.Choice(
+            self, "Upload To Youtube?"
+        )
+
+
+        upload_to_yt_task = stp_tasks.LambdaInvoke(self, "Upload To Youtube", result_selector={"youtubeData.$": "$.Payload"},
+                                             lambda_function=yt_upload_fn, result_path="$.UploadToYoutubeResult")
+        mongodb_full_uri.grant_read(yt_upload_fn)
+        youtube_secrets.grant_read(yt_upload_fn)
+        combined_clips.grant_read(yt_upload_fn)
+
+
+        definition = process_clips.next(render_video_task).next(upload_to_youtube_question.when(stepfunctions.Condition.boolean_equals("$.data.uploadToYoutube", True), upload_to_yt_task.next(notify_task)).otherwise(notify_task))
         state_machine = stepfunctions.StateMachine(self, "Renderer",
                                                    definition=definition
                                                    )
@@ -175,9 +210,9 @@ class RenderLambdaStack(cdk.Stack):
                                  runtime=lambda_.Runtime.PYTHON_3_8,
                                  timeout=cdk.Duration.seconds(30),
                                  memory_size=128,
-                                  environment={
-                                           'TWITCH_CLIENT_ID': TWITCH_CLIENT_ID,
-                                       },)
+                                 environment={
+                                     'TWITCH_CLIENT_ID': TWITCH_CLIENT_ID,
+                                 })
 
         auth = apigateway.TokenAuthorizer(
             self, 'Token Authorizer', handler=auth_fn)

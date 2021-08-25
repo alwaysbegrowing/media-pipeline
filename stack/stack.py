@@ -21,7 +21,6 @@ MONGODB_FULL_URI_ARN = 'arn:aws:secretsmanager:us-east-1:576758376358:secret:MON
 YT_CREDENTIALS = 'arn:aws:secretsmanager:us-east-1:576758376358:secret:YT_CREDENTIALS-7vn4OJ'
 
 
-
 class RenderLambdaStack(cdk.Stack):
 
     def __init__(self, scope: cdk.Construct, construct_id: str, mongo_db_database: str = 'pillar', **kwargs) -> None:
@@ -51,7 +50,6 @@ class RenderLambdaStack(cdk.Stack):
 
                                               timeout=cdk.Duration.seconds(60),
                                               memory_size=128)
-
 
         clips_endpoint = clip_api.root.add_resource("clips")
 
@@ -131,13 +129,11 @@ class RenderLambdaStack(cdk.Stack):
             actions=['ses:SendEmail', 'ses:SendRawEmail'], resources=['*'])
         notify_lambda.add_to_role_policy(ses_email_role)
 
-
         notify_task = stp_tasks.LambdaInvoke(self, "Send Email",
                                              lambda_function=notify_lambda)
 
         send_failure_email = stp_tasks.LambdaInvoke(self, "Send Failure Email",
-                                             lambda_function=notify_lambda)
-     
+                                                    lambda_function=notify_lambda)
 
         get_clips_task = stp_tasks.LambdaInvoke(self, "Download Individual Clips",
                                                 lambda_function=downloader
@@ -145,8 +141,6 @@ class RenderLambdaStack(cdk.Stack):
 
         render_video_task = stp_tasks.LambdaInvoke(self, "Call Mediaconvert", heartbeat=cdk.Duration.seconds(600),
                                                    result_path="$.mediaConvertResult", lambda_function=renderer, integration_pattern=stepfunctions.IntegrationPattern.WAIT_FOR_TASK_TOKEN, payload=stepfunctions.TaskInput.from_object({"individualClips.$": "$.downloadResult.individualClips", "displayName.$": "$.user.display_name", "TaskToken": stepfunctions.JsonPath.task_token}))
-
-       
 
         process_clips = stepfunctions.Map(
             self, "Process Clips", items_path="$.data.clips",  result_selector={"individualClips.$": "$[*].Payload"}, result_path="$.downloadResult",  parameters={"clip.$": "$$.Map.Item.Value", "index.$": "$$.Map.Item.Index", "videoId.$": "$.data.videoId"}).iterator(get_clips_task)
@@ -161,22 +155,21 @@ class RenderLambdaStack(cdk.Stack):
                                       memory_size=1024,
                                       environment={
                                           'TWITCH_CLIENT_ID': TWITCH_CLIENT_ID,
-                                        'DB_NAME': mongo_db_database,
+                                          'DB_NAME': mongo_db_database,
 
                                       })
         upload_to_youtube_question = stepfunctions.Choice(
             self, "Upload To Youtube?"
         )
 
-
         upload_to_yt_task = stp_tasks.LambdaInvoke(self, "Upload To Youtube", result_selector={"youtubeData.$": "$.Payload"},
-                                             lambda_function=yt_upload_fn, result_path="$.UploadToYoutubeResult")
+                                                   lambda_function=yt_upload_fn, result_path="$.UploadToYoutubeResult")
         mongodb_full_uri.grant_read(yt_upload_fn)
         youtube_secrets.grant_read(yt_upload_fn)
         combined_clips.grant_read(yt_upload_fn)
 
-
-        definition = process_clips.next(render_video_task).next(upload_to_youtube_question.when(stepfunctions.Condition.boolean_equals("$.data.uploadToYoutube", True), upload_to_yt_task.next(notify_task)).otherwise(notify_task))
+        definition = process_clips.next(render_video_task).next(upload_to_youtube_question.when(stepfunctions.Condition.boolean_equals(
+            "$.data.uploadToYoutube", True), upload_to_yt_task.next(notify_task)).otherwise(notify_task))
         state_machine = stepfunctions.StateMachine(self, "Renderer",
                                                    definition=definition
                                                    )
@@ -220,7 +213,7 @@ class RenderLambdaStack(cdk.Stack):
         clips_endpoint.add_method(
             "POST", integration, method_responses=method_responses, authorizer=auth)
 
-        events_rule = events.Rule(self, "TranscodingFinished", rule_name="MediaConvertFinished", event_pattern=events.EventPattern(source=[
+        events_rule = events.Rule(self, "TranscodingFinished", rule_name=f"MediaConvertFinished-{construct_id}", event_pattern=events.EventPattern(source=[
                                   "aws.mediaconvert"], detail_type=["MediaConvert Job State Change"], detail={"queue": [mediaconvert_queue.attr_arn]}), targets=[events_targets.LambdaFunction(transcoding_finished)])
         transcoding_finished.add_to_role_policy(iam.PolicyStatement(effect=iam.Effect.ALLOW, actions=[
                                                 "states:SendTask*"], resources=[state_machine.state_machine_arn]))

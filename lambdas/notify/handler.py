@@ -11,11 +11,18 @@ def handler(event, context):
     s3_url = event['mediaConvertResult']['outputFilePath']
     request_email = event['user']['email']
     display_name = event['user']['display_name']
-    youtube_url = event.get('UploadToYoutubeResult', {}).get('youtubeData', {}).get('edit_url')
+    youtube_url = event.get(
+        'UploadToYoutubeResult',
+        {}).get(
+        'youtubeData',
+        {}).get('edit_url')
     compilation_file_url = s3_to_http(s3_url)
 
     if (youtube_url):
-        message = YoutubeSuccess(display_name, youtube_url, compilation_file_url).message
+        message = YoutubeSuccess(
+            display_name,
+            youtube_url,
+            compilation_file_url).message
 
     elif (s3_url):
         message = S3Success(display_name, compilation_file_url).message

@@ -44,7 +44,7 @@ class HtmlTemplate():
 
 class S3Success(HtmlTemplate):
     subject = 'Your Pillar Export is Ready! (link inside)'
-  
+
     def __init__(self, display_name: str, file: str) -> None:
         html = f'''
             <body>
@@ -77,6 +77,6 @@ class YoutubeSuccess(HtmlTemplate):
         {display_name}, <br>
         Your video has been uploaded to YouTube! <br>
         Youtube URL: {file} <br>
-        Raw File: {s3_file}                
+        Raw File: {s3_file}
         '''
         super().__init__(self.subject, html)

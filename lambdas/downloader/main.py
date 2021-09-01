@@ -15,6 +15,7 @@ def get_stream_manifest_url(video_id):
     streams = streamlink.streams(original_url)
     return streams.get('best').url
 
+
 def handler(event, context):
     '''
     This is what the event body is going to look like:
@@ -27,9 +28,9 @@ def handler(event, context):
         'render': True
     }
     '''
-    
+
     os.chdir('/tmp')
-    
+
     clip = event['clip']
     video_id = event['videoId']
     clip_index = event['index']
@@ -44,7 +45,7 @@ def handler(event, context):
     }
 
     ffmpeg_outputs = {
-        download_name:  ['-t', duration, '-y', '-c', 'copy']
+        download_name: ['-t', duration, '-y', '-c', 'copy']
     }
 
     ffmpeg_global_options = []
@@ -52,7 +53,6 @@ def handler(event, context):
     ffmpeg = FFmpeg(inputs=ffmpeg_inputs, outputs=ffmpeg_outputs,
                     global_options=ffmpeg_global_options)
     ffmpeg.run()
-
 
     if not event.get('dry_run'):
         print('Uploading....')

@@ -4,6 +4,7 @@ import boto3
 
 cached_yt_secrets = None
 
+
 def get_yt_secrets():
     global cached_yt_secrets
     YT_SECRET_NAME = "YT_CREDENTIALS"
@@ -14,7 +15,7 @@ def get_yt_secrets():
             service_name='secretsmanager'
         )
         cached_yt_secrets = secret_client.get_secret_value(
-                SecretId=YT_SECRET_NAME)['SecretString']
+            SecretId=YT_SECRET_NAME)['SecretString']
     yt_secrets = json.loads(cached_yt_secrets)
     yt_client_id = yt_secrets['YT_CLIENT_ID']
     yt_client_secret = yt_secrets['YT_CLIENT_SECRET']

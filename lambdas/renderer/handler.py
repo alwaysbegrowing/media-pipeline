@@ -48,7 +48,6 @@ def make_job(inputs, task_token, display_name):
     job_str = job_str.replace('**task_token2**', task_token2)
     job_str = job_str.replace('**task_token3**', task_token3)
 
-
     job = json.loads(job_str)
     job["Settings"]["Inputs"] = inputs
     job["Queue"] = QUEUE_ARN
@@ -67,10 +66,6 @@ def handler(event, context):
     display_name = event['displayName']
     individual_clips = event['individualClips']
     sorted(individual_clips, key=lambda clip: clip['position'])
-
-
-
-
 
     inputs = []
     for clip in individual_clips:

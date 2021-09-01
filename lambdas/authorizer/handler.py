@@ -19,7 +19,6 @@ import os
 TWITCH_CLIENT_ID = os.getenv('TWITCH_CLIENT_ID')
 
 
-
 def get_user(authorization_token):
     headers = {
         'Client-Id': TWITCH_CLIENT_ID,
@@ -30,7 +29,7 @@ def get_user(authorization_token):
         return resp.json()["data"][0]
     else:
         raise Exception('Unauthorized Request')
-    
+
 
 def handler(event, context):
     """Do not print the auth token unless absolutely necessary """
@@ -72,35 +71,36 @@ def handler(event, context):
     policy.stage = apiGatewayArnTmp[1]
     policy.allowMethod(HttpVerb.POST, "/clips")
 
-
     # Finally, build the policy
     authResponse = policy.build()
- 
+
     # new! -- add additional key-value pairs associated with the authenticated principal
     # these are made available by APIGW like so: $context.authorizer.<key>
     # additional context is cached
     context = {
         'user': json.dumps(user),
-        'key': 'value', # $context.authorizer.key -> value
-        'number' : 1,
-        'bool' : True
+        'key': 'value',  # $context.authorizer.key -> value
+        'number': 1,
+        'bool': True
     }
     # context['arr'] = ['foo'] <- this is invalid, APIGW will not accept it
     # context['obj'] = {'foo':'bar'} <- also invalid
- 
+
     authResponse['context'] = context
-    
+
     return authResponse
 
+
 class HttpVerb:
-    GET     = "GET"
-    POST    = "POST"
-    PUT     = "PUT"
-    PATCH   = "PATCH"
-    HEAD    = "HEAD"
-    DELETE  = "DELETE"
+    GET = "GET"
+    POST = "POST"
+    PUT = "PUT"
+    PATCH = "PATCH"
+    HEAD = "HEAD"
+    DELETE = "DELETE"
     OPTIONS = "OPTIONS"
-    ALL     = "*"
+    ALL = "*"
+
 
 class AuthPolicy(object):
     awsAccountId = ""
@@ -109,7 +109,7 @@ class AuthPolicy(object):
     """The principal used for the policy, this should be a unique identifier for the end user."""
     version = "2012-10-17"
     """The policy version used for the evaluation. This should always be '2012-10-17'"""
-    pathRegex = "^[/.a-zA-Z0-9-\*]+$"
+    pathRegex = "^[/.a-zA-Z0-9-\\*]+$"
     """The regular expression used to validate resource paths for the policy"""
 
     """these are the internal lists of allowed and denied methods. These are lists
@@ -120,20 +120,19 @@ class AuthPolicy(object):
     allowMethods = []
     denyMethods = []
 
-    
     restApiId = "<<restApiId>>"
-    """ Replace the placeholder value with a default API Gateway API id to be used in the policy. 
-    Beware of using '*' since it will not simply mean any API Gateway API id, because stars will greedily expand over '/' or other separators. 
-    See https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_resource.html for more details. """    
+    """ Replace the placeholder value with a default API Gateway API id to be used in the policy.
+    Beware of using '*' since it will not simply mean any API Gateway API id, because stars will greedily expand over '/' or other separators.
+    See https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_resource.html for more details. """
 
     region = "<<region>>"
-    """ Replace the placeholder value with a default region to be used in the policy. 
-    Beware of using '*' since it will not simply mean any region, because stars will greedily expand over '/' or other separators. 
-    See https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_resource.html for more details. """    
+    """ Replace the placeholder value with a default region to be used in the policy.
+    Beware of using '*' since it will not simply mean any region, because stars will greedily expand over '/' or other separators.
+    See https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_resource.html for more details. """
 
     stage = "<<stage>>"
-    """ Replace the placeholder value with a default stage to be used in the policy. 
-    Beware of using '*' since it will not simply mean any stage, because stars will greedily expand over '/' or other separators. 
+    """ Replace the placeholder value with a default stage to be used in the policy.
+    Beware of using '*' since it will not simply mean any stage, because stars will greedily expand over '/' or other separators.
     See https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_resource.html for more details. """
 
     def __init__(self, principal, awsAccountId):
@@ -147,31 +146,38 @@ class AuthPolicy(object):
         the internal list contains a resource ARN and a condition statement. The condition
         statement can be null."""
         if verb != "*" and not hasattr(HttpVerb, verb):
-            raise NameError("Invalid HTTP verb " + verb + ". Allowed verbs in HttpVerb class")
+            raise NameError(
+                "Invalid HTTP verb " +
+                verb +
+                ". Allowed verbs in HttpVerb class")
         resourcePattern = re.compile(self.pathRegex)
         if not resourcePattern.match(resource):
-            raise NameError("Invalid resource path: " + resource + ". Path should match " + self.pathRegex)
+            raise NameError(
+                "Invalid resource path: " +
+                resource +
+                ". Path should match " +
+                self.pathRegex)
 
         if resource[:1] == "/":
             resource = resource[1:]
 
         resourceArn = ("arn:aws:execute-api:" +
-            self.region + ":" +
-            self.awsAccountId + ":" +
-            self.restApiId + "/" +
-            self.stage + "/" +
-            verb + "/" +
-            resource)
+                       self.region + ":" +
+                       self.awsAccountId + ":" +
+                       self.restApiId + "/" +
+                       self.stage + "/" +
+                       verb + "/" +
+                       resource)
 
         if effect.lower() == "allow":
             self.allowMethods.append({
-                'resourceArn' : resourceArn,
-                'conditions' : conditions
+                'resourceArn': resourceArn,
+                'conditions': conditions
             })
         elif effect.lower() == "deny":
             self.denyMethods.append({
-                'resourceArn' : resourceArn,
-                'conditions' : conditions
+                'resourceArn': resourceArn,
+                'conditions': conditions
             })
 
     def _getEmptyStatement(self, effect):
@@ -194,11 +200,13 @@ class AuthPolicy(object):
             statement = self._getEmptyStatement(effect)
 
             for curMethod in methods:
-                if curMethod['conditions'] is None or len(curMethod['conditions']) == 0:
+                if curMethod['conditions'] is None or len(
+                        curMethod['conditions']) == 0:
                     statement['Resource'].append(curMethod['resourceArn'])
                 else:
                     conditionalStatement = self._getEmptyStatement(effect)
-                    conditionalStatement['Resource'].append(curMethod['resourceArn'])
+                    conditionalStatement['Resource'].append(
+                        curMethod['resourceArn'])
                     conditionalStatement['Condition'] = curMethod['conditions']
                     statements.append(conditionalStatement)
 
@@ -242,18 +250,20 @@ class AuthPolicy(object):
         one statement for Allow and one statement for Deny.
         Methods that includes conditions will have their own statement in the policy."""
         if ((self.allowMethods is None or len(self.allowMethods) == 0) and
-            (self.denyMethods is None or len(self.denyMethods) == 0)):
+                (self.denyMethods is None or len(self.denyMethods) == 0)):
             raise NameError("No statements defined for the policy")
 
         policy = {
-            'principalId' : self.principalId,
-            'policyDocument' : {
-                'Version' : self.version,
-                'Statement' : []
+            'principalId': self.principalId,
+            'policyDocument': {
+                'Version': self.version,
+                'Statement': []
             }
         }
 
-        policy['policyDocument']['Statement'].extend(self._getStatementForEffect("Allow", self.allowMethods))
-        policy['policyDocument']['Statement'].extend(self._getStatementForEffect("Deny", self.denyMethods))
+        policy['policyDocument']['Statement'].extend(
+            self._getStatementForEffect("Allow", self.allowMethods))
+        policy['policyDocument']['Statement'].extend(
+            self._getStatementForEffect("Deny", self.denyMethods))
 
         return policy

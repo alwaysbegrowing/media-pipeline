@@ -235,7 +235,8 @@ class RenderLambdaStack(cdk.Stack):
         input_data = "$util.escapeJavaScript($input.json('$'))" + replace
         auth_data = "$util.escapeJavaScript($context.authorizer.user)"
         step_function_input = f'{{\"data\": {input_data}, \"user\": {auth_data}}}'
-        data = {"input": step_function_input,"stateMachineArn": state_machine.state_machine_arn }
+        data = {"input": step_function_input,
+                "stateMachineArn": state_machine.state_machine_arn}
         json_formatted_data = (json.dumps(data))
         final_data = json_formatted_data.replace('replacement_string', '''.replaceAll("\\\\'", "'")''')
         request_template = {
@@ -244,7 +245,7 @@ class RenderLambdaStack(cdk.Stack):
 
 
 
-        
+
         api_role = iam.Role(
             self,
             "ClipApiRole",

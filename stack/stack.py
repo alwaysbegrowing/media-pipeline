@@ -223,16 +223,16 @@ class RenderLambdaStack(cdk.Stack):
                                                    definition=definition
                                                    )
 
-
-
-  
         replace = "this_is_honestly_sooooo_bad"
         input_data = "$util.escapeJavaScript($input.json('$'))" + replace
         auth_data = "$util.escapeJavaScript($context.authorizer.user)"
         step_function_input = f'{{\"data\": {input_data}, \"user\": {auth_data}}}'
-        data = {"input": step_function_input,"stateMachineArn": state_machine.state_machine_arn }
+        data = {"input": step_function_input,
+                "stateMachineArn": state_machine.state_machine_arn}
         json_formatted_data = (json.dumps(data))
-        final_data = json_formatted_data.replace('this_is_honestly_sooooo_bad', '''.replaceAll("\\\\'", "'")''')
+        final_data = json_formatted_data.replace(
+            'this_is_honestly_sooooo_bad',
+            '''.replaceAll("\\\\'", "'")''')
         request_template = {
             "application/json": final_data
         }

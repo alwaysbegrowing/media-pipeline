@@ -223,11 +223,20 @@ class RenderLambdaStack(cdk.Stack):
                                                    definition=definition
                                                    )
 
+
+
+  
+        replace = "this_is_honestly_sooooo_bad"
+        x = "$util.escapeJavaScript($input.json('$'))" + replace
+
+        step_function_input = f'{{\"data\": {x}}}'
+        data = {"input": step_function_input,"stateMachineArn": state_machine.state_machine_arn }
+        json_formatted_data = (json.dumps(data))
+        final_data = json_formatted_data.replace('this_is_honestly_sooooo_bad', '''.replaceAll("\\\\'", "'")''')
+
         request_template = {
-            "application/json": json.dumps(
-                {
-                    "stateMachineArn": state_machine.state_machine_arn,
-                    "input": "{\"data\": $util.escapeJavaScript($input.json('$')), \"user\": $util.escapeJavaScript($context.authorizer.user)}"})}
+            "application/json": final_data
+        }
         api_role = iam.Role(
             self,
             "ClipApiRole",

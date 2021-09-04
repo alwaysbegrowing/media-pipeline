@@ -223,11 +223,25 @@ class RenderLambdaStack(cdk.Stack):
                                                    definition=definition
                                                    )
 
+        # This transforms the input into the format that the step functions are expecting.
+        # they expect input with the input data being a string https://docs.aws.amazon.com/step-functions/latest/dg/tutorial-api-gateway.html#api-gateway-step-3
+        # this gets complicated with the mapping template utils https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-mapping-template-reference.html#util-template-reference
+        # the replace variable is to fix https://github.com/pillargg/pillar.gg/issues/164
+        # all the code below does is manipulation on the input to get the mapping template to look like
+        # {"input": "{\"data\": $util.escapeJavaScript($input.json('$')).replaceAll("\\'", "'"), \"user\": $util.escapeJavaScript($context.authorizer.user)}", "stateMachineArn": "arn:aws:states:us-east-1:576758376358:stateMachine:RendererE9DA6252-h0z0K3nEWfic"}
+        replace = "replacement_string"
+        input_data = "$util.escapeJavaScript($input.json('$'))" + replace
+        auth_data = "$util.escapeJavaScript($context.authorizer.user)"
+        step_function_input = f'{{\"data\": {input_data}, \"user\": {auth_data}}}'
+        data = {"input": step_function_input,
+                "stateMachineArn": state_machine.state_machine_arn}
+        json_formatted_data = (json.dumps(data))
+        final_data = json_formatted_data.replace(
+            'replacement_string', '''.replaceAll("\\\\'", "'")''')
         request_template = {
-            "application/json": json.dumps(
-                {
-                    "stateMachineArn": state_machine.state_machine_arn,
-                    "input": "{\"data\": $util.escapeJavaScript($input.json('$')), \"user\": $util.escapeJavaScript($context.authorizer.user)}"})}
+            "application/json": final_data
+        }
+
         api_role = iam.Role(
             self,
             "ClipApiRole",

@@ -311,3 +311,105 @@ class RenderLambdaStack(cdk.Stack):
                 actions=["states:SendTask*"],
                 resources=[
                     state_machine.state_machine_arn]))
+
+
+        # mobile export section
+
+        # mobile export queue
+        mobile_mediaconvert_queue = mediaconvert.CfnQueue(self, id="MobileExportRender")
+
+        # background clips s3 bucket
+        background_clips_bucket = s3.Bucket(scope=self, id="BackgroundClipsBucket", lifecycle_rules=[lifetime])
+
+        # facecam clips bucket
+        facecam_clips_bucket = s3.Bucket(scope=self, id="FacecamClipsBucket", lifecycle_rules=[lifetime])
+
+        # gameplay clips bucket
+        gameplay_clips_bucket = s3.Bucket(scope=self, id="GameplayClipsBucket", lifecycle_rules=[lifetime])
+        
+        # mobile export bucket
+        mobile_export_bucket = s3.Bucket(scope=self, id="MobileExportBucket", lifecycle_rules=[lifetime], public_read_access=True)
+
+        # mobile export api
+        mobile_export_api = apigateway.RestApi(self, "MobileExportApi",
+                                              rest_api_name=f"MobileExportApi-{construct_id}",
+                                              description="Mobile export api",
+                                              default_cors_preflight_options=cors)
+                         
+        # python crop lambda
+        crop_lambda = PythonFunction(self, "CropLambda",
+                                     handler='handler',
+                                     index='handler.py',
+                                     entry=os.path.join(
+                                         os.getcwd(), 'lambdas', 'mobile', 'crop'),
+                                     runtime=lambda_.Runtime.PYTHON_3_8,
+                                     timeout=cdk.Duration.seconds(30),
+                                     memory_size=128,
+                                     environment={
+                                         'INPUT_BUCKET': individual_clips.bucket_arn,
+                                         'MEDIACONVERT_ARN': mobile_mediaconvert_queue.attr_arn,
+                                     })
+        
+        background_clips_bucket.grant_write(crop_lambda)
+        facecam_clips_bucket.grant_write(crop_lambda)
+        gameplay_clips_bucket.grant_write(crop_lambda)
+        individual_clips.grant_read(crop_lambda)
+
+        # mobile transcoding progress lambda
+        transcoding_progress_lambda = PythonFunction(self, "TranscodingProgressLambda",
+                                                     handler='handler',
+                                                     index='handler.py',
+                                                     entry=os.path.join(
+                                                         os.getcwd(), 'lambdas', 'mobile', 'transcoding_progress'),
+                                                     runtime=lambda_.Runtime.PYTHON_3_8,
+                                                     timeout=cdk.Duration.seconds(30),
+                                                     memory_size=128)
+
+        # state machine definition
+
+        # download clip task
+        download_clip_task = stp_tasks.LambdaInvoke(self, "Download Clip", lambda_function=downloader)
+        
+        # crop video task
+        crop_video_task = stp_tasks.LambdaInvoke(self, "Crop Video", lambda_function=crop_lambda)
+
+        # definition for the plain crop process
+        plain_crop = download_clip_task.next(crop_video_task)
+
+        # state machine
+        mobile_export_state_machine = stepfunctions.StateMachine(self, "MobileExport", definition=plain_crop) # use of plain_crop is temporary
+
+        mobile_events_rule = events.Rule(
+            self,
+            "MobileTranscodingFinished",
+            rule_name=f"MediaConvertFinished-{construct_id}",
+            event_pattern=events.EventPattern(
+                source=["aws.mediaconvert"],
+                detail_type=["MediaConvert Job State Change"],
+                detail={
+                    "queue": [
+                        mobile_mediaconvert_queue.attr_arn]}),
+            targets=[
+                events_targets.LambdaFunction(transcoding_progress_lambda)])
+        transcoding_progress_lambda.add_to_role_policy(
+            iam.PolicyStatement(
+                effect=iam.Effect.ALLOW,
+                actions=["states:SendTask*"],
+                resources=[
+                    mobile_export_state_machine.state_machine_arn]))
+
+        
+        # invoke lambda for mobile export
+        invoke_mobile_export_lambda = PythonFunction(self, "InvokeMobileExport",
+                                                     handler='handler',
+                                                     index='handler.py',
+                                                     entry=os.path.join(
+                                                         os.getcwd(), 'lambdas', 'mobile', 'invoke'),
+                                                     runtime=lambda_.Runtime.PYTHON_3_8,
+                                                     timeout=cdk.Duration.seconds(30),
+                                                     memory_size=128,
+                                                     environment={
+                                                         'STATE_MACHINE_ARN': mobile_export_state_machine.state_machine_arn,
+                                                     })
+                            
+        

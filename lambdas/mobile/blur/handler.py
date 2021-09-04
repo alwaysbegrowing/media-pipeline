@@ -1,0 +1,1 @@
+# this will handle blurring as Steve and I outlined

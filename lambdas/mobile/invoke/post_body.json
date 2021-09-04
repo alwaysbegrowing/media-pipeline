@@ -1,0 +1,21 @@
+{
+    "faceCam": {
+        "height": 345,
+        "width": 345,
+        "x": 1203,
+        "y": 954
+    },
+    "game": {
+        "height": 345,
+        "width": 345,
+        "x": 1203,
+        "y": 954
+    },
+    "templateId": "",
+    "videoId": "",
+    "timestamps": {
+        "startTime": 0,
+        "endTime": 60,
+        "id": "some-garbage"
+    }
+}

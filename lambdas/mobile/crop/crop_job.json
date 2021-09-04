@@ -6,66 +6,58 @@
     "TimecodeConfig": {
       "Source": "ZEROBASED"
     },
-    "OutputGroups": [
-      {
-        "Name": "File Group",
-        "Outputs": [
-          {
-            "ContainerSettings": {
-              "Container": "MP4",
-              "Mp4Settings": {}
-            },
-            "VideoDescription": {
-              "CodecSettings": {
-                "Codec": "H_264",
-                "H264Settings": {
-                  "MaxBitrate": 12000000,
-                  "RateControlMode": "QVBR",
-                  "SceneChangeDetect": "TRANSITION_DETECTION"
-                }
-              }
-            },
-            "AudioDescriptions": [
-              {
-                "CodecSettings": {
-                  "Codec": "AAC",
-                  "AacSettings": {
-                    "Bitrate": 96000,
-                    "CodingMode": "CODING_MODE_2_0",
-                    "SampleRate": 48000
-                  }
-                }
-              }
-            ],
-            "NameModifier": "sdfgsdfg"
+    "OutputGroups": [{
+      "Name": "File Group",
+      "Outputs": [{
+        "ContainerSettings": {
+          "Container": "MP4",
+          "Mp4Settings": {}
+        },
+        "VideoDescription": {
+          "CodecSettings": {
+            "Codec": "H_264",
+            "H264Settings": {
+              "MaxBitrate": 12000000,
+              "RateControlMode": "QVBR",
+              "SceneChangeDetect": "TRANSITION_DETECTION"
+            }
           }
-        ],
-        "OutputGroupSettings": {
-          "Type": "FILE_GROUP_SETTINGS",
-          "FileGroupSettings": {
-            "Destination": "s3://qa-render-combinedclips9275ae0a-13myjw544jfv0/128675916/"
+        },
+        "AudioDescriptions": [{
+          "CodecSettings": {
+            "Codec": "AAC",
+            "AacSettings": {
+              "Bitrate": 96000,
+              "CodingMode": "CODING_MODE_2_0",
+              "SampleRate": 48000
+            }
           }
+        }],
+        "NameModifier": "-crop"
+      }],
+      "OutputGroupSettings": {
+        "Type": "FILE_GROUP_SETTINGS",
+        "FileGroupSettings": {
+          "Destination": "s3://"
         }
       }
-    ],
-    "Inputs": [
-      {
-        "AudioSelectors": {
-          "Audio Selector 1": {
-            "DefaultSelection": "DEFAULT"
-          }
-        },
-        "VideoSelector": {},
-        "TimecodeSource": "ZEROBASED",
-        "Crop": {
-          "Height": 300,
-          "Width": 300,
-          "X": 12,
-          "Y": 12
-        },
-        "FileInput": "s3://prod-render-individualclips96d9129c-g04o8l9w9yzk/1069988543/0-44.75.mkv"
-      }
-    ]
+    }],
+    "Inputs": [{
+      "AudioSelectors": {
+        "Audio Selector 1": {
+          "DefaultSelection": "DEFAULT"
+        }
+      },
+      "VideoSelector": {},
+      "TimecodeSource": "ZEROBASED",
+      "Crop": {
+        "Height": "**h**",
+        "Width": "**w**",
+        "X": "**x**",
+        "Y": "**y**"
+      },
+      "FileInput": "s3://**input_bucket**/**filename**"
+    }]
   },
   "AccelerationSettings": {
     "Mode": "DISABLED"

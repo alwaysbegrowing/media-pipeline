@@ -3,46 +3,51 @@ import json
 
 import boto3
 
+from job_constructor import MCJob
+
 IN_BUCKET = os.getenv('INPUT_BUCKET')
+QUEUE_ARN = os.getenv('QUEUE_ARN')
+ROLE_ARN = os.getenv('ROLE_ARN')
 
-# This will be reused for cropping with various inputs
-
-# construct the media convert job
-
-
-def make_job(clip_name, input_bucket, output_bucket, x, y, w, h):
-    job_string = ''
-
-    with open('crop_job.json', 'r') as f:
-        job_string = f.read()
-
-    job_string = job_string.replace('"**x**"', str(x))
-    job_string = job_string.replace('"**y**"', str(y))
-    job_string = job_string.replace('"**w**"', str(w))
-    job_string = job_string.replace('"**h**"', str(h))
-    job_string = job_string.replace('"**input_bucket**"', input_bucket)
-    job_string = job_string.replace('"**output_bucket**"', output_bucket)
-    job_string = job_string.replace('"**filename**"', clip_name)
-
-    return json.loads(job_string)
+'''
+This is the data that is needed to start mediaconvert.
+{
+    'ClipName': 'clip_name',
+    'Outputs': [
+        {
+            'bucket': 'bucket_name',
+            'output_name': 'output_name',
+            'x': 100,
+            'y': 100,
+            'width': 100,
+            'height': 100
+        },
+    ]
+}
+'''
 
 
 def handler(event, context):
 
-    print(event)
+    print(json.dumps(event))
 
-    # get clip name
-    clip_name = event['clip_name']
-    # get output bucket
-    output_bucket = event['output_bucket']
-    # get x, y, h, w
-    x = event['x']
-    y = event['y']
-    w = event['w']
-    h = event['h']
+    job_constructor = MCJob(QUEUE_ARN, ROLE_ARN)
 
-    # make the job
-    job = make_job(clip_name, IN_BUCKET, output_bucket, x, y, w, h)
+    # get input from the event
+    job_constructor.add_input(IN_BUCKET, event['ClipName'])
+
+    # add outputs to the job
+    for output in event['Outputs']:
+        crop = MCJob.create_crop(
+            output['x'], output['y'], output['width'], output['height'])
+        job_constructor.add_output(
+            output['bucket'], output['output_name'], crop=crop)
+
+    # create the job
+    job = job_constructor.create()
+
+    print(f'Constructed Job:')
+    print(json.dumps(job, indent=4))
 
     mediaconvert_client = boto3.client(  # need endpoint url to start mediaconvert
         'mediaconvert', endpoint_url='https://lxlxpswfb.mediaconvert.us-east-1.amazonaws.com')

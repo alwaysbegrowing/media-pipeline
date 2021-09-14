@@ -38,6 +38,12 @@ def handler(event, context):
     content_file = event.get('content')
     facecam_file = event.get('facecam')
 
+    if not background_file:
+        raise Exception('Missing background file')
+
+    if not content_file:
+        raise Exception('Missing content file')
+
     # get the video files from s3
     with s3fs.S3FileSystem(anon=False) as s3:
         s3.get(f's3://{IN_BUCKET}/{background_file}')

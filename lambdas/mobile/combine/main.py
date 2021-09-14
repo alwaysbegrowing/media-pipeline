@@ -1,7 +1,6 @@
 import os
 
 import s3fs
-from ffmpy import FFmpeg
 
 IN_BUCKET = os.getenv('IN_BUCKET')
 OUT_BUCKET = os.getenv('OUT_BUCKET')
@@ -29,25 +28,8 @@ def handler(event, context):
 
     print('Blurring file.')
 
-    # generate ffmpeg command
-    ffmpeg_inputs = {
-        f'/tmp/{clip_name}': None
-    }
-
-    ffmpeg_outputs = {
-        f'/tmp/blur-{clip_name}': ['-vf', f'"boxblur={BLUR_STRENGTH}:1"']
-    }
-
-    ffmpeg = FFmpeg(
-        inputs=ffmpeg_inputs,
-        outputs=ffmpeg_outputs,
-        global_options=[]
-    )
 
     print('Running ffmpeg.')
-
-    # run ffmpeg
-    ffmpeg.run()
 
     print('Uploading file.')
 

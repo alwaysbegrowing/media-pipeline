@@ -337,7 +337,7 @@ class RenderLambdaStack(cdk.Stack):
                                               default_cors_preflight_options=cors)
                          
         # python crop lambda
-        crop_lambda = PythonFunction(self, "CropLambda",
+        crop_lambda = PythonFunction(self, "Crop Lambda",
                                      handler='handler',
                                      index='handler.py',
                                      entry=os.path.join(
@@ -368,10 +368,20 @@ class RenderLambdaStack(cdk.Stack):
         # state machine definition
 
         # download clip task
-        download_clip_task = stp_tasks.LambdaInvoke(self, "Download Clip", lambda_function=downloader)
+        download_clip_task = stp_tasks.LambdaInvoke(self, "Download Clip", lambda_function=downloader).add_catch(
+            send_failure_email, result_path="$.Error")
         
         # crop video task
-        crop_video_task = stp_tasks.LambdaInvoke(self, "Crop Video", lambda_function=crop_lambda)
+        crop_video_task = stp_tasks.LambdaInvoke(self, "Crop Video", 
+            lambda_function=crop_lambda, 
+            heartbeat=cdk.Duration.seconds(30), 
+            result_path="$.crop",
+            integration_pattern=stepfunctions.IntegrationPattern.WAIT_FOR_TASK_TOKEN,
+            payload=stepfunctions.TaskInput.from_object({
+                "individualClips.$": "$.downloadResult.individualClips",
+                "displayName.$": "$.user.display_name",
+                "TaskToken": stepfunctions.JsonPath.task_token
+            }))
 
         # definition for the plain crop process
         plain_crop = download_clip_task.next(crop_video_task)

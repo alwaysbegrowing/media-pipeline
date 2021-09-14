@@ -13,22 +13,22 @@ class MCJob:
         self.outputs = []
         self.queue_arn = queue_arn
         self.role_arn = role_arn
-        self.outputs = 0
+        self.n = 0
 
     # add input to the job
     def add_input(self, bucket, input_name):
         self.inputs.append({"bucket": bucket, "name": input_name})
 
     # add output to the job
-    def add_output(self, bucket, output_name, bitrate=12000000, crop=None):
+    def add_output(self, bucket, output_name, width, height, bitrate=12_000_000, crop=None):
         self.outputs.append(
-            {"bucket": bucket, "modifier": output_name, "bitrate": bitrate, "crop": crop})
+            {"bucket": bucket, "modifier": output_name, "width": width, "height": height, "bitrate": bitrate, "crop": crop})
 
     # construct output group
     def _construct_output_group(self, output):
-        self.outputs += 1
+        self.n += 1
         return {
-            "Name": f"File Group {self.outputs}",
+            "Name": f"File Group {self.n}",
             "Outputs": [{
                 "ContainerSettings": {
                     "Container": "MP4",
@@ -43,7 +43,9 @@ class MCJob:
                             "SceneChangeDetect": "TRANSITION_DETECTION"
                         }
                     },
-                    "Crop": output["crop"]
+                    "Crop": output["crop"],
+                    "Width": output["width"],
+                    "Height": output["height"],
                 },
                 "AudioDescriptions": [{
                     "CodecSettings": {
@@ -109,3 +111,48 @@ class MCJob:
                 self._construct_output_group(output))
 
         return job
+
+
+if __name__ == "__main__":
+    import json
+    job = MCJob(
+        "arn:aws:sqs:us-east-1:123456789012:MyQueue",  # queue arn
+        "arn:aws:iam::123456789012:role/MyRole"  # role arn
+    )
+
+    # add inputs
+    job.add_input(
+        "chandlerstestbucket",  # bucket name
+        "Input.mp4"  # input name
+    )
+
+    # add outputs
+    job.add_output(
+        "chandlerstestbucket",  # bucket name
+        "Background",  # output name
+        1080,  # width
+        1920,  # height
+        bitrate=4_000_000,  # bitrate
+        crop=MCJob.create_crop(656, 0, 608, 1080)  # crop
+    )
+
+    job.add_output(
+        "chandlerstestbucket",  # bucket name
+        "Content",  # output name
+        1080,  # width
+        1080,  # height
+        bitrate=5_000_000,  # bitrate
+        crop=MCJob.create_crop(456, 18, 1000, 1000)  # crop
+    )
+
+    job.add_output(
+        "chandlerstestbucket",  # bucket name
+        "Facecam",  # output name
+        560,
+        420,
+        bitrate=2_000_000,
+        crop=MCJob.create_crop(1420, 778, 400, 300)
+    )
+
+    with open('test.json', 'w') as f:
+        json.dump(job.create(), f, indent=4)

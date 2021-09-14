@@ -20,7 +20,9 @@ This is the data that is needed to start mediaconvert.
             'x': 100,
             'y': 100,
             'width': 100,
-            'height': 100
+            'height': 100,
+            'res_x': 100,
+            'res_y': 100
         },
     ]
 }
@@ -41,7 +43,7 @@ def handler(event, context):
         crop = MCJob.create_crop(
             output['x'], output['y'], output['width'], output['height'])
         job_constructor.add_output(
-            output['bucket'], output['output_name'], crop=crop)
+            output['bucket'], output['output_name'], output['res_x'], output['res_y'], crop=crop)
 
     # create the job
     job = job_constructor.create()

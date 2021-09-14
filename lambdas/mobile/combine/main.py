@@ -1,4 +1,6 @@
 import os
+import subprocess
+import uuid
 
 import s3fs
 
@@ -8,43 +10,55 @@ OUT_BUCKET = os.getenv('OUT_BUCKET')
 BLUR_STRENGTH = 15
 
 
+def create_fc_mobile_video(background_file, content_file, facecam_file, output_file, blur_strength=15):
+
+    # the x and y coordinates will change when we
+    # start working with different aspect ratios
+
+    cmd = f"ffmpeg -i {background_file} -i {content_file} -i {facecam_file} -filter_complex '[0:v] boxblur={blur_strength}:1 [a]; [a][1:v] overlay=0:420 [b]; [b][2:v] overlay=260:0' -r 60 -c:v libx264 -pix_fmt yuv420p {output_file}"
+
+    subprocess.run(cmd, shell=True)
+
+
+def create_blurred_mobile_video(background_file, content_file, output_file, blur_strength=15):
+
+    # the x and y coordinates will change when we
+    # start working with different aspect ratios
+
+    cmd = f"ffmpeg -i {background_file} -i {content_file} -filter_complex '[0:v] boxblur={blur_strength}:1 [a]; [a][1:v] overlay=0:420' -r 60 -c:v libx264 -pix_fmt yuv420p {output_file}"
+
+    subprocess.run(cmd, shell=True)
+
+
 def handler(event, context):
 
-    # get clip name from event
-    clip_name = event['clip_name']
-    print(clip_name)
+    os.chdir('/tmp')
 
-    # get s3 filesystem
-    s3 = s3fs.S3FileSystem(anon=False)
+    background_file = event.get('background')
+    content_file = event.get('content')
+    facecam_file = event.get('facecam')
 
-    s3_file = s3.open(f'{IN_BUCKET}/{clip_name}', 'rb')
+    # get the video files from s3
+    with s3fs.S3FileSystem(anon=False) as s3:
+        s3.get(f's3://{IN_BUCKET}/{background_file}')
+        s3.get(f's3://{IN_BUCKET}/{content_file}')
+        if facecam_file:
+            s3.get(f's3://{IN_BUCKET}/{facecam_file}')
 
-    print('Downloading file.')
-    # save s3 file to local file
-    local_file = open(f'/tmp/{clip_name}', 'wb')
-    local_file.write(s3_file.read())
-    local_file.close()
-    s3_file.close()
+    if facecam_file:
+        create_fc_mobile_video(background_file, content_file,
+                               facecam_file, 'output.mp4', blur_strength=BLUR_STRENGTH)
+    else:
+        create_blurred_mobile_video(
+            background_file, content_file, 'output.mp4', blur_strength=BLUR_STRENGTH)
 
-    print('Blurring file.')
+    # create a random name
+    output_file = f'{uuid.uuid4()}.mp4'
 
-
-    print('Running ffmpeg.')
-
-    print('Uploading file.')
-
-    # upload file to s3
-
-    s3_file = s3.open(f'{OUT_BUCKET}/{clip_name}', 'wb')
-    s3_file.write(open(f'/tmp/blur-{clip_name}', 'rb').read())
-    s3_file.close()
-
-    print('Removing local files.')
-
-    # remove local files
-    os.remove(f'/tmp/{clip_name}')
-    os.remove(f'/tmp/blur-{clip_name}')
+    # upload the video to s3
+    with s3fs.S3FileSystem(anon=False) as s3:
+        s3.put('output.mp4', f's3://{OUT_BUCKET}/{output_file}')
 
     return {
-        'blurredName': f'blur-{clip_name}'
+        'output_file': output_file
     }

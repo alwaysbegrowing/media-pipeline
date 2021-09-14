@@ -1,0 +1,23 @@
+{
+    "user": {
+        "display_name": "chand1012",
+        "email": "chandlerl14@outlook.com"
+    },
+    "ClipData": {
+        "videoId": 1146969838,
+        "clip": {
+            "startTime": 892,
+            "endTime": 920
+        }
+    },
+    "Outputs": {
+        "background": {
+            "x": 656,
+            "y": 0,
+            "width": 606,
+            "height": 1080,
+            "res_x": 1080,
+            "res_y": 1920
+        }
+    }
+}

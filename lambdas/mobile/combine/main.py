@@ -41,15 +41,22 @@ def handler(event, context):
     if not background_file:
         raise Exception('Missing background file')
 
-    if not content_file:
-        raise Exception('Missing content file')
-
     # get the video files from s3
     with s3fs.S3FileSystem(anon=False) as s3:
         s3.get(f's3://{IN_BUCKET}/{background_file}')
-        s3.get(f's3://{IN_BUCKET}/{content_file}')
+        if content_file:
+            s3.get(f's3://{IN_BUCKET}/{content_file}')
         if facecam_file:
             s3.get(f's3://{IN_BUCKET}/{facecam_file}')
+
+    # create a random name
+    output_file = f'{uuid.uuid4()}.mp4'
+
+    if not facecam_file and not content_file:
+        with s3fs.S3FileSystem(anon=False) as s3:
+            s3.put(f'/tmp/{background_file}',
+                   f's3://{OUT_BUCKET}/{output_file}')
+        return {'output_file': output_file}
 
     if facecam_file:
         create_fc_mobile_video(background_file, content_file,
@@ -57,9 +64,6 @@ def handler(event, context):
     else:
         create_blurred_mobile_video(
             background_file, content_file, 'output.mp4', blur_strength=BLUR_STRENGTH)
-
-    # create a random name
-    output_file = f'{uuid.uuid4()}.mp4'
 
     # upload the video to s3
     with s3fs.S3FileSystem(anon=False) as s3:

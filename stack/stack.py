@@ -154,7 +154,7 @@ class RenderLambdaStack(cdk.Stack):
                                              lambda_function=notify_lambda)
 
         send_failure_email = stp_tasks.LambdaInvoke(
-            self, "Send Failure Email", lambda_function=notify_lambda)
+            self, "Send Mobile Export Failure Email", lambda_function=notify_lambda)
 
         get_clips_task = stp_tasks.LambdaInvoke(
             self, "Download Individual Clips", lambda_function=downloader).add_catch(
@@ -312,30 +312,56 @@ class RenderLambdaStack(cdk.Stack):
                 resources=[
                     state_machine.state_machine_arn]))
 
-
         # mobile export section
 
+        # API input will look something like this:
+        # {
+        #   "ClipData": {
+        #     "videoId": 857674564,
+        #     "clip": {
+        #       "starTime": 30,
+        #       "endTime": 120
+        #     }
+        #   },
+        #   "Outputs": {
+        #         "background": {
+        #             "bucket": "bucket_name",
+        #             "x": 100,
+        #             "y": 100,
+        #             "width": 100,
+        #             "height": 100,
+        #             "res_x": 100,
+        #             "res_y": 100
+        #         }
+        #     }
+        # }
+
         # mobile export queue
-        mobile_mediaconvert_queue = mediaconvert.CfnQueue(self, id="MobileExportRender")
+        mobile_mediaconvert_queue = mediaconvert.CfnQueue(
+            self, id="MobileExportRender")
+
+        # mobile mediaconvert role setup
+        mobile_mediaconvert_role = iam.Role(
+            self,
+            "MediaConvertMobile",
+            assumed_by=iam.ServicePrincipal("mediaconvert.amazonaws.com"))
+        individual_clips.grant_read(mediaconvert_role)
 
         # background clips s3 bucket
-        background_clips_bucket = s3.Bucket(scope=self, id="BackgroundClipsBucket", lifecycle_rules=[lifetime])
+        cropped_clips_bucket = s3.Bucket(
+            scope=self, id="BackgroundClipsBucket", lifecycle_rules=[lifetime])
+        cropped_clips_bucket.grant_write(mediaconvert_role)
 
-        # facecam clips bucket
-        facecam_clips_bucket = s3.Bucket(scope=self, id="FacecamClipsBucket", lifecycle_rules=[lifetime])
-
-        # gameplay clips bucket
-        gameplay_clips_bucket = s3.Bucket(scope=self, id="GameplayClipsBucket", lifecycle_rules=[lifetime])
-        
         # mobile export bucket
-        mobile_export_bucket = s3.Bucket(scope=self, id="MobileExportBucket", lifecycle_rules=[lifetime], public_read_access=True)
+        mobile_export_bucket = s3.Bucket(scope=self, id="MobileExportBucket", lifecycle_rules=[
+                                         lifetime], public_read_access=True)
 
         # mobile export api
         mobile_export_api = apigateway.RestApi(self, "MobileExportApi",
-                                              rest_api_name=f"MobileExportApi-{construct_id}",
-                                              description="Mobile export api",
-                                              default_cors_preflight_options=cors)
-                         
+                                               rest_api_name=f"MobileExportApi-{construct_id}",
+                                               description="Mobile export api",
+                                               default_cors_preflight_options=cors)
+
         # python crop lambda
         crop_lambda = PythonFunction(self, "Crop Lambda",
                                      handler='handler',
@@ -345,15 +371,37 @@ class RenderLambdaStack(cdk.Stack):
                                      runtime=lambda_.Runtime.PYTHON_3_8,
                                      timeout=cdk.Duration.seconds(30),
                                      memory_size=128,
+                                     initial_policy=[  # reuse policy statements from above: mediaconvert_pass_role, mediaconvert_create_job
+                                         mediaconvert_create_job,
+                                         mediaconvert_pass_role
+                                     ],
                                      environment={
-                                         'INPUT_BUCKET': individual_clips.bucket_arn,
+                                         'IN_BUCKET': individual_clips.bucket_arn,
+                                         'OUT_BUCKET': cropped_clips_bucket.bucket_arn,
                                          'MEDIACONVERT_ARN': mobile_mediaconvert_queue.attr_arn,
+                                         'ROLE_ARN': mobile_mediaconvert_role.role_arn,
                                      })
-        
-        background_clips_bucket.grant_write(crop_lambda)
-        facecam_clips_bucket.grant_write(crop_lambda)
-        gameplay_clips_bucket.grant_write(crop_lambda)
+
+        cropped_clips_bucket.grant_write(crop_lambda)
         individual_clips.grant_read(crop_lambda)
+
+        # docker combiner lambda
+        mobile_ecr_image = lambda_.EcrImageCode.from_asset_image(
+            directory=os.path.join(
+                os.getcwd(), 'lambdas', 'mobile', 'combine'),
+        )
+
+        combiner_lambda = lambda_.Function(self, "MobileCombiner",
+                                           code=mobile_ecr_image,
+                                           handler=lambda_.Handler.FROM_IMAGE,
+                                           runtime=lambda_.Runtime.FROM_IMAGE,
+                                           environment={
+                                               'IN_BUCKET': cropped_clips_bucket.bucket_arn,
+                                               'OUT_BUCKET': mobile_export_bucket.bucket_arn,
+                                           },
+                                           timeout=cdk.Duration.minutes(10),
+                                           memory_size=3096
+                                           )
 
         # mobile transcoding progress lambda
         transcoding_progress_lambda = PythonFunction(self, "TranscodingProgressLambda",
@@ -362,37 +410,106 @@ class RenderLambdaStack(cdk.Stack):
                                                      entry=os.path.join(
                                                          os.getcwd(), 'lambdas', 'mobile', 'transcoding_progress'),
                                                      runtime=lambda_.Runtime.PYTHON_3_8,
-                                                     timeout=cdk.Duration.seconds(30),
+                                                     timeout=cdk.Duration.seconds(
+                                                         30),
                                                      memory_size=128)
 
         # state machine definition
 
+        send_mobile_failure_email = stp_tasks.LambdaInvoke(
+            self, "Send Failure Email", lambda_function=notify_lambda)
+
         # download clip task
-        download_clip_task = stp_tasks.LambdaInvoke(self, "Download Clip", lambda_function=downloader).add_catch(
-            send_failure_email, result_path="$.Error")
-        
+        download_clip_task = stp_tasks.LambdaInvoke(self, "Download Clip",
+                                                    lambda_function=downloader,
+                                                    input_path="$.ClipData",
+                                                    result_selector={
+                                                        'file.$': '$.file'
+                                                    },
+                                                    result_path="$.ClipName",
+                                                    output_path="$"
+                                                    ).add_catch(
+            send_mobile_failure_email, result_path="$.Error")
+
         # crop video task
-        crop_video_task = stp_tasks.LambdaInvoke(self, "Crop Video", 
-            lambda_function=crop_lambda, 
-            heartbeat=cdk.Duration.seconds(30), 
-            result_path="$.crop",
-            integration_pattern=stepfunctions.IntegrationPattern.WAIT_FOR_TASK_TOKEN,
-            payload=stepfunctions.TaskInput.from_object({
-                "individualClips.$": "$.downloadResult.individualClips",
-                "displayName.$": "$.user.display_name",
-                "TaskToken": stepfunctions.JsonPath.task_token
-            }))
+        crop_video_task = stp_tasks.LambdaInvoke(self, "Crop Video",
+                                                 lambda_function=crop_lambda,
+                                                 heartbeat=cdk.Duration.seconds(
+                                                     30),
+                                                 result_path="$.crop",
+                                                 output_path="$",
+                                                 integration_pattern=stepfunctions.IntegrationPattern.WAIT_FOR_TASK_TOKEN,
+                                                 payload=stepfunctions.TaskInput.from_object(
+                                                     {
+                                                         "individualClips.$": "$.downloadResult.individualClips",
+                                                         "TaskToken": stepfunctions.JsonPath.task_token,
+                                                         "ClipName.$": "$.ClipName.file",
+                                                         "Outputs.$": "$.Outputs"
+                                                     }
+                                                 )
+                                                 )
 
-        # definition for the plain crop process
-        plain_crop = download_clip_task.next(crop_video_task)
+        combine_video_task = stp_tasks.LambdaInvoke(self, "Combine Video",
+                                                    lambda_function=combiner_lambda,
+                                                    result_path="$.combine",
+                                                    input_path="$.crop",
+                                                    output_path="$"
+                                                    )
 
-        # state machine
-        mobile_export_state_machine = stepfunctions.StateMachine(self, "MobileExport", definition=plain_crop) # use of plain_crop is temporary
+        mobile_notify_task = stp_tasks.LambdaInvoke(self, "Send Mobile Notification Email",
+                                                    lambda_function=notify_lambda,
+                                                    payload=stepfunctions.TaskInput.from_object({
+                                                        "mediaConvertResults": {
+                                                            "outputFilePath.$": "$.combine.output_file"
+                                                        },
+                                                        "user.$": "$.user"
+                                                    })
+                                                    )
+
+        mobile_definition = download_clip_task.next(crop_video_task).next(
+            combine_video_task).next(mobile_notify_task)
+
+        mobile_export_state_machine = stepfunctions.StateMachine(
+            self, "MobileExporter", definition=mobile_definition)
+
+        mobile_api_role = iam.Role(
+            self,
+            "MobileExportApiRole",
+            assumed_by=iam.ServicePrincipal("apigateway.amazonaws.com"))
+        mobile_export_state_machine.grant_start_execution(mobile_api_role)
+        mobileIntegrationResponses = [
+            apigateway.IntegrationResponse(
+                selection_pattern="200",
+                status_code="200",
+                response_parameters={
+                    "method.response.header.Access-Control-Allow-Origin": "'*'"},
+                response_templates={
+                    "application/json": "$input.json('$')",
+                })]
+
+        mobileIntegration = apigateway.AwsIntegration(
+            service='states',
+            action='StartExecution',
+            options=apigateway.IntegrationOptions(
+                credentials_role=mobile_api_role,
+                request_templates=request_template,
+                integration_responses=mobileIntegrationResponses))
+
+        mobile_export_endpoint = mobile_export_api.root.add_resource("export")
+
+        # mobile_export_auth = apigateway.TokenAuthorizer(
+        #     self, 'Mobile Export Token Authorizer', handler=auth_fn)
+
+        mobile_export_endpoint.add_method(
+            "POST",
+            mobileIntegration,
+            method_responses=method_responses,)
+        # authorizer=mobile_export_auth)
 
         mobile_events_rule = events.Rule(
             self,
             "MobileTranscodingFinished",
-            rule_name=f"MediaConvertFinished-{construct_id}",
+            rule_name=f"MediaConvertFinishedMobile-{construct_id}",
             event_pattern=events.EventPattern(
                 source=["aws.mediaconvert"],
                 detail_type=["MediaConvert Job State Change"],
@@ -401,25 +518,10 @@ class RenderLambdaStack(cdk.Stack):
                         mobile_mediaconvert_queue.attr_arn]}),
             targets=[
                 events_targets.LambdaFunction(transcoding_progress_lambda)])
+
         transcoding_progress_lambda.add_to_role_policy(
             iam.PolicyStatement(
                 effect=iam.Effect.ALLOW,
                 actions=["states:SendTask*"],
                 resources=[
                     mobile_export_state_machine.state_machine_arn]))
-
-        
-        # invoke lambda for mobile export
-        invoke_mobile_export_lambda = PythonFunction(self, "InvokeMobileExport",
-                                                     handler='handler',
-                                                     index='handler.py',
-                                                     entry=os.path.join(
-                                                         os.getcwd(), 'lambdas', 'mobile', 'invoke'),
-                                                     runtime=lambda_.Runtime.PYTHON_3_8,
-                                                     timeout=cdk.Duration.seconds(30),
-                                                     memory_size=128,
-                                                     environment={
-                                                         'STATE_MACHINE_ARN': mobile_export_state_machine.state_machine_arn,
-                                                     })
-                            
-        

@@ -1,0 +1,37 @@
+{
+    "user": {
+        "display_name": "chand1012",
+        "email": "test@mailinator.com"
+    },
+    "ClipData": {
+        "videoId": 857674564,
+        "clip": {
+            "startTime": 30,
+            "endTime": 120
+        }
+    },
+    "Outputs": {
+        "background": {
+            "x": 656,
+            "y": 0,
+            "width": 606,
+            "height": 1080,
+            "res_x": 1080,
+            "res_y": 1920
+        }
+    },
+    "ClipName": {
+        "file": "s3://bucket/clip.mp4"
+    },
+    "crop": {
+        "background_file": "background_clip",
+        "content_file": "content_clip",
+        "facecam_file": "facecam_clip"
+    },
+    "combine": {
+        "output_file": "output_clip"
+    },
+    "finalOutput": {
+        "message": "this is a message"
+    }
+}

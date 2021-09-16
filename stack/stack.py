@@ -347,6 +347,10 @@ class RenderLambdaStack(cdk.Stack):
             assumed_by=iam.ServicePrincipal("mediaconvert.amazonaws.com"))
         individual_clips.grant_read(mediaconvert_role)
 
+        mobile_mediaconvert_create_job = iam.PolicyStatement(
+            actions=['mediaconvert:CreateJob'], resources=[
+                mobile_mediaconvert_queue.attr_arn])
+
         # background clips s3 bucket
         cropped_clips_bucket = s3.Bucket(
             scope=self, id="BackgroundClipsBucket", lifecycle_rules=[lifetime])
@@ -372,7 +376,7 @@ class RenderLambdaStack(cdk.Stack):
                                      timeout=cdk.Duration.seconds(30),
                                      memory_size=128,
                                      initial_policy=[  # reuse policy statements from above: mediaconvert_pass_role, mediaconvert_create_job
-                                         mediaconvert_create_job,
+                                         mobile_mediaconvert_create_job,
                                          mediaconvert_pass_role
                                      ],
                                      environment={
@@ -424,7 +428,7 @@ class RenderLambdaStack(cdk.Stack):
                                                     lambda_function=downloader,
                                                     input_path="$.ClipData",
                                                     result_selector={
-                                                        'file.$': '$.file'
+                                                        'file.$': '$.Payload.file'
                                                     },
                                                     result_path="$.ClipName",
                                                     output_path="$"
@@ -441,7 +445,6 @@ class RenderLambdaStack(cdk.Stack):
                                                  integration_pattern=stepfunctions.IntegrationPattern.WAIT_FOR_TASK_TOKEN,
                                                  payload=stepfunctions.TaskInput.from_object(
                                                      {
-                                                         "individualClips.$": "$.downloadResult.individualClips",
                                                          "TaskToken": stepfunctions.JsonPath.task_token,
                                                          "ClipName.$": "$.ClipName.file",
                                                          "Outputs.$": "$.Outputs"

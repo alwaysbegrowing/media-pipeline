@@ -7,7 +7,7 @@ from job_constructor import MCJob
 
 OUT_BUCKET = os.getenv('OUT_BUCKET')
 IN_BUCKET = os.getenv('IN_BUCKET')
-QUEUE_ARN = os.getenv('QUEUE_ARN')
+QUEUE_ARN = os.getenv('MEDIACONVERT_ARN')
 ROLE_ARN = os.getenv('ROLE_ARN')
 
 '''
@@ -36,6 +36,7 @@ def handler(event, context):
     print(json.dumps(event))
 
     job_constructor = MCJob(QUEUE_ARN, ROLE_ARN)
+    job_constructor.add_task_token(event['TaskToken'])
 
     # get input from the event
     job_constructor.add_input(IN_BUCKET, event['ClipName'])
@@ -53,7 +54,7 @@ def handler(event, context):
     job = job_constructor.create()
 
     print(f'Constructed Job:')
-    print(json.dumps(job, indent=4))
+    print(json.dumps(job))
 
     mediaconvert_client = boto3.client(  # need endpoint url to start mediaconvert
         'mediaconvert', endpoint_url='https://lxlxpswfb.mediaconvert.us-east-1.amazonaws.com')

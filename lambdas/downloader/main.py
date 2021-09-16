@@ -33,7 +33,7 @@ def handler(event, context):
 
     clip = event['clip']
     video_id = event['videoId']
-    clip_index = event['index']
+    clip_index = event.get('index', 0)
     download_name = f'{uuid.uuid4()}.mkv'
     start_time = clip['startTime']
     end_time = clip['endTime']

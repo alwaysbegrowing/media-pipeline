@@ -15,6 +15,9 @@ class MCJob:
         self.role_arn = role_arn
         self.n = 0
 
+    def add_task_token(self, task_token):
+        self.task_token = task_token
+
     # add input to the job
     def add_input(self, bucket, input_name):
         self.inputs.append({"bucket": bucket, "name": input_name})
@@ -82,9 +85,16 @@ class MCJob:
 
     # create job
     def create(self):
+        task_token1 = self.task_token[0:256]
+        task_token2 = self.task_token[256:512]
+        task_token3 = self.task_token[512:768]
         job = {
+            "UserMetadata": {
+                "TaskToken1": task_token1,
+                "TaskToken2": task_token2,
+                "TaskToken3": task_token3
+            },
             "Queue": self.queue_arn,
-            "UserMetadata": {},
             "Role": self.role_arn,
             "Settings": {
                 "TimecodeConfig": {

@@ -39,7 +39,7 @@ def handler(event, context):
     job_constructor.add_task_token(event['TaskToken'])
 
     # get input from the event
-    job_constructor.add_input(IN_BUCKET, event['ClipName'])
+    job_constructor.add_input(event['ClipName'])
 
     outputs = event['Outputs']
 

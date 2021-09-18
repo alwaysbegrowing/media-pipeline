@@ -380,8 +380,8 @@ class RenderLambdaStack(cdk.Stack):
                                          mediaconvert_pass_role
                                      ],
                                      environment={
-                                         'IN_BUCKET': individual_clips.bucket_arn,
-                                         'OUT_BUCKET': cropped_clips_bucket.bucket_arn,
+                                         'IN_BUCKET': individual_clips.bucket_name,
+                                         'OUT_BUCKET': cropped_clips_bucket.bucket_name,
                                          'MEDIACONVERT_ARN': mobile_mediaconvert_queue.attr_arn,
                                          'ROLE_ARN': mobile_mediaconvert_role.role_arn,
                                      })

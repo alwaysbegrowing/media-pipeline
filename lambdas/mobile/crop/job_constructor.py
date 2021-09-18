@@ -19,8 +19,8 @@ class MCJob:
         self.task_token = task_token
 
     # add input to the job
-    def add_input(self, bucket, input_name):
-        self.inputs.append({"bucket": bucket, "name": input_name})
+    def add_input(self, input_name):
+        self.inputs.append({"name": input_name})
 
     # add output to the job
     def add_output(self, bucket, output_name, width, height, bitrate=12_000_000, crop=None):
@@ -65,7 +65,7 @@ class MCJob:
             "OutputGroupSettings": {
                 "Type": "FILE_GROUP_SETTINGS",
                 "FileGroupSettings": {
-                    "Destination": f"s3://{output['bucket']}"
+                    "Destination": f"s3://{output['bucket']}/"
                 }
             }
         }
@@ -80,7 +80,7 @@ class MCJob:
             },
             "VideoSelector": {},
             "TimecodeSource": "ZEROBASED",
-            "FileInput": f"s3://{input_video['bucket']}/{input_video['name']}"
+            "FileInput": input_video['name']
         }
 
     # create job
@@ -106,7 +106,7 @@ class MCJob:
             "AccelerationSettings": {
                 "Mode": "DISABLED"
             },
-            "StatusUpdateInterval": "SECONDS_60",
+            "StatusUpdateInterval": "SECONDS_10",
             "Priority": 0
         }
 
@@ -132,8 +132,7 @@ if __name__ == "__main__":
 
     # add inputs
     job.add_input(
-        "chandlerstestbucket",  # bucket name
-        "Input.mp4"  # input name
+        "s3://renderlambdastack-individualclips96d9129c-1mv9lf4dyunhn/5b1eadff-4d03-4884-a31d-4b7650d18d50.mkv"
     )
 
     # add outputs

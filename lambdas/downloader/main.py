@@ -35,6 +35,7 @@ def handler(event, context):
     video_id = event['videoId']
     clip_index = event.get('index', 0)
     download_name = f'{uuid.uuid4()}.mkv'
+    upscale = event.get('upscale', False)
     start_time = clip['startTime']
     end_time = clip['endTime']
     duration = str(end_time - start_time)
@@ -47,6 +48,12 @@ def handler(event, context):
     ffmpeg_outputs = {
         download_name: ['-t', duration, '-y', '-c', 'copy']
     }
+
+    if upscale:
+        ffmpeg_outputs = {
+            download_name: ['-t', duration, 'c:a', 'copy', '-c:v', 'libx264',
+                            '-preset', 'veryfast', '-vf', 'scale=1920x1080:flags=lanczos']
+        }
 
     ffmpeg_global_options = []
 

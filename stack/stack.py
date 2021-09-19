@@ -77,8 +77,8 @@ class RenderLambdaStack(cdk.Stack):
             runtime=lambda_.Runtime.FROM_IMAGE,
             environment={
                 'BUCKET': individual_clips.bucket_name},
-            timeout=cdk.Duration.seconds(60),
-            memory_size=512)
+            timeout=cdk.Duration.seconds(240),
+            memory_size=1024)
 
         individual_clips.grant_write(downloader)
 
@@ -354,7 +354,7 @@ class RenderLambdaStack(cdk.Stack):
         # background clips s3 bucket
         cropped_clips_bucket = s3.Bucket(
             scope=self, id="BackgroundClipsBucket", lifecycle_rules=[lifetime])
-        cropped_clips_bucket.grant_write(mediaconvert_role)
+        cropped_clips_bucket.grant_write(mobile_mediaconvert_role)
 
         # mobile export bucket
         mobile_export_bucket = s3.Bucket(scope=self, id="MobileExportBucket", lifecycle_rules=[

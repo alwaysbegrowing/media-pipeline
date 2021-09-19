@@ -13,6 +13,7 @@ def handler(event, context):
     token = f'{user_metadata["TaskToken1"]}{user_metadata["TaskToken2"]}{user_metadata["TaskToken3"]}'
 
     if (event['detail']['status'] == "COMPLETE"):
+        print(event)
         stepfunctions.send_task_success(taskToken=token, output=json.dumps(
             {'outputFilePath': event['detail']['outputGroupDetails'][0]['outputDetails'][0]['outputFilePaths'][0]}))
 

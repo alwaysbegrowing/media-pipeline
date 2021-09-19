@@ -353,7 +353,7 @@ class RenderLambdaStack(cdk.Stack):
 
         # background clips s3 bucket
         cropped_clips_bucket = s3.Bucket(
-            scope=self, id="BackgroundClipsBucket", lifecycle_rules=[lifetime])
+            scope=self, id="CroppedClipsBucket", lifecycle_rules=[lifetime])
         cropped_clips_bucket.grant_write(mobile_mediaconvert_role)
 
         # mobile export bucket

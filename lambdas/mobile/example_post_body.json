@@ -5,6 +5,7 @@
     },
     "ClipData": {
         "videoId": 1146969838,
+        "upscale": true,
         "clip": {
             "startTime": 892,
             "endTime": 920
@@ -18,6 +19,14 @@
             "height": 1080,
             "res_x": 1080,
             "res_y": 1920
+        },
+        "content": {
+            "x": 420,
+            "y": 0,
+            "width": 1080,
+            "height": 1080,
+            "res_x": 1080,
+            "res_y": 1080
         }
     }
 }

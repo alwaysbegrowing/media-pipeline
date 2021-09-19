@@ -34,9 +34,11 @@ def handler(event, context):
 
     os.chdir('/tmp')
 
-    background_file = event.get('background')
-    content_file = event.get('content')
-    facecam_file = event.get('facecam')
+    print(f"Event: {event}")
+
+    background_file = event.get('background_file')
+    content_file = event.get('content_file')
+    facecam_file = event.get('facecam_file')
 
     if not background_file:
         raise Exception('Missing background file')

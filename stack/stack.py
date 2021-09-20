@@ -196,8 +196,8 @@ class RenderLambdaStack(cdk.Stack):
                                       environment={
                                           'TWITCH_CLIENT_ID': TWITCH_CLIENT_ID,
                                           'DB_NAME': mongo_db_database,
-
                                       })
+
         upload_to_youtube_question = stepfunctions.Choice(
             self, "Upload To Youtube?"
         )
@@ -357,8 +357,10 @@ class RenderLambdaStack(cdk.Stack):
         cropped_clips_bucket.grant_write(mobile_mediaconvert_role)
 
         # mobile export bucket
-        mobile_export_bucket = s3.Bucket(scope=self, id="MobileExportBucket", lifecycle_rules=[
-                                         lifetime], public_read_access=True)
+        mobile_export_bucket = s3.Bucket(scope=self,
+                                         id="MobileExportBucket",
+                                         lifecycle_rules=[lifetime],
+                                         public_read_access=True)
 
         # mobile export api
         mobile_export_api = apigateway.RestApi(self, "MobileExportApi",
@@ -400,12 +402,14 @@ class RenderLambdaStack(cdk.Stack):
                                            handler=lambda_.Handler.FROM_IMAGE,
                                            runtime=lambda_.Runtime.FROM_IMAGE,
                                            environment={
-                                               'IN_BUCKET': cropped_clips_bucket.bucket_arn,
-                                               'OUT_BUCKET': mobile_export_bucket.bucket_arn,
+                                               'IN_BUCKET': cropped_clips_bucket.bucket_name,
+                                               'OUT_BUCKET': mobile_export_bucket.bucket_name,
                                            },
                                            timeout=cdk.Duration.minutes(10),
-                                           memory_size=3096
-                                           )
+                                           memory_size=3096)
+
+        cropped_clips_bucket.grant_read(combiner_lambda)
+        mobile_export_bucket.grant_read_write(combiner_lambda)
 
         # mobile transcoding progress lambda
         transcoding_progress_lambda = PythonFunction(self, "TranscodingProgressLambda",

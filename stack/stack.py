@@ -466,8 +466,8 @@ class RenderLambdaStack(cdk.Stack):
         mobile_notify_task = stp_tasks.LambdaInvoke(self, "Send Mobile Notification Email",
                                                     lambda_function=notify_lambda,
                                                     payload=stepfunctions.TaskInput.from_object({
-                                                        "mediaConvertResults": {
-                                                            "outputFilePath.$": "$.combine.output_file"
+                                                        "mediaConvertResult": {
+                                                            "outputFilePath.$": "$.combine.Payload.output_file"
                                                         },
                                                         "user.$": "$.user"
                                                     })

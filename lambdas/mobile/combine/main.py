@@ -75,7 +75,6 @@ def handler(event, context):
         print(upload_file_name)
         s3.put(background_local_file,
                upload_file_name)
-        s3.close()
         subprocess.run("rm -r /tmp/*", shell=True)
         return {'output_file': output_file}
 
@@ -87,7 +86,6 @@ def handler(event, context):
             f'/tmp/{background_file_name}', f'/tmp/{content_file_name}', '/tmp/output.mp4', blur_strength=BLUR_STRENGTH)
 
     s3.put('/tmp/output.mp4', f's3://{OUT_BUCKET}/{output_file}')
-    s3.close()
     subprocess.run("rm -r /tmp/*", shell=True)
     return {
         'output_file': f's3://{OUT_BUCKET}/{output_file}'

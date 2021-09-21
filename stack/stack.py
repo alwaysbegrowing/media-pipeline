@@ -430,17 +430,22 @@ class RenderLambdaStack(cdk.Stack):
             memory_size=128)
 
         # failure lambda
-        failure_lambda = PythonFunction(self, "FailureLambda",
-                                        handler='handler',
-                                        index='handler.py',
-                                        entry=os.path.join(
-                                            os.getcwd(), 'lambdas', 'mobile', 'failure'),
-                                        runtime=lambda_.Runtime.PYTHON_3_8,
-                                        timeout=cdk.Duration.seconds(30),
-                                        environment={
-                                            'FROM_EMAIL': 'steven@pillar.gg',
-                                        },
-                                        memory_size=128)
+        failure_lambda = PythonFunction(
+            self,
+            "FailureLambda",
+            handler='handler',
+            index='handler.py',
+            entry=os.path.join(
+                os.getcwd(),
+                'lambdas',
+                'mobile',
+                'failure'),
+            runtime=lambda_.Runtime.PYTHON_3_8,
+            timeout=cdk.Duration.seconds(30),
+            environment={
+                'FROM_EMAIL': 'steven@pillar.gg',
+            },
+            memory_size=128)
 
         failure_lambda.add_to_role_policy(ses_email_role)
 
@@ -463,40 +468,41 @@ class RenderLambdaStack(cdk.Stack):
             result_path="$.Error")
 
         # crop video task
-        crop_video_task = stp_tasks.LambdaInvoke(self, "Crop Video",
-                                                 lambda_function=crop_lambda,
-                                                 heartbeat=cdk.Duration.seconds(
-                                                     30),
-                                                 result_path="$.crop",
-                                                 output_path="$",
-                                                 integration_pattern=stepfunctions.IntegrationPattern.WAIT_FOR_TASK_TOKEN,
-                                                 payload=stepfunctions.TaskInput.from_object(
-                                                     {
-                                                         "TaskToken": stepfunctions.JsonPath.task_token,
-                                                         "ClipName.$": "$.ClipName.file",
-                                                         "Outputs.$": "$.Outputs"
-                                                     }
-                                                 )
-                                                 ).add_catch(
-            send_mobile_failure_email, result_path="$.Error")
+        crop_video_task = stp_tasks.LambdaInvoke(
+            self,
+            "Crop Video",
+            lambda_function=crop_lambda,
+            heartbeat=cdk.Duration.seconds(30),
+            result_path="$.crop",
+            output_path="$",
+            integration_pattern=stepfunctions.IntegrationPattern.WAIT_FOR_TASK_TOKEN,
+            payload=stepfunctions.TaskInput.from_object(
+                {
+                    "TaskToken": stepfunctions.JsonPath.task_token,
+                    "ClipName.$": "$.ClipName.file",
+                    "Outputs.$": "$.Outputs"})).add_catch(
+            send_mobile_failure_email,
+            result_path="$.Error")
 
-        combine_video_task = stp_tasks.LambdaInvoke(self, "Combine Video",
-                                                    lambda_function=combiner_lambda,
-                                                    result_path="$.combine",
-                                                    input_path="$.crop",
-                                                    output_path="$"
-                                                    ).add_catch(
-            send_mobile_failure_email, result_path="$.Error")
+        combine_video_task = stp_tasks.LambdaInvoke(
+            self,
+            "Combine Video",
+            lambda_function=combiner_lambda,
+            result_path="$.combine",
+            input_path="$.crop",
+            output_path="$").add_catch(
+            send_mobile_failure_email,
+            result_path="$.Error")
 
-        mobile_notify_task = stp_tasks.LambdaInvoke(self, "Send Mobile Notification Email",
-                                                    lambda_function=notify_lambda,
-                                                    payload=stepfunctions.TaskInput.from_object({
-                                                        "mediaConvertResult": {
-                                                            "outputFilePath.$": "$.combine.Payload.output_file"
-                                                        },
-                                                        "user.$": "$.user"
-                                                    })
-                                                    )
+        mobile_notify_task = stp_tasks.LambdaInvoke(
+            self,
+            "Send Mobile Notification Email",
+            lambda_function=notify_lambda,
+            payload=stepfunctions.TaskInput.from_object(
+                {
+                    "mediaConvertResult": {
+                        "outputFilePath.$": "$.combine.Payload.output_file"},
+                    "user.$": "$.user"}))
 
         mobile_definition = download_clip_task.next(crop_video_task).next(
             combine_video_task).next(mobile_notify_task)

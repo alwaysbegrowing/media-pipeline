@@ -77,7 +77,7 @@ class RenderLambdaStack(cdk.Stack):
             runtime=lambda_.Runtime.FROM_IMAGE,
             environment={
                 'BUCKET': individual_clips.bucket_name},
-            timeout=cdk.Duration.seconds(240),
+            timeout=cdk.Duration.minutes(10),
             memory_size=1024)
 
         individual_clips.grant_write(downloader)
@@ -313,28 +313,6 @@ class RenderLambdaStack(cdk.Stack):
 
         # mobile export section
 
-        # API input will look something like this:
-        # {
-        #   "ClipData": {
-        #     "videoId": 857674564,
-        #     "clip": {
-        #       "starTime": 30,
-        #       "endTime": 120
-        #     }
-        #   },
-        #   "Outputs": {
-        #         "background": {
-        #             "bucket": "bucket_name",
-        #             "x": 100,
-        #             "y": 100,
-        #             "width": 100,
-        #             "height": 100,
-        #             "res_x": 100,
-        #             "res_y": 100
-        #         }
-        #     }
-        # }
-
         # mobile export queue
         mobile_mediaconvert_queue = mediaconvert.CfnQueue(
             self, id="MobileExportRender")
@@ -535,14 +513,14 @@ class RenderLambdaStack(cdk.Stack):
 
         mobile_export_endpoint = mobile_export_api.root.add_resource("export")
 
-        # mobile_export_auth = apigateway.TokenAuthorizer(
-        #     self, 'Mobile Export Token Authorizer', handler=auth_fn)
+        mobile_export_auth = apigateway.TokenAuthorizer(
+            self, 'Mobile Export Token Authorizer', handler=auth_fn)
 
         mobile_export_endpoint.add_method(
             "POST",
             mobileIntegration,
-            method_responses=method_responses,)
-        # authorizer=mobile_export_auth)
+            method_responses=method_responses,
+            authorizer=mobile_export_auth)
 
         mobile_events_rule = events.Rule(
             self,

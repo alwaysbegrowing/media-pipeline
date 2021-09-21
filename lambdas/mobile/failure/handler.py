@@ -17,6 +17,8 @@ def handler(event, context):
     message = error['Cause']
     error_name = error['Error']
 
+    print(message)
+
     # construct the email body
     html = f'''
             <body>
@@ -26,7 +28,6 @@ def handler(event, context):
             Here are more details on the error:<br>
             <br>
             <b>Error Name:</b> {error_name}<br>
-            <b>Error Cause:</b> <br/> {message}<br>
             '''
 
     # send the email

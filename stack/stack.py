@@ -468,14 +468,16 @@ class RenderLambdaStack(cdk.Stack):
                                                          "Outputs.$": "$.Outputs"
                                                      }
                                                  )
-                                                 )
+                                                 ).add_catch(
+            send_mobile_failure_email, result_path="$.Error")
 
         combine_video_task = stp_tasks.LambdaInvoke(self, "Combine Video",
                                                     lambda_function=combiner_lambda,
                                                     result_path="$.combine",
                                                     input_path="$.crop",
                                                     output_path="$"
-                                                    )
+                                                    ).add_catch(
+            send_mobile_failure_email, result_path="$.Error")
 
         mobile_notify_task = stp_tasks.LambdaInvoke(self, "Send Mobile Notification Email",
                                                     lambda_function=notify_lambda,

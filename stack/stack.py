@@ -141,7 +141,6 @@ class RenderLambdaStack(cdk.Stack):
                                        runtime=lambda_.Runtime.PYTHON_3_8,
                                        environment={
                                            'FROM_EMAIL': 'steven@pillar.gg',
-
                                        },
                                        memory_size=256,
                                        timeout=cdk.Duration.seconds(60))
@@ -422,10 +421,25 @@ class RenderLambdaStack(cdk.Stack):
                                                          30),
                                                      memory_size=128)
 
+        # failure lambda
+        failure_lambda = PythonFunction(self, "FailureLambda",
+                                        handler='handler',
+                                        index='handler.py',
+                                        entry=os.path.join(
+                                            os.getcwd(), 'lambdas', 'mobile', 'failure'),
+                                        runtime=lambda_.Runtime.PYTHON_3_8,
+                                        timeout=cdk.Duration.seconds(30),
+                                        environment={
+                                            'FROM_EMAIL': 'steven@pillar.gg',
+                                        },
+                                        memory_size=128)
+
+        failure_lambda.add_to_role_policy(ses_email_role)
+
         # state machine definition
 
         send_mobile_failure_email = stp_tasks.LambdaInvoke(
-            self, "Send Failure Email", lambda_function=notify_lambda)
+            self, "Send Failure Email", lambda_function=failure_lambda)
 
         # download clip task
         download_clip_task = stp_tasks.LambdaInvoke(self, "Download Clip",

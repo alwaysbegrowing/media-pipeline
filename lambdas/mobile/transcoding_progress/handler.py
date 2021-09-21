@@ -30,7 +30,8 @@ def handler(event, context):
                     if 'facecam' in path:
                         outputData['facecam_file'] = path
 
-        stepfunctions.send_task_success(taskToken=token, output=json.dumps(outputData))
+        stepfunctions.send_task_success(
+            taskToken=token, output=json.dumps(outputData))
 
     if (event['detail']['status'] == "STATUS_UPDATE"):
         stepfunctions.send_task_heartbeat(taskToken=token)

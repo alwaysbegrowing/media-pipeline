@@ -46,9 +46,16 @@ def handler(event, context):
     # add outputs to the job
     for output in outputs:
         crop = MCJob.create_crop(
-            outputs[output]['x'], outputs[output]['y'], outputs[output]['width'], outputs[output]['height'])
+            outputs[output]['x'],
+            outputs[output]['y'],
+            outputs[output]['width'],
+            outputs[output]['height'])
         job_constructor.add_output(
-            OUT_BUCKET, output, outputs[output]['res_x'], outputs[output]['res_y'], crop=crop)
+            OUT_BUCKET,
+            output,
+            outputs[output]['res_x'],
+            outputs[output]['res_y'],
+            crop=crop)
 
     # create the job
     job = job_constructor.create()

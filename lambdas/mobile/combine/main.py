@@ -10,7 +10,12 @@ OUT_BUCKET = os.getenv('OUT_BUCKET')
 BLUR_STRENGTH = 15
 
 
-def create_fc_mobile_video(background_file, content_file, facecam_file, output_file, blur_strength=15):
+def create_fc_mobile_video(
+        background_file,
+        content_file,
+        facecam_file,
+        output_file,
+        blur_strength=15):
 
     # the x and y coordinates will change when we
     # start working with different aspect ratios
@@ -24,7 +29,11 @@ def create_fc_mobile_video(background_file, content_file, facecam_file, output_f
     subprocess.run(cmd, shell=True)
 
 
-def create_blurred_mobile_video(background_file, content_file, output_file, blur_strength=15):
+def create_blurred_mobile_video(
+        background_file,
+        content_file,
+        output_file,
+        blur_strength=15):
 
     # the x and y coordinates will change when we
     # start working with different aspect ratios
@@ -79,11 +88,18 @@ def handler(event, context):
         return {'output_file': output_file}
 
     if facecam_file:
-        create_fc_mobile_video(f'/tmp/{background_file_name}', f'/tmp/{content_file_name}',
-                               f'/tmp/{facecam_file_name}', 'output.mp4', blur_strength=BLUR_STRENGTH)
+        create_fc_mobile_video(
+            f'/tmp/{background_file_name}',
+            f'/tmp/{content_file_name}',
+            f'/tmp/{facecam_file_name}',
+            'output.mp4',
+            blur_strength=BLUR_STRENGTH)
     else:
         create_blurred_mobile_video(
-            f'/tmp/{background_file_name}', f'/tmp/{content_file_name}', '/tmp/output.mp4', blur_strength=BLUR_STRENGTH)
+            f'/tmp/{background_file_name}',
+            f'/tmp/{content_file_name}',
+            '/tmp/output.mp4',
+            blur_strength=BLUR_STRENGTH)
 
     s3.put('/tmp/output.mp4', f's3://{OUT_BUCKET}/{output_file}')
     subprocess.run("rm -r /tmp/*", shell=True)

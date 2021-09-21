@@ -362,10 +362,12 @@ class RenderLambdaStack(cdk.Stack):
                                          public_read_access=True)
 
         # mobile export api
-        mobile_export_api = apigateway.RestApi(self, "MobileExportApi",
-                                               rest_api_name=f"MobileExportApi-{construct_id}",
-                                               description="Mobile export api",
-                                               default_cors_preflight_options=cors)
+        mobile_export_api = apigateway.RestApi(
+            self,
+            "MobileExportApi",
+            rest_api_name=f"MobileExportApi-{construct_id}",
+            description="Mobile export api",
+            default_cors_preflight_options=cors)
 
         # python crop lambda
         crop_lambda = PythonFunction(self, "Crop Lambda",
@@ -396,30 +398,36 @@ class RenderLambdaStack(cdk.Stack):
                 os.getcwd(), 'lambdas', 'mobile', 'combine'),
         )
 
-        combiner_lambda = lambda_.Function(self, "MobileCombiner",
-                                           code=mobile_ecr_image,
-                                           handler=lambda_.Handler.FROM_IMAGE,
-                                           runtime=lambda_.Runtime.FROM_IMAGE,
-                                           environment={
-                                               'IN_BUCKET': cropped_clips_bucket.bucket_name,
-                                               'OUT_BUCKET': mobile_export_bucket.bucket_name,
-                                           },
-                                           timeout=cdk.Duration.minutes(10),
-                                           memory_size=3096)
+        combiner_lambda = lambda_.Function(
+            self,
+            "MobileCombiner",
+            code=mobile_ecr_image,
+            handler=lambda_.Handler.FROM_IMAGE,
+            runtime=lambda_.Runtime.FROM_IMAGE,
+            environment={
+                'IN_BUCKET': cropped_clips_bucket.bucket_name,
+                'OUT_BUCKET': mobile_export_bucket.bucket_name,
+            },
+            timeout=cdk.Duration.minutes(10),
+            memory_size=3096)
 
         cropped_clips_bucket.grant_read(combiner_lambda)
         mobile_export_bucket.grant_read_write(combiner_lambda)
 
         # mobile transcoding progress lambda
-        transcoding_progress_lambda = PythonFunction(self, "TranscodingProgressLambda",
-                                                     handler='handler',
-                                                     index='handler.py',
-                                                     entry=os.path.join(
-                                                         os.getcwd(), 'lambdas', 'mobile', 'transcoding_progress'),
-                                                     runtime=lambda_.Runtime.PYTHON_3_8,
-                                                     timeout=cdk.Duration.seconds(
-                                                         30),
-                                                     memory_size=128)
+        transcoding_progress_lambda = PythonFunction(
+            self,
+            "TranscodingProgressLambda",
+            handler='handler',
+            index='handler.py',
+            entry=os.path.join(
+                os.getcwd(),
+                'lambdas',
+                'mobile',
+                'transcoding_progress'),
+            runtime=lambda_.Runtime.PYTHON_3_8,
+            timeout=cdk.Duration.seconds(30),
+            memory_size=128)
 
         # failure lambda
         failure_lambda = PythonFunction(self, "FailureLambda",
@@ -442,16 +450,17 @@ class RenderLambdaStack(cdk.Stack):
             self, "Send Failure Email", lambda_function=failure_lambda)
 
         # download clip task
-        download_clip_task = stp_tasks.LambdaInvoke(self, "Download Clip",
-                                                    lambda_function=downloader,
-                                                    input_path="$.ClipData",
-                                                    result_selector={
-                                                        'file.$': '$.Payload.file'
-                                                    },
-                                                    result_path="$.ClipName",
-                                                    output_path="$"
-                                                    ).add_catch(
-            send_mobile_failure_email, result_path="$.Error")
+        download_clip_task = stp_tasks.LambdaInvoke(
+            self,
+            "Download Clip",
+            lambda_function=downloader,
+            input_path="$.ClipData",
+            result_selector={
+                'file.$': '$.Payload.file'},
+            result_path="$.ClipName",
+            output_path="$").add_catch(
+            send_mobile_failure_email,
+            result_path="$.Error")
 
         # crop video task
         crop_video_task = stp_tasks.LambdaInvoke(self, "Crop Video",

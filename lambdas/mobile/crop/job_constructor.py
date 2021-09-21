@@ -23,9 +23,20 @@ class MCJob:
         self.inputs.append({"name": input_name})
 
     # add output to the job
-    def add_output(self, bucket, output_name, width, height, bitrate=12_000_000, crop=None):
-        self.outputs.append(
-            {"bucket": bucket, "modifier": output_name, "width": width, "height": height, "bitrate": bitrate, "crop": crop})
+    def add_output(
+            self,
+            bucket,
+            output_name,
+            width,
+            height,
+            bitrate=12_000_000,
+            crop=None):
+        self.outputs.append({"bucket": bucket,
+                             "modifier": output_name,
+                             "width": width,
+                             "height": height,
+                             "bitrate": bitrate,
+                             "crop": crop})
 
     # construct output group
     def _construct_output_group(self, output):

@@ -222,24 +222,26 @@ class RenderLambdaStack(cdk.Stack):
                                                    definition=definition
                                                    )
 
-        # This transforms the input into the format that the step functions are expecting.
-        # they expect input with the input data being a string https://docs.aws.amazon.com/step-functions/latest/dg/tutorial-api-gateway.html#api-gateway-step-3
-        # this gets complicated with the mapping template utils https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-mapping-template-reference.html#util-template-reference
-        # the replace variable is to fix https://github.com/pillargg/pillar.gg/issues/164
-        # all the code below does is manipulation on the input to get the mapping template to look like
-        # {"input": "{\"data\": $util.escapeJavaScript($input.json('$')).replaceAll("\\'", "'"), \"user\": $util.escapeJavaScript($context.authorizer.user)}", "stateMachineArn": "arn:aws:states:us-east-1:576758376358:stateMachine:RendererE9DA6252-h0z0K3nEWfic"}
-        replace = "replacement_string"
-        input_data = "$util.escapeJavaScript($input.json('$'))" + replace
-        auth_data = "$util.escapeJavaScript($context.authorizer.user)"
-        step_function_input = f'{{\"data\": {input_data}, \"user\": {auth_data}}}'
-        data = {"input": step_function_input,
-                "stateMachineArn": state_machine.state_machine_arn}
-        json_formatted_data = (json.dumps(data))
-        final_data = json_formatted_data.replace(
-            'replacement_string', '''.replaceAll("\\\\'", "'")''')
-        request_template = {
-            "application/json": final_data
-        }
+        def formated_request_template(state_machine_arn):
+            # This transforms the input into the format that the step functions are expecting.
+            # they expect input with the input data being a string https://docs.aws.amazon.com/step-functions/latest/dg/tutorial-api-gateway.html#api-gateway-step-3
+            # this gets complicated with the mapping template utils https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-mapping-template-reference.html#util-template-reference
+            # the replace variable is to fix https://github.com/pillargg/pillar.gg/issues/164
+            # all the code below does is manipulation on the input to get the mapping template to look like
+            # {"input": "{\"data\": $util.escapeJavaScript($input.json('$')).replaceAll("\\'", "'"), \"user\": $util.escapeJavaScript($context.authorizer.user)}", "stateMachineArn": "arn:aws:states:us-east-1:576758376358:stateMachine:RendererE9DA6252-h0z0K3nEWfic"}
+            replace = "replacement_string"
+            input_data = "$util.escapeJavaScript($input.json('$'))" + replace
+            auth_data = "$util.escapeJavaScript($context.authorizer.user)"
+            step_function_input = f'{{\"data\": {input_data}, \"user\": {auth_data}}}'
+            data = {"input": step_function_input,
+                    "stateMachineArn": state_machine_arn}
+            json_formatted_data = (json.dumps(data))
+            final_data = json_formatted_data.replace(
+                'replacement_string', '''.replaceAll("\\\\'", "'")''')
+            request_template = {
+                "application/json": final_data
+            }
+            return request_template
 
         api_role = iam.Role(
             self,
@@ -255,13 +257,16 @@ class RenderLambdaStack(cdk.Stack):
                 response_templates={
                     "application/json": "$input.json('$')",
                 })]
-        integration = apigateway.AwsIntegration(
-            service='states',
-            action='StartExecution',
-            options=apigateway.IntegrationOptions(
-                credentials_role=api_role,
-                request_templates=request_template,
-                integration_responses=integrationResponses))
+
+        def build_integration(state_machine_arn):
+            integration = apigateway.AwsIntegration(
+                service='states',
+                action='StartExecution',
+                options=apigateway.IntegrationOptions(
+                    credentials_role=api_role,
+                    request_templates=formated_request_template(state_machine_arn),
+                    integration_responses=integrationResponses))
+            return integration
 
         method_responses = [
             apigateway.MethodResponse(
@@ -288,9 +293,13 @@ class RenderLambdaStack(cdk.Stack):
 
         clips_endpoint.add_method(
             "POST",
-            integration,
+            build_integration(state_machine.state_machine_arn),
             method_responses=method_responses,
             authorizer=auth)
+
+        # mobile export queue
+        mobile_mediaconvert_queue = mediaconvert.CfnQueue(
+            self, id="MobileExportRender")
 
         events_rule = events.Rule(
             self,
@@ -301,7 +310,8 @@ class RenderLambdaStack(cdk.Stack):
                 detail_type=["MediaConvert Job State Change"],
                 detail={
                     "queue": [
-                        mediaconvert_queue.attr_arn]}),
+                        mediaconvert_queue.attr_arn,
+                        mobile_mediaconvert_queue.attr_arn]}),
             targets=[
                 events_targets.LambdaFunction(transcoding_finished)])
         transcoding_finished.add_to_role_policy(
@@ -312,10 +322,6 @@ class RenderLambdaStack(cdk.Stack):
                     state_machine.state_machine_arn]))
 
         # mobile export section
-
-        # mobile export queue
-        mobile_mediaconvert_queue = mediaconvert.CfnQueue(
-            self, id="MobileExportRender")
 
         # mobile mediaconvert role setup
         mobile_mediaconvert_role = iam.Role(
@@ -338,14 +344,6 @@ class RenderLambdaStack(cdk.Stack):
                                          id="MobileExportBucket",
                                          lifecycle_rules=[lifetime],
                                          public_read_access=True)
-
-        # mobile export api
-        mobile_export_api = apigateway.RestApi(
-            self,
-            "MobileExportApi",
-            rest_api_name=f"MobileExportApi-{construct_id}",
-            description="Mobile export api",
-            default_cors_preflight_options=cors)
 
         # python crop lambda
         crop_lambda = PythonFunction(self, "Crop Lambda",
@@ -488,52 +486,15 @@ class RenderLambdaStack(cdk.Stack):
         mobile_export_state_machine = stepfunctions.StateMachine(
             self, "MobileExporter", definition=mobile_definition)
 
-        mobile_api_role = iam.Role(
-            self,
-            "MobileExportApiRole",
-            assumed_by=iam.ServicePrincipal("apigateway.amazonaws.com"))
-        mobile_export_state_machine.grant_start_execution(mobile_api_role)
-        mobileIntegrationResponses = [
-            apigateway.IntegrationResponse(
-                selection_pattern="200",
-                status_code="200",
-                response_parameters={
-                    "method.response.header.Access-Control-Allow-Origin": "'*'"},
-                response_templates={
-                    "application/json": "$input.json('$')",
-                })]
+        mobile_export_state_machine.grant_start_execution(api_role)
 
-        mobileIntegration = apigateway.AwsIntegration(
-            service='states',
-            action='StartExecution',
-            options=apigateway.IntegrationOptions(
-                credentials_role=mobile_api_role,
-                request_templates=request_template,
-                integration_responses=mobileIntegrationResponses))
-
-        mobile_export_endpoint = mobile_export_api.root.add_resource("export")
-
-        mobile_export_auth = apigateway.TokenAuthorizer(
-            self, 'Mobile Export Token Authorizer', handler=auth_fn)
+        mobile_export_endpoint = clip_api.root.add_resource("export")
 
         mobile_export_endpoint.add_method(
             "POST",
-            mobileIntegration,
+            build_integration(mobile_export_state_machine.state_machine_arn),
             method_responses=method_responses,
-            authorizer=mobile_export_auth)
-
-        mobile_events_rule = events.Rule(
-            self,
-            "MobileTranscodingFinished",
-            rule_name=f"MediaConvertFinishedMobile-{construct_id}",
-            event_pattern=events.EventPattern(
-                source=["aws.mediaconvert"],
-                detail_type=["MediaConvert Job State Change"],
-                detail={
-                    "queue": [
-                        mobile_mediaconvert_queue.attr_arn]}),
-            targets=[
-                events_targets.LambdaFunction(transcoding_progress_lambda)])
+            authorizer=auth)
 
         transcoding_progress_lambda.add_to_role_policy(
             iam.PolicyStatement(

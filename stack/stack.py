@@ -222,14 +222,13 @@ class RenderLambdaStack(cdk.Stack):
                                                    definition=definition
                                                    )
 
-
         def formated_request_template(state_machine_arn):
-        # This transforms the input into the format that the step functions are expecting.
-        # they expect input with the input data being a string https://docs.aws.amazon.com/step-functions/latest/dg/tutorial-api-gateway.html#api-gateway-step-3
-        # this gets complicated with the mapping template utils https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-mapping-template-reference.html#util-template-reference
-        # the replace variable is to fix https://github.com/pillargg/pillar.gg/issues/164
-        # all the code below does is manipulation on the input to get the mapping template to look like
-        # {"input": "{\"data\": $util.escapeJavaScript($input.json('$')).replaceAll("\\'", "'"), \"user\": $util.escapeJavaScript($context.authorizer.user)}", "stateMachineArn": "arn:aws:states:us-east-1:576758376358:stateMachine:RendererE9DA6252-h0z0K3nEWfic"}
+            # This transforms the input into the format that the step functions are expecting.
+            # they expect input with the input data being a string https://docs.aws.amazon.com/step-functions/latest/dg/tutorial-api-gateway.html#api-gateway-step-3
+            # this gets complicated with the mapping template utils https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-mapping-template-reference.html#util-template-reference
+            # the replace variable is to fix https://github.com/pillargg/pillar.gg/issues/164
+            # all the code below does is manipulation on the input to get the mapping template to look like
+            # {"input": "{\"data\": $util.escapeJavaScript($input.json('$')).replaceAll("\\'", "'"), \"user\": $util.escapeJavaScript($context.authorizer.user)}", "stateMachineArn": "arn:aws:states:us-east-1:576758376358:stateMachine:RendererE9DA6252-h0z0K3nEWfic"}
             replace = "replacement_string"
             input_data = "$util.escapeJavaScript($input.json('$'))" + replace
             auth_data = "$util.escapeJavaScript($context.authorizer.user)"
@@ -258,6 +257,7 @@ class RenderLambdaStack(cdk.Stack):
                 response_templates={
                     "application/json": "$input.json('$')",
                 })]
+
         def build_integration(state_machine_arn):
             integration = apigateway.AwsIntegration(
                 service='states',
@@ -310,7 +310,8 @@ class RenderLambdaStack(cdk.Stack):
                 detail_type=["MediaConvert Job State Change"],
                 detail={
                     "queue": [
-                        mediaconvert_queue.attr_arn, mobile_mediaconvert_queue.attr_arn]}),
+                        mediaconvert_queue.attr_arn,
+                        mobile_mediaconvert_queue.attr_arn]}),
             targets=[
                 events_targets.LambdaFunction(transcoding_finished)])
         transcoding_finished.add_to_role_policy(

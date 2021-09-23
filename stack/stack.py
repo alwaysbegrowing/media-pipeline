@@ -180,7 +180,7 @@ class RenderLambdaStack(cdk.Stack):
                                              lambda_function=notify_lambda)
 
         send_failure_email = stp_tasks.LambdaInvoke(
-            self, "Send Mobile Export Failure Email", lambda_function=failure_lambda)
+            self, "Send Export Failure Email", lambda_function=failure_lambda)
 
         get_clips_task = stp_tasks.LambdaInvoke(
             self, "Download Individual Clips", lambda_function=downloader).add_catch(

@@ -139,19 +139,23 @@ class RenderLambdaStack(cdk.Stack):
         ses_email_role = iam.PolicyStatement(
             actions=['ses:SendEmail', 'ses:SendRawEmail'], resources=['*'])
 
-        notify_lambda = PythonFunction(self, 'Notify',
-                                       description='SES Email Lambda',
-                                       handler='handler',
-                                       index='handler.py',
-                                       entry=os.path.join(
-                                           os.getcwd(), 'lambdas', 'notify'),
-                                       runtime=lambda_.Runtime.PYTHON_3_8,
-                                       environment={
-                                           'FROM_EMAIL': 'steven@pillar.gg',
-                                           'SLACK_TOKEN_ARN': slack_token_secret.secret_arn,
-                                       },
-                                       memory_size=256,
-                                       timeout=cdk.Duration.seconds(60))
+        notify_lambda = PythonFunction(
+            self,
+            'Notify',
+            description='SES Email Lambda',
+            handler='handler',
+            index='handler.py',
+            entry=os.path.join(
+                os.getcwd(),
+                'lambdas',
+                'notify'),
+            runtime=lambda_.Runtime.PYTHON_3_8,
+            environment={
+                'FROM_EMAIL': 'steven@pillar.gg',
+                'SLACK_TOKEN_ARN': slack_token_secret.secret_arn,
+            },
+            memory_size=256,
+            timeout=cdk.Duration.seconds(60))
 
         slack_token_secret.grant_read(notify_lambda)
         notify_lambda.add_to_role_policy(ses_email_role)
@@ -318,7 +322,8 @@ class RenderLambdaStack(cdk.Stack):
                 detail_type=["MediaConvert Job State Change"],
                 detail={
                     "queue": [
-                        mediaconvert_queue.attr_arn, mobile_mediaconvert_queue.attr_arn]}),
+                        mediaconvert_queue.attr_arn,
+                        mobile_mediaconvert_queue.attr_arn]}),
             targets=[
                 events_targets.LambdaFunction(transcoding_finished)])
 
@@ -467,4 +472,5 @@ class RenderLambdaStack(cdk.Stack):
                 effect=iam.Effect.ALLOW,
                 actions=["states:SendTask*"],
                 resources=[
-                    mobile_export_state_machine.state_machine_arn, state_machine.state_machine_arn]))
+                    mobile_export_state_machine.state_machine_arn,
+                    state_machine.state_machine_arn]))

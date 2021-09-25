@@ -1,6 +1,8 @@
 
-
-class MCJob:
+# this should be made more robust
+# so that we can use it with our other
+# lambda functions
+class MediaConvertJobHandler:
 
     # create crop static method
     @staticmethod
@@ -134,9 +136,12 @@ class MCJob:
         return job
 
 
+# this is code used for testing
+# this should be made into proper unit
+# tests in the future
 if __name__ == "__main__":
     import json
-    job = MCJob(
+    job = MediaConvertJobHandler(
         "arn:aws:sqs:us-east-1:123456789012:MyQueue",  # queue arn
         "arn:aws:iam::123456789012:role/MyRole"  # role arn
     )
@@ -153,7 +158,7 @@ if __name__ == "__main__":
         1080,  # width
         1920,  # height
         bitrate=4_000_000,  # bitrate
-        crop=MCJob.create_crop(656, 0, 608, 1080)  # crop
+        crop=MediaConvertJobHandler.create_crop(656, 0, 608, 1080)  # crop
     )
 
     job.add_output(
@@ -162,7 +167,7 @@ if __name__ == "__main__":
         1080,  # width
         1080,  # height
         bitrate=5_000_000,  # bitrate
-        crop=MCJob.create_crop(456, 18, 1000, 1000)  # crop
+        crop=MediaConvertJobHandler.create_crop(456, 18, 1000, 1000)  # crop
     )
 
     job.add_output(
@@ -171,7 +176,7 @@ if __name__ == "__main__":
         560,
         420,
         bitrate=2_000_000,
-        crop=MCJob.create_crop(1420, 778, 400, 300)
+        crop=MediaConvertJobHandler.create_crop(1420, 778, 400, 300)
     )
 
     with open('test.json', 'w') as f:

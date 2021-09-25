@@ -1,21 +1,28 @@
 {
-    "faceCam": {
-        "height": 345,
-        "width": 345,
-        "x": 1203,
-        "y": 954
+    "ClipData": {
+        "videoId": 1146969838,
+        "upscale": true,
+        "clip": {
+            "startTime": 892,
+            "endTime": 920
+        }
     },
-    "highlight": {
-        "height": 345,
-        "width": 345,
-        "x": 1203,
-        "y": 954
-    },
-    "templateId": "",
-    "videoId": "",
-    "timestamps": {
-        "startTime": 0,
-        "endTime": 60,
-        "id": "some-garbage"
+    "Outputs": {
+        "background": {
+            "x": 656,
+            "y": 0,
+            "width": 606,
+            "height": 1080,
+            "res_x": 1080,
+            "res_y": 1920
+        },
+        "content": {
+            "x": 420,
+            "y": 0,
+            "width": 1080,
+            "height": 1080,
+            "res_x": 1080,
+            "res_y": 1080
+        }
     }
 }

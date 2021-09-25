@@ -3,7 +3,7 @@ import json
 
 import boto3
 
-from job_constructor import MCJob
+from job_constructor import MediaConvertJobHandler
 
 OUT_BUCKET = os.getenv('OUT_BUCKET')
 IN_BUCKET = os.getenv('IN_BUCKET')
@@ -35,7 +35,7 @@ def handler(event, context):
 
     print(json.dumps(event))
 
-    job_constructor = MCJob(QUEUE_ARN, ROLE_ARN)
+    job_constructor = MediaConvertJobHandler(QUEUE_ARN, ROLE_ARN)
     job_constructor.add_task_token(event['TaskToken'])
 
     # get input from the event
@@ -45,7 +45,14 @@ def handler(event, context):
 
     # add outputs to the job
     for output in outputs:
-        crop = MCJob.create_crop(
+        res_x = outputs[output].get('res_x')
+        res_y = outputs[output].get('res_y')
+
+        if not res_x or not res_y:
+            res_x = outputs[output]['resX']
+            res_y = outputs[output]['resY']
+
+        crop = MediaConvertJobHandler.create_crop(
             outputs[output]['x'],
             outputs[output]['y'],
             outputs[output]['width'],

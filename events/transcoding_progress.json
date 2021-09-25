@@ -1,0 +1,41 @@
+{
+    "version": "0",
+    "id": "e2e5fe88-2602-f31a-826b-aad16fc48391",
+    "detail-type": "MediaConvert Job State Change",
+    "source": "aws.mediaconvert",
+    "account": "576758376358",
+    "time": "2021-09-23T17:27:35Z",
+    "region": "us-east-1",
+    "resources": [
+        "arn:aws:mediaconvert:us-east-1:576758376358:jobs/1632418030186-mew8cu"
+    ],
+    "detail": {
+        "timestamp": 1632418055497,
+        "accountId": "576758376358",
+        "queue": "arn:aws:mediaconvert:us-east-1:576758376358:queues/ClipCombiner-DfIOx9maDCaq",
+        "jobId": "1632418030186-mew8cu",
+        "status": "COMPLETE",
+        "userMetadata": {
+            "TaskToken1": "AAAAKgAAAAIAAAAAAAAAAUdu3aOuz+OUJKV6COWvyxtoLhRa5Asy7khLXQga1+uUR6bKiUZ+TtiOphMd1bOisdJ3n08VbFNfdGJ+w7QLYkFOGF8s4COgx1+YPFZTcP/vkm+1FG6YAyT198n2JSaBLKnpdq4hQY1P5vFw6QVoI4nesQcYYlgkvsASlvRtYm0iSqizlKdEj4hmF2624XyM6uo66a8roLbtMfDzzNBxNnuDS2IJTa5LowcNKL2dfevz",
+            "TaskToken2": "XXjdW2QbWLXqbd5de1bCkvC6AeCIHpi8lhfRsJk4FV1jB1tQQNgWoXzojlOECUIyc/pSbLXFNdghLyTTwD+QL63UKjLpmY9n5PBzUaVl1LBMKNI/dVXnuPBNThzwMMtCd0AoOwffHW8HgB1PLoD7CBvht+sbw0nLHCiH9uc5Qbxzxw3Fa0vSbC9q2S1zeUeaqt4NQqhwXJoH/DyZTBMowlYC0su7JMLxxhyN5+dNnA6sqYxbYwtPTgO3ky1otssd",
+            "TaskToken3": "nNwC3k2MtQIW5OElzIetA90/2UGQMrOWawFNmJzfHBLfshB7JA0TBpwVgoZrU3N5WFtT0vIWP+miAJ3D4gk8Qplh/ZP/MKnQiQxJUIDj6D8W9F6vV4lVpsKZUAee6Nae/AE30ATGFrHm91YslY7ZGw=="
+        },
+        "outputGroupDetails": [
+            {
+                "outputDetails": [
+                    {
+                        "outputFilePaths": [
+                            "s3://renderlambdastack-combinedclips9275ae0a-pa6zk8x4mn/chand1012/68c24298-dcf5-4aac-aa0c-fd16f156e3dc-basic-combiner.mp4"
+                        ],
+                        "durationInMs": 30966,
+                        "videoDetails": {
+                            "widthInPx": 1600,
+                            "heightInPx": 900
+                        }
+                    }
+                ],
+                "type": "FILE_GROUP"
+            }
+        ]
+    }
+}

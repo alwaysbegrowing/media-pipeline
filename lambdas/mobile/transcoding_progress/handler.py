@@ -16,7 +16,7 @@ def handler(event, context):
         outputData = {}
         outputGroupDetails = event['detail']['outputGroupDetails']
         # all of these are stored in arrays,
-        # this guarantees it will check all of the
+        # this guarantees it will check
         # data
         for outputGroup in outputGroupDetails:
             outputDetails = outputGroup['outputDetails']

@@ -139,28 +139,6 @@ class RenderLambdaStack(cdk.Stack):
         ses_email_role = iam.PolicyStatement(
             actions=['ses:SendEmail', 'ses:SendRawEmail'], resources=['*'])
 
-        # failure lambda
-        failure_lambda = PythonFunction(
-            self,
-            "FailureLambda",
-            handler='handler',
-            index='handler.py',
-            entry=os.path.join(
-                os.getcwd(),
-                'lambdas',
-                'failure'),
-            runtime=lambda_.Runtime.PYTHON_3_8,
-            timeout=cdk.Duration.seconds(30),
-            environment={
-                'FROM_EMAIL': 'steven@pillar.gg',
-                'SLACK_TOKEN_ARN': slack_token_secret.secret_arn
-            },
-            memory_size=128)
-
-        failure_lambda.add_to_role_policy(ses_email_role)
-
-        slack_token_secret.grant_read(failure_lambda)
-
         notify_lambda = PythonFunction(self, 'Notify',
                                        description='SES Email Lambda',
                                        handler='handler',
@@ -170,17 +148,19 @@ class RenderLambdaStack(cdk.Stack):
                                        runtime=lambda_.Runtime.PYTHON_3_8,
                                        environment={
                                            'FROM_EMAIL': 'steven@pillar.gg',
+                                           'SLACK_TOKEN_ARN': slack_token_secret.secret_arn,
                                        },
                                        memory_size=256,
                                        timeout=cdk.Duration.seconds(60))
 
+        slack_token_secret.grant_read(notify_lambda)
         notify_lambda.add_to_role_policy(ses_email_role)
 
         notify_task = stp_tasks.LambdaInvoke(self, "Send Email",
                                              lambda_function=notify_lambda)
 
         send_failure_email = stp_tasks.LambdaInvoke(
-            self, "Send Export Failure Email", lambda_function=failure_lambda)
+            self, "Send Export Failure Email", lambda_function=notify_lambda)
 
         get_clips_task = stp_tasks.LambdaInvoke(
             self, "Download Individual Clips", lambda_function=downloader).add_catch(
@@ -338,15 +318,9 @@ class RenderLambdaStack(cdk.Stack):
                 detail_type=["MediaConvert Job State Change"],
                 detail={
                     "queue": [
-                        mediaconvert_queue.attr_arn]}),
+                        mediaconvert_queue.attr_arn, mobile_mediaconvert_queue.attr_arn]}),
             targets=[
                 events_targets.LambdaFunction(transcoding_finished)])
-        transcoding_finished.add_to_role_policy(
-            iam.PolicyStatement(
-                effect=iam.Effect.ALLOW,
-                actions=["states:SendTask*"],
-                resources=[
-                    state_machine.state_machine_arn]))
 
         # mobile export section
 
@@ -417,26 +391,10 @@ class RenderLambdaStack(cdk.Stack):
         cropped_clips_bucket.grant_read(combiner_lambda)
         mobile_export_bucket.grant_read_write(combiner_lambda)
 
-        # mobile transcoding progress lambda
-        # THIS IS NOT THE SAME AS THE OTHER LAMBDA
-        transcoding_progress_lambda = PythonFunction(
-            self,
-            "TranscodingProgressLambda",
-            handler='handler',
-            index='handler.py',
-            entry=os.path.join(
-                os.getcwd(),
-                'lambdas',
-                'mobile',
-                'transcoding_progress'),
-            runtime=lambda_.Runtime.PYTHON_3_8,
-            timeout=cdk.Duration.seconds(30),
-            memory_size=128)
-
         # state machine definition
 
         send_mobile_failure_email = stp_tasks.LambdaInvoke(
-            self, "Send Failure Email", lambda_function=failure_lambda)
+            self, "Send Failure Email", lambda_function=notify_lambda)
 
         # download clip task
         download_clip_task = stp_tasks.LambdaInvoke(
@@ -504,23 +462,9 @@ class RenderLambdaStack(cdk.Stack):
             method_responses=method_responses,
             authorizer=auth)
 
-        # THIS IS NOT THE SAME POLICY
-        mobile_events_rule = events.Rule(
-            self,
-            "MobileTranscodingFinished",
-            rule_name=f"MediaConvertFinishedMobile-{construct_id}",
-            event_pattern=events.EventPattern(
-                source=["aws.mediaconvert"],
-                detail_type=["MediaConvert Job State Change"],
-                detail={
-                    "queue": [
-                        mobile_mediaconvert_queue.attr_arn]}),
-            targets=[
-                events_targets.LambdaFunction(transcoding_progress_lambda)])
-
-        transcoding_progress_lambda.add_to_role_policy(
+        transcoding_finished.add_to_role_policy(
             iam.PolicyStatement(
                 effect=iam.Effect.ALLOW,
                 actions=["states:SendTask*"],
                 resources=[
-                    mobile_export_state_machine.state_machine_arn]))
+                    mobile_export_state_machine.state_machine_arn, state_machine.state_machine_arn]))

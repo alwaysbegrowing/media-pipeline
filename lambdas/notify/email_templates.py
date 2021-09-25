@@ -58,7 +58,7 @@ class S3Success(HtmlTemplate):
 class FailureMessage(HtmlTemplate):
     subject = 'Your Pillar compilation failed'
 
-    def __init__(self, display_name: str) -> None:
+    def __init__(self, display_name: str, error_name: str) -> None:
         html = f'''
             <body>
             {display_name}, <br>

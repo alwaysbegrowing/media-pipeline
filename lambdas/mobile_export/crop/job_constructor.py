@@ -4,12 +4,10 @@
 # lambda functions
 class MediaConvertJobHandler:
 
-    # create crop static method
     @staticmethod
     def create_crop(x, y, width, height):
         return {"X": x, "Y": y, "Width": width, "Height": height}
 
-    # initialize the job
     def __init__(self, queue_arn, role_arn):
         self.inputs = []
         self.outputs = []
@@ -20,11 +18,9 @@ class MediaConvertJobHandler:
     def add_task_token(self, task_token):
         self.task_token = task_token
 
-    # add input to the job
     def add_input(self, input_name):
         self.inputs.append({"name": input_name})
 
-    # add output to the job
     def add_output(
             self,
             bucket,
@@ -40,7 +36,6 @@ class MediaConvertJobHandler:
                              "bitrate": bitrate,
                              "crop": crop})
 
-    # construct output group
     def _construct_output_group(self, output):
         self.n += 1
         return {
@@ -83,7 +78,6 @@ class MediaConvertJobHandler:
             }
         }
 
-    # construct input groups
     def _construct_input_group(self, input_video):
         return {
             "AudioSelectors": {
@@ -96,7 +90,6 @@ class MediaConvertJobHandler:
             "FileInput": input_video['name']
         }
 
-    # create job
     def create(self):
         task_token1 = self.task_token[0:256]
         task_token2 = self.task_token[256:512]
@@ -146,12 +139,10 @@ if __name__ == "__main__":
         "arn:aws:iam::123456789012:role/MyRole"  # role arn
     )
 
-    # add inputs
     job.add_input(
         "s3://renderlambdastack-individualclips96d9129c-1mv9lf4dyunhn/5b1eadff-4d03-4884-a31d-4b7650d18d50.mkv"
     )
 
-    # add outputs
     job.add_output(
         "chandlerstestbucket",  # bucket name
         "Background",  # output name

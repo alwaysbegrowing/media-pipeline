@@ -2,10 +2,10 @@ import os
 
 import slack
 
-from get_secret import get_secret
+from get_aws_secret import get_aws_secret
 
 SLACK_TOKEN_ARN = os.getenv('SLACK_TOKEN_ARN')
-SLACK_TOKEN = get_secret(SLACK_TOKEN_ARN)
+SLACK_TOKEN = get_aws_secret(SLACK_TOKEN_ARN)
 
 
 def replace_nth_occurrence(s, sub, repl, n):
@@ -44,7 +44,7 @@ def s3_to_http(s3_url):
         'https://')
 
 
-def send_slack_message(display_name, request_email, error_name, error_message):
+def send_log_to_slack_channel(display_name, request_email, error_name, error_message):
     slack_message = f'''
         Client Display Name: {display_name}
         Client Email: {request_email}

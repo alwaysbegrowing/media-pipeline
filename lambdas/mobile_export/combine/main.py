@@ -4,13 +4,12 @@ import uuid
 
 import s3fs
 
-IN_BUCKET = os.getenv('IN_BUCKET')
-OUT_BUCKET = os.getenv('OUT_BUCKET')
+FINAL_BUCKET = os.getenv('FINAL_BUCKET')
 
 BLUR_STRENGTH = 15
 
 
-def create_fc_mobile_video(
+def create_facecam_mobile_video(
         background_file,
         content_file,
         facecam_file,
@@ -79,7 +78,7 @@ def handler(event, context):
 
     if not facecam_file and not content_file:
         background_local_file = f'/tmp/{background_file_name}'
-        upload_file_name = f's3://{OUT_BUCKET}/{output_file}'
+        upload_file_name = f's3://{FINAL_BUCKET}/{output_file}'
         print(background_local_file)
         print(upload_file_name)
         s3.put(background_local_file,
@@ -88,7 +87,7 @@ def handler(event, context):
         return {'output_file': output_file}
 
     if facecam_file:
-        create_fc_mobile_video(
+        create_facecam_mobile_video(
             f'/tmp/{background_file_name}',
             f'/tmp/{content_file_name}',
             f'/tmp/{facecam_file_name}',
@@ -101,8 +100,8 @@ def handler(event, context):
             '/tmp/output.mp4',
             blur_strength=BLUR_STRENGTH)
 
-    s3.put('/tmp/output.mp4', f's3://{OUT_BUCKET}/{output_file}')
+    s3.put('/tmp/output.mp4', f's3://{FINAL_BUCKET}/{output_file}')
     subprocess.run("rm -r /tmp/*", shell=True)
     return {
-        'output_file': f's3://{OUT_BUCKET}/{output_file}'
+        'output_file': f's3://{FINAL_BUCKET}/{output_file}'
     }

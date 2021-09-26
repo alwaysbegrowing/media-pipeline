@@ -269,7 +269,9 @@ class RenderLambdaStack(cdk.Stack):
                     "application/json": "$input.json('$')",
                 })]
 
-        def build_integration(state_machine_arn):
+        def build_stepfunction_integration(state_machine_arn):
+            # this constructions the integration for the api gateway
+            # the integration allows for the step function to be called from the api gateway
             integration = apigateway.AwsIntegration(
                 service='states',
                 action='StartExecution',
@@ -305,7 +307,7 @@ class RenderLambdaStack(cdk.Stack):
 
         clips_endpoint.add_method(
             "POST",
-            build_integration(state_machine.state_machine_arn),
+            build_stepfunction_integration(state_machine.state_machine_arn),
             method_responses=method_responses,
             authorizer=auth)
 
@@ -356,7 +358,7 @@ class RenderLambdaStack(cdk.Stack):
                                      handler='handler',
                                      index='handler.py',
                                      entry=os.path.join(
-                                         os.getcwd(), 'lambdas', 'mobile', 'crop'),
+                                         os.getcwd(), 'lambdas', 'mobile_export', 'crop'),
                                      runtime=lambda_.Runtime.PYTHON_3_8,
                                      timeout=cdk.Duration.seconds(30),
                                      memory_size=128,
@@ -377,7 +379,7 @@ class RenderLambdaStack(cdk.Stack):
         # docker combiner lambda
         mobile_ecr_image = lambda_.EcrImageCode.from_asset_image(
             directory=os.path.join(
-                os.getcwd(), 'lambdas', 'mobile', 'combine'),
+                os.getcwd(), 'lambdas', 'mobile_export', 'combine'),
         )
 
         combiner_lambda = lambda_.Function(
@@ -387,8 +389,7 @@ class RenderLambdaStack(cdk.Stack):
             handler=lambda_.Handler.FROM_IMAGE,
             runtime=lambda_.Runtime.FROM_IMAGE,
             environment={
-                'IN_BUCKET': cropped_clips_bucket.bucket_name,
-                'OUT_BUCKET': mobile_export_bucket.bucket_name,
+                'FINAL_BUCKET': mobile_export_bucket.bucket_name,
             },
             timeout=cdk.Duration.minutes(10),
             memory_size=3096)
@@ -463,7 +464,8 @@ class RenderLambdaStack(cdk.Stack):
 
         mobile_export_endpoint.add_method(
             "POST",
-            build_integration(mobile_export_state_machine.state_machine_arn),
+            build_stepfunction_integration(
+                mobile_export_state_machine.state_machine_arn),
             method_responses=method_responses,
             authorizer=auth)
 

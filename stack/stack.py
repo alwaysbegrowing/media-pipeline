@@ -271,7 +271,8 @@ class RenderLambdaStack(cdk.Stack):
 
         def build_stepfunction_integration(state_machine_arn):
             # this constructions the integration for the api gateway
-            # the integration allows for the step function to be called from the api gateway
+            # the integration allows for the step function to be called from
+            # the api gateway
             integration = apigateway.AwsIntegration(
                 service='states',
                 action='StartExecution',

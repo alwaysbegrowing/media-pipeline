@@ -44,7 +44,11 @@ def s3_to_http(s3_url):
         'https://')
 
 
-def send_log_to_slack_channel(display_name, request_email, error_name, error_message):
+def send_log_to_slack_channel(
+        display_name,
+        request_email,
+        error_name,
+        error_message):
     slack_message = f'''
         Client Display Name: {display_name}
         Client Email: {request_email}

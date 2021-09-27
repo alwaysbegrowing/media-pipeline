@@ -84,7 +84,7 @@ def handler(event, context):
         s3.put(background_local_file,
                upload_file_name)
         subprocess.run("rm -r /tmp/*", shell=True)
-        return {'output_file': output_file}
+        return {'output_file': upload_file_name}
 
     if facecam_file:
         create_facecam_mobile_video(

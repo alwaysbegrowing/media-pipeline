@@ -1,0 +1,43 @@
+{
+    "data": {
+        "ClipData": {
+            "videoId": 1146969838,
+            "upscale": true,
+            "clip": {
+                "startTime": 892,
+                "endTime": 920
+            }
+        },
+        "Outputs": {
+            "background": {
+                "x": 656,
+                "y": 0,
+                "width": 606,
+                "height": 1080,
+                "res_x": 1080,
+                "res_y": 1920
+            },
+            "content": {
+                "x": 420,
+                "y": 0,
+                "width": 1080,
+                "height": 1080,
+                "res_x": 1080,
+                "res_y": 1080
+            }
+        }
+    },
+    "user": {
+        "id": "117861016",
+        "login": "chand1012",
+        "display_name": "chand1012",
+        "type": "",
+        "broadcaster_type": "",
+        "description": "I really like shooters and VR.",
+        "profile_image_url": "https://static-cdn.jtvnw.net/jtv_user_pictures/8f1fd9d8-24f4-4f5f-8fb2-b5b84538beb3-profile_image-300x300.png",
+        "offline_image_url": "",
+        "view_count": 138,
+        "email": "chandlerl14@outlook.com",
+        "created_at": "2016-03-05T18:41:23Z"
+    }
+}

@@ -19,6 +19,7 @@ from aws_cdk.aws_lambda_python import PythonFunction
 TWITCH_CLIENT_ID = "phpnjz4llxez4zpw3iurfthoi573c8"
 MONGODB_FULL_URI_ARN = 'arn:aws:secretsmanager:us-east-1:576758376358:secret:MONGODB_FULL_URI-DBSAtt'
 YT_CREDENTIALS = 'arn:aws:secretsmanager:us-east-1:576758376358:secret:YT_CREDENTIALS-7vn4OJ'
+SLACK_TOKEN = 'arn:aws:secretsmanager:us-east-1:576758376358:secret:SlackToken-YE4Jip'
 
 
 class RenderLambdaStack(cdk.Stack):
@@ -77,8 +78,8 @@ class RenderLambdaStack(cdk.Stack):
             runtime=lambda_.Runtime.FROM_IMAGE,
             environment={
                 'BUCKET': individual_clips.bucket_name},
-            timeout=cdk.Duration.seconds(60),
-            memory_size=512)
+            timeout=cdk.Duration.minutes(10),
+            memory_size=1024)
 
         individual_clips.grant_write(downloader)
 
@@ -132,29 +133,38 @@ class RenderLambdaStack(cdk.Stack):
         youtube_secrets = secretsmanager.Secret.from_secret_complete_arn(
             self, 'YT_CREDENTIALS', YT_CREDENTIALS)
 
-        notify_lambda = PythonFunction(self, 'Notify',
-                                       description='SES Email Lambda',
-                                       handler='handler',
-                                       index='handler.py',
-                                       entry=os.path.join(
-                                           os.getcwd(), 'lambdas', 'notify'),
-                                       runtime=lambda_.Runtime.PYTHON_3_8,
-                                       environment={
-                                           'FROM_EMAIL': 'steven@pillar.gg',
-
-                                       },
-                                       memory_size=256,
-                                       timeout=cdk.Duration.seconds(60))
+        slack_token_secret = secretsmanager.Secret.from_secret_complete_arn(
+            self, 'SlackToken', SLACK_TOKEN)
 
         ses_email_role = iam.PolicyStatement(
             actions=['ses:SendEmail', 'ses:SendRawEmail'], resources=['*'])
+
+        notify_lambda = PythonFunction(
+            self,
+            'Notify',
+            description='SES Email Lambda',
+            handler='handler',
+            index='handler.py',
+            entry=os.path.join(
+                os.getcwd(),
+                'lambdas',
+                'notify'),
+            runtime=lambda_.Runtime.PYTHON_3_8,
+            environment={
+                'FROM_EMAIL': 'steven@pillar.gg',
+                'SLACK_TOKEN_ARN': slack_token_secret.secret_arn,
+            },
+            memory_size=256,
+            timeout=cdk.Duration.seconds(60))
+
+        slack_token_secret.grant_read(notify_lambda)
         notify_lambda.add_to_role_policy(ses_email_role)
 
         notify_task = stp_tasks.LambdaInvoke(self, "Send Email",
                                              lambda_function=notify_lambda)
 
         send_failure_email = stp_tasks.LambdaInvoke(
-            self, "Send Failure Email", lambda_function=notify_lambda)
+            self, "Send Export Failure Email", lambda_function=notify_lambda)
 
         get_clips_task = stp_tasks.LambdaInvoke(
             self, "Download Individual Clips", lambda_function=downloader).add_catch(
@@ -196,8 +206,8 @@ class RenderLambdaStack(cdk.Stack):
                                       environment={
                                           'TWITCH_CLIENT_ID': TWITCH_CLIENT_ID,
                                           'DB_NAME': mongo_db_database,
-
                                       })
+
         upload_to_youtube_question = stepfunctions.Choice(
             self, "Upload To Youtube?"
         )
@@ -223,24 +233,26 @@ class RenderLambdaStack(cdk.Stack):
                                                    definition=definition
                                                    )
 
-        # This transforms the input into the format that the step functions are expecting.
-        # they expect input with the input data being a string https://docs.aws.amazon.com/step-functions/latest/dg/tutorial-api-gateway.html#api-gateway-step-3
-        # this gets complicated with the mapping template utils https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-mapping-template-reference.html#util-template-reference
-        # the replace variable is to fix https://github.com/pillargg/pillar.gg/issues/164
-        # all the code below does is manipulation on the input to get the mapping template to look like
-        # {"input": "{\"data\": $util.escapeJavaScript($input.json('$')).replaceAll("\\'", "'"), \"user\": $util.escapeJavaScript($context.authorizer.user)}", "stateMachineArn": "arn:aws:states:us-east-1:576758376358:stateMachine:RendererE9DA6252-h0z0K3nEWfic"}
-        replace = "replacement_string"
-        input_data = "$util.escapeJavaScript($input.json('$'))" + replace
-        auth_data = "$util.escapeJavaScript($context.authorizer.user)"
-        step_function_input = f'{{\"data\": {input_data}, \"user\": {auth_data}}}'
-        data = {"input": step_function_input,
-                "stateMachineArn": state_machine.state_machine_arn}
-        json_formatted_data = (json.dumps(data))
-        final_data = json_formatted_data.replace(
-            'replacement_string', '''.replaceAll("\\\\'", "'")''')
-        request_template = {
-            "application/json": final_data
-        }
+        def formated_request_template(state_machine_arn):
+            # This transforms the input into the format that the step functions are expecting.
+            # they expect input with the input data being a string https://docs.aws.amazon.com/step-functions/latest/dg/tutorial-api-gateway.html#api-gateway-step-3
+            # this gets complicated with the mapping template utils https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-mapping-template-reference.html#util-template-reference
+            # the replace variable is to fix https://github.com/pillargg/pillar.gg/issues/164
+            # all the code below does is manipulation on the input to get the mapping template to look like
+            # {"input": "{\"data\": $util.escapeJavaScript($input.json('$')).replaceAll("\\'", "'"), \"user\": $util.escapeJavaScript($context.authorizer.user)}", "stateMachineArn": "arn:aws:states:us-east-1:576758376358:stateMachine:RendererE9DA6252-h0z0K3nEWfic"}
+            replace = "replacement_string"
+            input_data = "$util.escapeJavaScript($input.json('$'))" + replace
+            auth_data = "$util.escapeJavaScript($context.authorizer.user)"
+            step_function_input = f'{{\"data\": {input_data}, \"user\": {auth_data}}}'
+            data = {"input": step_function_input,
+                    "stateMachineArn": state_machine_arn}
+            json_formatted_data = (json.dumps(data))
+            final_data = json_formatted_data.replace(
+                'replacement_string', '''.replaceAll("\\\\'", "'")''')
+            request_template = {
+                "application/json": final_data
+            }
+            return request_template
 
         api_role = iam.Role(
             self,
@@ -256,13 +268,20 @@ class RenderLambdaStack(cdk.Stack):
                 response_templates={
                     "application/json": "$input.json('$')",
                 })]
-        integration = apigateway.AwsIntegration(
-            service='states',
-            action='StartExecution',
-            options=apigateway.IntegrationOptions(
-                credentials_role=api_role,
-                request_templates=request_template,
-                integration_responses=integrationResponses))
+
+        def build_stepfunction_integration(state_machine_arn):
+            # this constructions the integration for the api gateway
+            # the integration allows for the step function to be called from
+            # the api gateway
+            integration = apigateway.AwsIntegration(
+                service='states',
+                action='StartExecution',
+                options=apigateway.IntegrationOptions(
+                    credentials_role=api_role,
+                    request_templates=formated_request_template(
+                        state_machine_arn),
+                    integration_responses=integrationResponses))
+            return integration
 
         method_responses = [
             apigateway.MethodResponse(
@@ -289,9 +308,13 @@ class RenderLambdaStack(cdk.Stack):
 
         clips_endpoint.add_method(
             "POST",
-            integration,
+            build_stepfunction_integration(state_machine.state_machine_arn),
             method_responses=method_responses,
             authorizer=auth)
+
+        # mobile export queue
+        mobile_mediaconvert_queue = mediaconvert.CfnQueue(
+            self, id="MobileExportRender")
 
         events_rule = events.Rule(
             self,
@@ -302,12 +325,155 @@ class RenderLambdaStack(cdk.Stack):
                 detail_type=["MediaConvert Job State Change"],
                 detail={
                     "queue": [
-                        mediaconvert_queue.attr_arn]}),
+                        mediaconvert_queue.attr_arn,
+                        mobile_mediaconvert_queue.attr_arn]}),
             targets=[
                 events_targets.LambdaFunction(transcoding_finished)])
+
+        # mobile export section
+
+        # mobile mediaconvert role setup
+        mobile_mediaconvert_role = iam.Role(
+            self,
+            "MediaConvertMobile",
+            assumed_by=iam.ServicePrincipal("mediaconvert.amazonaws.com"))
+        individual_clips.grant_read(mediaconvert_role)
+
+        mobile_mediaconvert_create_job = iam.PolicyStatement(
+            actions=['mediaconvert:CreateJob'], resources=[
+                mobile_mediaconvert_queue.attr_arn])
+
+        # background clips s3 bucket
+        cropped_clips_bucket = s3.Bucket(
+            scope=self, id="CroppedClipsBucket", lifecycle_rules=[lifetime])
+        cropped_clips_bucket.grant_write(mobile_mediaconvert_role)
+
+        # mobile export bucket
+        mobile_export_bucket = s3.Bucket(scope=self,
+                                         id="MobileExportBucket",
+                                         lifecycle_rules=[lifetime],
+                                         public_read_access=True)
+
+        # python crop lambda
+        crop_lambda = PythonFunction(self, "Crop Lambda",
+                                     handler='handler',
+                                     index='handler.py',
+                                     entry=os.path.join(
+                                         os.getcwd(), 'lambdas', 'mobile_export', 'crop'),
+                                     runtime=lambda_.Runtime.PYTHON_3_8,
+                                     timeout=cdk.Duration.seconds(30),
+                                     memory_size=128,
+                                     initial_policy=[  # reuse policy statements from above: mediaconvert_pass_role, mediaconvert_create_job
+                                         mobile_mediaconvert_create_job,
+                                         mediaconvert_pass_role
+                                     ],
+                                     environment={
+                                         'IN_BUCKET': individual_clips.bucket_name,
+                                         'OUT_BUCKET': cropped_clips_bucket.bucket_name,
+                                         'MEDIACONVERT_ARN': mobile_mediaconvert_queue.attr_arn,
+                                         'ROLE_ARN': mobile_mediaconvert_role.role_arn,
+                                     })
+
+        cropped_clips_bucket.grant_write(crop_lambda)
+        individual_clips.grant_read(crop_lambda)
+
+        # docker combiner lambda
+        mobile_ecr_image = lambda_.EcrImageCode.from_asset_image(
+            directory=os.path.join(
+                os.getcwd(), 'lambdas', 'mobile_export', 'combine'),
+        )
+
+        combiner_lambda = lambda_.Function(
+            self,
+            "MobileCombiner",
+            code=mobile_ecr_image,
+            handler=lambda_.Handler.FROM_IMAGE,
+            runtime=lambda_.Runtime.FROM_IMAGE,
+            environment={
+                'FINAL_BUCKET': mobile_export_bucket.bucket_name,
+            },
+            timeout=cdk.Duration.minutes(10),
+            memory_size=3096)
+
+        cropped_clips_bucket.grant_read(combiner_lambda)
+        mobile_export_bucket.grant_read_write(combiner_lambda)
+
+        # state machine definition
+
+        send_mobile_failure_email = stp_tasks.LambdaInvoke(
+            self, "Send Failure Email", lambda_function=notify_lambda)
+
+        # download clip task
+        download_clip_task = stp_tasks.LambdaInvoke(
+            self,
+            "Download Clip",
+            lambda_function=downloader,
+            input_path="$.data.ClipData",
+            result_selector={
+                'file.$': '$.Payload.file'},
+            result_path="$.ClipName",
+            output_path="$").add_catch(
+            send_mobile_failure_email,
+            result_path="$.Error")
+
+        # crop video task
+        crop_video_task = stp_tasks.LambdaInvoke(
+            self,
+            "Crop Video",
+            lambda_function=crop_lambda,
+            heartbeat=cdk.Duration.seconds(30),
+            result_path="$.crop",
+            output_path="$",
+            integration_pattern=stepfunctions.IntegrationPattern.WAIT_FOR_TASK_TOKEN,
+            payload=stepfunctions.TaskInput.from_object(
+                {
+                    "TaskToken": stepfunctions.JsonPath.task_token,
+                    "ClipName.$": "$.ClipName.file",
+                    "Outputs.$": "$.data.Outputs"})).add_catch(
+            send_mobile_failure_email,
+            result_path="$.Error")
+
+        combine_video_task = stp_tasks.LambdaInvoke(
+            self,
+            "Combine Video",
+            lambda_function=combiner_lambda,
+            result_path="$.combine",
+            input_path="$.crop",
+            output_path="$").add_catch(
+            send_mobile_failure_email,
+            result_path="$.Error")
+
+        mobile_notify_task = stp_tasks.LambdaInvoke(
+            self,
+            "Send Mobile Notification Email",
+            lambda_function=notify_lambda,
+            payload=stepfunctions.TaskInput.from_object(
+                {
+                    "mediaConvertResult": {
+                        "outputFilePath.$": "$.combine.Payload.output_file"},
+                    "user.$": "$.user"}))
+
+        mobile_definition = download_clip_task.next(crop_video_task).next(
+            combine_video_task).next(mobile_notify_task)
+
+        mobile_export_state_machine = stepfunctions.StateMachine(
+            self, "MobileExporter", definition=mobile_definition)
+
+        mobile_export_state_machine.grant_start_execution(api_role)
+
+        mobile_export_endpoint = clip_api.root.add_resource("export")
+
+        mobile_export_endpoint.add_method(
+            "POST",
+            build_stepfunction_integration(
+                mobile_export_state_machine.state_machine_arn),
+            method_responses=method_responses,
+            authorizer=auth)
+
         transcoding_finished.add_to_role_policy(
             iam.PolicyStatement(
                 effect=iam.Effect.ALLOW,
                 actions=["states:SendTask*"],
                 resources=[
+                    mobile_export_state_machine.state_machine_arn,
                     state_machine.state_machine_arn]))

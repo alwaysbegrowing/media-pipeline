@@ -70,6 +70,7 @@ def handler(event, context):
     policy.region = tmp[3]
     policy.stage = apiGatewayArnTmp[1]
     policy.allowMethod(HttpVerb.POST, "/clips")
+    policy.allowMethod(HttpVerb.POST, "/export")
 
     # Finally, build the policy
     authResponse = policy.build()

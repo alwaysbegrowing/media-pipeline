@@ -22,7 +22,13 @@ class MediaConvertJobHandler:
     def add_input(self, input_name):
         self.inputs.append({"name": input_name})
 
-    def add_overlay(self, overlay_location, overlay_x, overlay_y, overlay_w, overlay_h):
+    def add_overlay(
+    self,
+    overlay_location,
+    overlay_x,
+    overlay_y,
+    overlay_w,
+     overlay_h):
         self.overlay = {
             "Width": overlay_w,
             "Height": overlay_h,

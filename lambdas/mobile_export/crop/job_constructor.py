@@ -13,6 +13,7 @@ class MediaConvertJobHandler:
         self.outputs = []
         self.queue_arn = queue_arn
         self.role_arn = role_arn
+        self.overlay = None
         self.n = 0
 
     def add_task_token(self, task_token):
@@ -20,6 +21,17 @@ class MediaConvertJobHandler:
 
     def add_input(self, input_name):
         self.inputs.append({"name": input_name})
+
+    def add_overlay(self, overlay_location, overlay_x, overlay_y, overlay_w, overlay_h):
+        self.overlay = {
+            "Width": overlay_w,
+            "Height": overlay_h,
+            "ImageX": overlay_x,
+            "ImageY": overlay_y,
+            "Layer": 1,
+            "ImageInserterInput": overlay_location,
+            "Opacity": 50
+        }
 
     def add_output(
             self,
@@ -45,6 +57,15 @@ class MediaConvertJobHandler:
                     "Container": "MP4",
                     "Mp4Settings": {}
                 },
+                "VideoDescription": {
+              "ScalingBehavior": "DEFAULT",
+              "VideoPreprocessors": {
+                "ImageInserter": {
+                  "InsertableImages": [
+                    self.overlay
+                  ]
+                }
+              },
                 "VideoDescription": {
                     "CodecSettings": {
                         "Codec": "H_264",

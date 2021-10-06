@@ -16,7 +16,7 @@ from aws_cdk import (core as cdk,
 
 from aws_cdk.aws_lambda_python import PythonFunction
 
-TWITCH_CLIENT_ID = "phpnjz4llxez4zpw3iurfthoi573c8"
+TWITCH_CLIENT_ID_ARN = 'arn:aws:secretsmanager:us-east-1:576758376358:secret:TWITCH_CLIENT_ID-dKQAIn'
 MONGODB_FULL_URI_ARN = 'arn:aws:secretsmanager:us-east-1:576758376358:secret:MONGODB_FULL_URI-DBSAtt'
 YT_CREDENTIALS = 'arn:aws:secretsmanager:us-east-1:576758376358:secret:YT_CREDENTIALS-7vn4OJ'
 SLACK_TOKEN = 'arn:aws:secretsmanager:us-east-1:576758376358:secret:SlackToken-YE4Jip'
@@ -194,6 +194,11 @@ class RenderLambdaStack(cdk.Stack):
                 "clip.$": "$$.Map.Item.Value",
                 "index.$": "$$.Map.Item.Index",
                 "videoId.$": "$.data.videoId"}).iterator(get_clips_task)
+
+        twitch_client_id = secretsmanager.Secret.from_secret_complete_arn(
+            self, 'TWITCH_CLIENT_ID', TWITCH_CLIENT_ID_ARN)
+
+        TWITCH_CLIENT_ID = twitch_client_id.secret_value.to_string()
 
         yt_upload_fn = PythonFunction(self, 'Youtube Upload',
                                       handler='handler',

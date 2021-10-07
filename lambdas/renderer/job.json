@@ -29,12 +29,12 @@
                     "VideoPreprocessors": {
                         "ImageInserter": {
                             "InsertableImages": [{
-                                "Width": 500,
+                                "Width": 350,
                                 "Height": 100,
                                 "ImageX": 0,
                                 "ImageY": 900,
                                 "Layer": 1,
-                                "ImageInserterInput": "https://i.imgur.com/fGTUZ13.png",
+                                "ImageInserterInput": "https://pillaroverlays.s3.amazonaws.com/watermark.png",
                                 "Opacity": 50
                             }]
                         }

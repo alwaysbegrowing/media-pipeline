@@ -22,22 +22,22 @@ class MediaConvertJobHandler:
     def add_input(self, input_name):
         self.inputs.append({"name": input_name})
 
-    def add_overlay(
-    self,
-    overlay_location,
-    overlay_x,
-    overlay_y,
-    overlay_w,
-     overlay_h):
-        self.overlay = {
-            "Width": overlay_w,
-            "Height": overlay_h,
-            "ImageX": overlay_x,
-            "ImageY": overlay_y,
-            "Layer": 1,
-            "ImageInserterInput": overlay_location,
-            "Opacity": 50
-        }
+    # def add_overlay(
+    # self,
+    # overlay_location,
+    # overlay_x,
+    # overlay_y,
+    # overlay_w,
+    #  overlay_h):
+    #     self.overlay = {
+    #         "Width": overlay_w,
+    #         "Height": overlay_h,
+    #         "ImageX": overlay_x,
+    #         "ImageY": overlay_y,
+    #         "Layer": 1,
+    #         "ImageInserterInput": overlay_location,
+    #         "Opacity": 50
+    #     }
 
     def add_output(
             self,
@@ -64,22 +64,13 @@ class MediaConvertJobHandler:
                     "Mp4Settings": {}
                 },
                 "VideoDescription": {
-              "ScalingBehavior": "DEFAULT",
-              "VideoPreprocessors": {
-                "ImageInserter": {
-                  "InsertableImages": [
-                    self.overlay
-                  ]
-                }
-              },
-                "VideoDescription": {
                     "CodecSettings": {
                         "Codec": "H_264",
                         "H264Settings": {
                             "MaxBitrate": output["bitrate"],
                             "RateControlMode": "QVBR",
                             "SceneChangeDetect": "TRANSITION_DETECTION"
-                        }
+                        },
                     },
                     "Crop": output["crop"],
                     "Width": output["width"],

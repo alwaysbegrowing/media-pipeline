@@ -8,22 +8,44 @@ FINAL_BUCKET = os.getenv('FINAL_BUCKET')
 
 BLUR_STRENGTH = 15
 
+WATERMARK_FILE = 'https://pillaroverlays.s3.amazonaws.com/watermark.png'
+
 
 def create_facecam_mobile_video(
         background_file,
         content_file,
         facecam_file,
         output_file,
-        blur_strength=15):
+        **options):
 
-    # the x and y coordinates will change when we
-    # start working with different aspect ratios
-    content_x = 0
-    content_y = 420
-    facecam_x = 260
-    facecam_y = 0
+    # specifies the x and y coordinates of the content
+    content_x = options.get('content_x', 0)
+    content_y = options.get('content_y', 420)
+    # specifies the x and y coordinates of the facecam
+    facecam_x = options.get('facecam_x', 260)
+    facecam_y = options.get('facecam_y', 0)
+    # how strong the blur should be
+    blur_strength = options.get('blur_strength', 15)
+    # whether or not to put a watermark on the video
+    watermark = options.get('watermark', True)
+    # the x and y coordinates of the watermark
+    watermark_x = options.get('watermark_x', 10)
+    watermark_y = options.get('watermark_y', 1720)
+    # the x and y scale of the watermark
+    watermark_scale_x = options.get('watermark_scale_x', 350)
+    watermark_scale_y = options.get('watermark_scale_y', 100)
+    # this can be any public URL or a local file
+    watermark_file = options.get('watermark_file', WATERMARK_FILE)
 
-    cmd = f"ffmpeg -i {background_file} -i {content_file} -i {facecam_file} -filter_complex '[0:v] boxblur={blur_strength}:1 [a]; [a][1:v] overlay={content_x}:{content_y} [b]; [b][2:v] overlay={facecam_x}:{facecam_y}' -r 60 -c:v libx264 -pix_fmt yuv420p {output_file}"
+    # if there is a watermark, add it to the video
+    if watermark:
+        # generates the FFMPEG command sequence to add the watermark
+        watermark_command = f"[3:v] scale={watermark_scale_x}:{watermark_scale_y},colorchannelmixer=aa=0.5 [d]; [c][d] overlay={watermark_x}:{watermark_y}"
+        # the ffmpeg command to create the video
+        cmd = f"ffmpeg -i {background_file} -i {content_file} -i {facecam_file} -i {watermark_file} -filter_complex '[0:v] boxblur={blur_strength}:1 [a]; [a][1:v] overlay={content_x}:{content_y} [b]; [b][2:v] overlay={facecam_x}:{facecam_y} [c];{watermark_command}' -r 60 -c:v libx264 -pix_fmt yuv420p {output_file}"
+    else:
+        # if there is no watermark, omit the watermark file and command
+        cmd = f"ffmpeg -i {background_file} -i {content_file} -i {facecam_file} -filter_complex '[0:v] boxblur={blur_strength}:1 [a]; [a][1:v] overlay={content_x}:{content_y} [b]; [b][2:v] overlay={facecam_x}:{facecam_y}' -r 60 -c:v libx264 -pix_fmt yuv420p {output_file}"
 
     subprocess.run(cmd, shell=True)
 
@@ -32,14 +54,33 @@ def create_blurred_mobile_video(
         background_file,
         content_file,
         output_file,
-        blur_strength=15):
+        **options):
 
-    # the x and y coordinates will change when we
-    # start working with different aspect ratios
-    content_x = 0
-    content_y = 420
+    # specifies the x and y coordinates of the content
+    content_x = options.get('content_x', 0)
+    content_y = options.get('content_y', 420)
+    # how strong the blur should be
+    blur_strength = options.get('blur_strength', 15)
+    # whether or not to put a watermark on the video
+    watermark = options.get('watermark', True)
+    # the x and y coordinates of the watermark
+    watermark_x = options.get('watermark_x', 10)
+    watermark_y = options.get('watermark_y', 1720)
+    # the x and y scale of the watermark
+    watermark_scale_x = options.get('watermark_scale_x', 350)
+    watermark_scale_y = options.get('watermark_scale_y', 100)
+    # this can be any public URL or a local file
+    watermark_file = options.get('watermark_file', WATERMARK_FILE)
 
-    cmd = f"ffmpeg -i {background_file} -i {content_file} -filter_complex '[0:v] boxblur={blur_strength}:1 [a]; [a][1:v] overlay={content_x}:{content_y}' -r 60 -c:v libx264 -pix_fmt yuv420p {output_file}"
+    # if there is a watermark, add it to the video
+    if watermark:
+        # generates the FFMPEG command sequence to add the watermark
+        watermark_command = f"[2:v] scale={watermark_scale_x}:{watermark_scale_y},colorchannelmixer=aa=0.5 [c]; [b][c] overlay={watermark_x}:{watermark_y}"
+        # the ffmpeg command to create the video
+        cmd = f"ffmpeg -i {background_file} -i {content_file} -i {watermark_file} -filter_complex '[0:v] boxblur={blur_strength}:1 [a]; [a][1:v] overlay={content_x}:{content_y} [b];{watermark_command}' -r 60 -c:v libx264 -pix_fmt yuv420p {output_file}"
+    else:
+        # if there is no watermark, omit the watermark file and command
+        cmd = f"ffmpeg -i {background_file} -i {content_file} -filter_complex '[0:v] boxblur={blur_strength}:1 [a]; [a][1:v] overlay={content_x}:{content_y}' -r 60 -c:v libx264 -pix_fmt yuv420p {output_file}"
 
     subprocess.run(cmd, shell=True)
 

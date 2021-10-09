@@ -13,7 +13,10 @@ def get_stream_manifest_url(video_id):
     prefix = 'https://twitch.tv/videos/'
     original_url = f'{prefix}{video_id}'
     streams = streamlink.streams(original_url)
-    return streams.get('best').url
+    best = streams.get('best')
+    if not best:
+        return streams.get('source').url
+    return best.url
 
 
 def handler(event, context):

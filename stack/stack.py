@@ -59,7 +59,7 @@ class RenderLambdaStack(cdk.Stack):
                 os.getcwd(),
                 'lambdas',
                 'transcoding_progress'),
-            runtime=lambda_.Runtime.PYTHON_3_8,
+            runtime=lambda_.Runtime.PYTHON_3_9,
             timeout=cdk.Duration.seconds(60),
             memory_size=128)
 
@@ -120,7 +120,7 @@ class RenderLambdaStack(cdk.Stack):
                 os.getcwd(),
                 'lambdas',
                 'renderer'),
-            runtime=lambda_.Runtime.PYTHON_3_8,
+            runtime=lambda_.Runtime.PYTHON_3_9,
             environment={
                 'OUT_BUCKET': combined_clips.bucket_name,
                 'QUEUE_ARN': mediaconvert_queue.attr_arn,
@@ -149,7 +149,7 @@ class RenderLambdaStack(cdk.Stack):
                 os.getcwd(),
                 'lambdas',
                 'notify'),
-            runtime=lambda_.Runtime.PYTHON_3_8,
+            runtime=lambda_.Runtime.PYTHON_3_9,
             environment={
                 'FROM_EMAIL': 'steven@pillar.gg',
                 'SLACK_TOKEN_ARN': slack_token_secret.secret_arn,
@@ -205,7 +205,7 @@ class RenderLambdaStack(cdk.Stack):
                                       index='handler.py',
                                       entry=os.path.join(
                                           os.getcwd(), 'lambdas', 'yt_upload'),
-                                      runtime=lambda_.Runtime.PYTHON_3_8,
+                                      runtime=lambda_.Runtime.PYTHON_3_9,
                                       timeout=cdk.Duration.seconds(30),
                                       memory_size=1024,
                                       environment={
@@ -301,7 +301,7 @@ class RenderLambdaStack(cdk.Stack):
                                  index='handler.py',
                                  entry=os.path.join(
                                      os.getcwd(), 'lambdas', 'authorizer'),
-                                 runtime=lambda_.Runtime.PYTHON_3_8,
+                                 runtime=lambda_.Runtime.PYTHON_3_9,
                                  timeout=cdk.Duration.seconds(30),
                                  memory_size=128,
                                  environment={
@@ -365,7 +365,7 @@ class RenderLambdaStack(cdk.Stack):
                                      index='handler.py',
                                      entry=os.path.join(
                                          os.getcwd(), 'lambdas', 'mobile_export', 'crop'),
-                                     runtime=lambda_.Runtime.PYTHON_3_8,
+                                     runtime=lambda_.Runtime.PYTHON_3_9,
                                      timeout=cdk.Duration.seconds(30),
                                      memory_size=128,
                                      initial_policy=[  # reuse policy statements from above: mediaconvert_pass_role, mediaconvert_create_job

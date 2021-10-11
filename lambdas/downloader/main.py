@@ -72,7 +72,7 @@ def handler(event, context):
                     global_options=ffmpeg_global_options)
     ffmpeg.run()
 
-    if not event.get('dry_run'):
+    if BUCKET:
         print('Uploading....')
         s3 = boto3.client('s3')
         s3.upload_file(download_name, BUCKET, download_name)

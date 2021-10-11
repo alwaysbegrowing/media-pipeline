@@ -33,6 +33,15 @@ This is the data that is needed to start mediaconvert.
 
 def handler(event, context):
 
+    dry_run = event.get('DryRun', False)
+
+    if dry_run:
+        print('Dry run, not actually cropping')
+        OUT_BUCKET = 'test'
+        IN_BUCKET = 'test'
+        QUEUE_ARN = 'test'
+        ROLE_ARN = 'test'
+
     print(json.dumps(event))
 
     job_constructor = MediaConvertJobHandler(QUEUE_ARN, ROLE_ARN)
@@ -70,9 +79,10 @@ def handler(event, context):
     print(f'Constructed Job:')
     print(json.dumps(job))
 
-    mediaconvert_client = boto3.client(  # need endpoint url to start mediaconvert
-        'mediaconvert', endpoint_url='https://lxlxpswfb.mediaconvert.us-east-1.amazonaws.com')
-    mediaconvert_client.create_job(**job)
+    if not dry_run:
+        mediaconvert_client = boto3.client(  # need endpoint url to start mediaconvert
+            'mediaconvert', endpoint_url='https://lxlxpswfb.mediaconvert.us-east-1.amazonaws.com')
+        mediaconvert_client.create_job(**job)
 
     background_file = f'{event["ClipName"]}background.mp4'
     content_file = f'{event["ClipName"]}content.mp4'

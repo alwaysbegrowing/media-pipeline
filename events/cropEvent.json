@@ -1,0 +1,31 @@
+{
+    "ClipName": "s3://renderlambdastack-individualclips96d9129c-6ouc89g9qcuf/5084577c-cee5-4ef2-b2f0-b79d27f0ab19.mkv",
+    "Outputs": {
+        "content": {
+            "x": 390,
+            "y": 0,
+            "width": 1080,
+            "height": 1080,
+            "res_x": 1080,
+            "res_y": 1080
+        },
+        "facecam": {
+            "x": 1382,
+            "y": 822,
+            "width": 342,
+            "height": 256,
+            "res_x": 560,
+            "res_y": 420
+        },
+        "background": {
+            "x": 656,
+            "y": 0,
+            "width": 606,
+            "height": 1080,
+            "res_x": 1080,
+            "res_y": 1920
+        }
+    },
+    "TaskToken": "AAAAKgAAAAIAAAAAAAAAAVMcBi/oQQHCTmbVgRTRVQDXz+VcZrZnv7oeSqpfSp8dZnJvEemOsfdwZNkH6l/Sqr89aFzRFe3lydwl4iWbthiLx4Kxqbab60VIoKhwcvR4MV+VoQpufkNqS/anD1J8PAYr3jB3kSv8mmwexPTKDRS+KeYlV51PHkaJnJ3bmA0aXk8bC6uHDX5E5YZ52ccmIH1DJJtF3EFhGOnlvwgFGlXsXkGRs9su3wsbgiwPyWtRFLu87ae183l/Zn1SIYrI67l7HYhiXA5zmatmPXxJEiBVm/wbE0XO47g3iFKOnZkWKqivNUyc44KTgC8XbgjtFNrAxJyre1E+t6Xl5ijne5U/38Tf97IiH56PiJQcx8QbbMgRfi9forfvz0RJWHwkepDuSCitAVGPNRx1vmDjKE1chnrTTP52DZX+wyyEdNY+zRB/HHU1Ghygi8LCSq90BfBrteWX6GjSi8eRJaLg2RiEm1cd2fMF4CZbpGm/xTjciE7ubAMFAGEV6d1SD8b2eKQTFUEAydPW1m18jTgCIuz9rxYA8NKy6ZZlEnpRaWkuwXCfHafw74ptvBM4O48Q481UsiVCr29cULGRmD3pdB3utS68+Cp2Z5sDCfq6ogaZj/X/H8TUYPgyV4EMlvqITA==",
+    "DryRun": true
+}

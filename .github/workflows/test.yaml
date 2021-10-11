@@ -58,7 +58,7 @@ jobs:
         run: |
           sam local invoke FinalRendererCB91BC08 --env-vars env.json --event ./events/renderEvent.json -l ./logs/render.txt
 
-      - name: Test Render
+      - name: Test Render Lambda
         uses: pillargg/sam-ots@master
         with:
           file: ./logs/render.txt
@@ -67,10 +67,18 @@ jobs:
         run: |
           sam local invoke Notify29C25B1B --env-vars env.json --event ./events/notifyStepEvent.json -l ./logs/stepNotify.txt
 
-      - name: Test Step Notification
+      - name: Test Notification Lambda
         uses: pillargg/sam-ots@master
         with:
           file: ./logs/stepNotify.txt
+
+      - name: Crop Lambda
+        run: sam local invoke CropLambdaD1203C8D --env-vars env.json --event ./events/cropEvent.json > ./logs/crop.txt
+
+      - name: Test Crop Lambda
+        uses: pillargg/sam-ots@master
+        with:
+          file: ./logs/crop.txt
 
       - name: Downloader Lambda
         run: |

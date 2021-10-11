@@ -16,3 +16,7 @@ local_test.py
 secrets.env
 template.yaml
 test.py
+
+logs/*
+lambdas/downloader/docker.env
+lambdas/mobile_export/combine/docker.env

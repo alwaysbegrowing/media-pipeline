@@ -1,0 +1,6 @@
+{
+    "content_file": "s3://renderlambdastack-croppedclipsbucket4f3e32f4-1m6mtmk9yr9n1/5084577c-cee5-4ef2-b2f0-b79d27f0ab19content.mp4",
+    "facecam_file": "s3://renderlambdastack-croppedclipsbucket4f3e32f4-1m6mtmk9yr9n1/5084577c-cee5-4ef2-b2f0-b79d27f0ab19facecam.mp4",
+    "background_file": "s3://renderlambdastack-croppedclipsbucket4f3e32f4-1m6mtmk9yr9n1/5084577c-cee5-4ef2-b2f0-b79d27f0ab19background.mp4",
+    "dry_run": true
+}

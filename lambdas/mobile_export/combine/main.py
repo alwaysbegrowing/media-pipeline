@@ -1,3 +1,4 @@
+import json
 import os
 import subprocess
 import uuid
@@ -89,7 +90,9 @@ def handler(event, context):
 
     os.chdir('/tmp')
 
-    print(f"Event: {event}")
+    print(json.dumps(event))
+
+    dry_run = event.get('dry_run', False)
 
     background_file = event.get('background_file')
     content_file = event.get('content_file')
@@ -106,43 +109,44 @@ def handler(event, context):
     if facecam_file:
         facecam_file_name = facecam_file.split('/')[-1]
 
-    s3 = s3fs.S3FileSystem(anon=False)
-
-    s3.get(background_file, f'/tmp/{background_file_name}')
-    if content_file:
-        s3.get(content_file, f'/tmp/{content_file_name}')
-    if facecam_file:
-        s3.get(facecam_file, f'/tmp/{facecam_file_name}')
-
     # create a random name
     output_file = f'{uuid.uuid4()}.mp4'
 
-    if not facecam_file and not content_file:
-        background_local_file = f'/tmp/{background_file_name}'
-        upload_file_name = f's3://{FINAL_BUCKET}/{output_file}'
-        print(background_local_file)
-        print(upload_file_name)
-        s3.put(background_local_file,
-               upload_file_name)
+    if not dry_run:
+        s3 = s3fs.S3FileSystem(anon=False)
+
+        s3.get(background_file, f'/tmp/{background_file_name}')
+        if content_file:
+            s3.get(content_file, f'/tmp/{content_file_name}')
+        if facecam_file:
+            s3.get(facecam_file, f'/tmp/{facecam_file_name}')
+
+        if not facecam_file and not content_file:
+            background_local_file = f'/tmp/{background_file_name}'
+            upload_file_name = f's3://{FINAL_BUCKET}/{output_file}'
+            print(background_local_file)
+            print(upload_file_name)
+            s3.put(background_local_file,
+                   upload_file_name)
+            subprocess.run("rm -r /tmp/*", shell=True)
+            return {'output_file': upload_file_name}
+
+        if facecam_file:
+            create_facecam_mobile_video(
+                f'/tmp/{background_file_name}',
+                f'/tmp/{content_file_name}',
+                f'/tmp/{facecam_file_name}',
+                'output.mp4',
+                blur_strength=BLUR_STRENGTH)
+        else:
+            create_blurred_mobile_video(
+                f'/tmp/{background_file_name}',
+                f'/tmp/{content_file_name}',
+                '/tmp/output.mp4',
+                blur_strength=BLUR_STRENGTH)
+
+        s3.put('/tmp/output.mp4', f's3://{FINAL_BUCKET}/{output_file}')
         subprocess.run("rm -r /tmp/*", shell=True)
-        return {'output_file': upload_file_name}
-
-    if facecam_file:
-        create_facecam_mobile_video(
-            f'/tmp/{background_file_name}',
-            f'/tmp/{content_file_name}',
-            f'/tmp/{facecam_file_name}',
-            'output.mp4',
-            blur_strength=BLUR_STRENGTH)
-    else:
-        create_blurred_mobile_video(
-            f'/tmp/{background_file_name}',
-            f'/tmp/{content_file_name}',
-            '/tmp/output.mp4',
-            blur_strength=BLUR_STRENGTH)
-
-    s3.put('/tmp/output.mp4', f's3://{FINAL_BUCKET}/{output_file}')
-    subprocess.run("rm -r /tmp/*", shell=True)
     return {
         'output_file': f's3://{FINAL_BUCKET}/{output_file}'
     }

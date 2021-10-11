@@ -37,10 +37,6 @@ def handler(event, context):
 
     if dry_run:
         print('Dry run, not actually cropping')
-        OUT_BUCKET = 'test'
-        IN_BUCKET = 'test'
-        QUEUE_ARN = 'test'
-        ROLE_ARN = 'test'
 
     print(json.dumps(event))
 

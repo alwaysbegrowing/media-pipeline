@@ -1,8 +1,12 @@
 {
   "index": 0,
-  "videoId": "964746682",
+  "videoId": "1129521230",
   "clip": {
-    "startTime": 60,
-    "endTime": 65
+    "language": "en",
+    "title": "Siege but I'm not drunk.",
+    "thumbnail_url": "https://clips-media-assets2.twitch.tv/43423517341-offset-1558-preview-480x272.jpg",
+    "startTime": 1526,
+    "endTime": 1552,
+    "twitchClipId": "TalentedAmusedRutabagaPlanking-PUw0f-aLzda8hHUL"
   }
 }

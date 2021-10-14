@@ -1,12 +1,12 @@
 {
   "individualClips": [{
       "position": 0,
-      "file": "s3://qa-render-individualclips96d9129c-1t0w8w50ag7dn/ddc1da31-fc43-4c73-80b0-9f8659d312e6.mkv",
+      "file": "s3://chandlertestbucket/input.mp4",
       "render": true
     },
     {
       "position": 1,
-      "file": "s3://qa-render-individualclips96d9129c-1t0w8w50ag7dn/e2a8f21a-5b31-4848-ae0b-8864eeb3d6a1.mkv",
+      "file": "s3://chandlertestbucket/input.mp4",
       "render": true
     }
   ],

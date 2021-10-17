@@ -58,6 +58,7 @@ class RenderLambdaStack(cdk.Stack):
             entry=os.path.join(
                 os.getcwd(),
                 'lambdas',
+                'common',
                 'transcoding_progress'),
             runtime=lambda_.Runtime.PYTHON_3_9,
             timeout=cdk.Duration.seconds(60),
@@ -66,7 +67,8 @@ class RenderLambdaStack(cdk.Stack):
         clips_endpoint = clip_api.root.add_resource("clips")
 
         ecr_image = lambda_.EcrImageCode.from_asset_image(
-            directory=os.path.join(os.getcwd(), 'lambdas', 'downloader')
+            directory=os.path.join(
+                os.getcwd(), 'lambdas', 'common', 'downloader')
         )
 
         downloader = lambda_.Function(
@@ -119,6 +121,7 @@ class RenderLambdaStack(cdk.Stack):
             entry=os.path.join(
                 os.getcwd(),
                 'lambdas',
+                'desktop_export',
                 'renderer'),
             runtime=lambda_.Runtime.PYTHON_3_9,
             environment={
@@ -148,6 +151,7 @@ class RenderLambdaStack(cdk.Stack):
             entry=os.path.join(
                 os.getcwd(),
                 'lambdas',
+                'common',
                 'notify'),
             runtime=lambda_.Runtime.PYTHON_3_9,
             environment={
@@ -204,7 +208,7 @@ class RenderLambdaStack(cdk.Stack):
                                       handler='handler',
                                       index='handler.py',
                                       entry=os.path.join(
-                                          os.getcwd(), 'lambdas', 'yt_upload'),
+                                          os.getcwd(), 'lambdas', 'desktop_export', 'yt_upload'),
                                       runtime=lambda_.Runtime.PYTHON_3_9,
                                       timeout=cdk.Duration.seconds(30),
                                       memory_size=1024,
@@ -300,7 +304,7 @@ class RenderLambdaStack(cdk.Stack):
                                  handler='handler',
                                  index='handler.py',
                                  entry=os.path.join(
-                                     os.getcwd(), 'lambdas', 'authorizer'),
+                                     os.getcwd(), 'lambdas', 'common', 'authorizer'),
                                  runtime=lambda_.Runtime.PYTHON_3_9,
                                  timeout=cdk.Duration.seconds(30),
                                  memory_size=128,

@@ -23,6 +23,7 @@ class HtmlTemplate():
     '''
 
     footer = f'''<br>
+    <a href="https://discord.gg/dhT6UUgf9v"> Join the Pillar Discord! </a>
     <br>
     <br>
     Thanks for using Pillar! <br>
@@ -63,7 +64,7 @@ class FailureMessage(HtmlTemplate):
             <body>
             {display_name}, <br>
             There was an error creating the compilation :( <br>
-            Please reply to this email and we will be happy to fix it!<br>
+            Please reply to this email or ping us on the Discord server and we will be happy to fix it!<br>
             '''
         super().__init__(self.subject, html)
 

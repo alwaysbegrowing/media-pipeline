@@ -19,7 +19,6 @@ from aws_cdk.aws_lambda_python import PythonFunction
 TWITCH_CLIENT_ID_ARN = 'arn:aws:secretsmanager:us-east-1:576758376358:secret:TWITCH_CLIENT_ID-dKQAIn'
 MONGODB_FULL_URI_ARN = 'arn:aws:secretsmanager:us-east-1:576758376358:secret:MONGODB_FULL_URI-DBSAtt'
 YT_CREDENTIALS = 'arn:aws:secretsmanager:us-east-1:576758376358:secret:YT_CREDENTIALS-7vn4OJ'
-SLACK_TOKEN = 'arn:aws:secretsmanager:us-east-1:576758376358:secret:SlackToken-YE4Jip'
 
 
 class RenderLambdaStack(cdk.Stack):
@@ -133,9 +132,6 @@ class RenderLambdaStack(cdk.Stack):
         youtube_secrets = secretsmanager.Secret.from_secret_complete_arn(
             self, 'YT_CREDENTIALS', YT_CREDENTIALS)
 
-        slack_token_secret = secretsmanager.Secret.from_secret_complete_arn(
-            self, 'SlackToken', SLACK_TOKEN)
-
         ses_email_role = iam.PolicyStatement(
             actions=['ses:SendEmail', 'ses:SendRawEmail'], resources=['*'])
 
@@ -151,8 +147,7 @@ class RenderLambdaStack(cdk.Stack):
                 'notify'),
             runtime=lambda_.Runtime.PYTHON_3_9,
             environment={
-                'FROM_EMAIL': 'steven@pillar.gg',
-                'SLACK_TOKEN_ARN': slack_token_secret.secret_arn,
+                'FROM_EMAIL': 'steven@pillar.gg'
             },
             memory_size=256,
             timeout=cdk.Duration.seconds(60))

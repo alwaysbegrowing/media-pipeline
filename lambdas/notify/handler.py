@@ -56,4 +56,4 @@ def handler(event, context):
     )
     print(result)
 
-    return {"message": message}
+    return {"message": message, "url": compilation_file_url}

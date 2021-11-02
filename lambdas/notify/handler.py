@@ -4,7 +4,6 @@ import os
 import boto3
 
 from email_templates import FailureMessage, S3Success, YoutubeSuccess
-from get_aws_secret import get_aws_secret
 from utils import s3_to_http
 
 FROM_EMAIL = os.getenv('FROM_EMAIL')

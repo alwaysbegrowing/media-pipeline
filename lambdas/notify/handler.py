@@ -4,8 +4,7 @@ import os
 import boto3
 
 from email_templates import FailureMessage, S3Success, YoutubeSuccess
-from get_aws_secret import get_aws_secret
-from utils import s3_to_http, send_log_to_slack_channel
+from utils import s3_to_http
 
 FROM_EMAIL = os.getenv('FROM_EMAIL')
 email_client = boto3.client('ses')
@@ -41,8 +40,6 @@ def handler(event, context):
         message = S3Success(display_name, compilation_file_url).message
 
     if error:
-        send_log_to_slack_channel(display_name, request_email,
-                                  error_name, error_message)
         message = FailureMessage(display_name, error_name)
 
     result = email_client.send_email(
@@ -56,4 +53,4 @@ def handler(event, context):
     )
     print(result)
 
-    return {"message": message}
+    return {"message": message, "url": compilation_file_url}

@@ -1,12 +1,5 @@
 import os
 
-import slack
-
-from get_aws_secret import get_aws_secret
-
-SLACK_TOKEN_ARN = os.getenv('SLACK_TOKEN_ARN')
-SLACK_TOKEN = get_aws_secret(SLACK_TOKEN_ARN)
-
 
 def replace_nth_occurrence(s, sub, repl, n):
     '''
@@ -42,23 +35,3 @@ def s3_to_http(s3_url):
         3).replace(
         's3://',
         'https://')
-
-
-def send_log_to_slack_channel(
-        display_name,
-        request_email,
-        error_name,
-        error_message):
-    slack_message = f'''
-        Client Display Name: {display_name}
-        Client Email: {request_email}
-        Error Name: {error_name}
-        Error Message: {error_message}
-    '''
-    client = slack.WebClient(token=SLACK_TOKEN)
-    client.chat_postMessage(
-        channel='#pillar-robots',
-        text=slack_message,
-        username='Media Pipeline Error',
-        icon_emoji=':robot_face:'
-    )

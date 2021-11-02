@@ -152,7 +152,6 @@ class RenderLambdaStack(cdk.Stack):
             memory_size=256,
             timeout=cdk.Duration.seconds(60))
 
-        slack_token_secret.grant_read(notify_lambda)
         notify_lambda.add_to_role_policy(ses_email_role)
 
         notify_task = stp_tasks.LambdaInvoke(self, "Send Email",

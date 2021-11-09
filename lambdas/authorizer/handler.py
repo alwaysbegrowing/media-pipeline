@@ -76,6 +76,9 @@ def handler(event, context):
     """2. Decode a JWT token inline"""
     """3. Lookup in a self-managed DB"""
     user = get_user(event['authorizationToken'])
+    isAllowed = is_user_allowed(user['id'])
+    if not isAllowed:
+        raise Exception('Rate limit exceeded')
     principalId = user['id']
 
     """you can send a 401 Unauthorized response to the client by failing like so:"""

@@ -11,12 +11,17 @@ or in the "license" file accompanying this file. This file is distributed on an 
 """
 from __future__ import print_function
 
-import re
 import json
-import requests
 import os
+import re
+
+import arrow
+import boto3
+import requests
+from pymongo import MongoClient
 
 TWITCH_CLIENT_ID = os.getenv('TWITCH_CLIENT_ID')
+EXPORT_RATELIMIT = 60
 
 
 def get_user(authorization_token):
@@ -29,6 +34,34 @@ def get_user(authorization_token):
         return resp.json()["data"][0]
     else:
         raise Exception('Unauthorized Request')
+
+
+def is_user_allowed(twitchId):
+    client = MongoClient(os.getenv('MONGODB_URI'))
+    db = client[os.getenv('MONGO_DB')]
+    exports = db['exports']
+    # find the most recent export with the matching twitchId
+    last_export = exports.find_one({'twitchId': twitchId}, sort=[('_id', -1)])
+
+    executionArn = last_export.get('executionArn')
+
+    # if they haven't exported anything
+    if not executionArn:
+        return True
+
+    sfn = boto3.client('stepfunctions')
+    response = sfn.describe_execution(
+        executionArn=executionArn
+    )
+
+    startTime = arrow.get(response['startDate']).to('UTC')
+    now = arrow.utcnow()
+    diff = now - startTime
+
+    if diff.total_seconds() > EXPORT_RATELIMIT:
+        return True
+
+    return False
 
 
 def handler(event, context):

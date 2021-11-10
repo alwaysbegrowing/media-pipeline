@@ -290,19 +290,23 @@ class RenderLambdaStack(cdk.Stack):
                 response_models={
                     "application/json": apigateway.EmptyModel()})]
 
-        auth_fn = PythonFunction(self, 'Authorizer',
-                                 handler='handler',
-                                 index='handler.py',
-                                 entry=os.path.join(
-                                     os.getcwd(), 'lambdas', 'authorizer'),
-                                 runtime=lambda_.Runtime.PYTHON_3_9,
-                                 timeout=cdk.Duration.seconds(30),
-                                 memory_size=128,
-                                 environment={
-                                     'TWITCH_CLIENT_ID': TWITCH_CLIENT_ID,
-                                     'MONGODB_URI': mongodb_full_uri.secret_value.to_string(),
-                                     'DB_NAME': mongo_db_database,
-                                 })
+        auth_fn = PythonFunction(
+            self,
+            'Authorizer',
+            handler='handler',
+            index='handler.py',
+            entry=os.path.join(
+                os.getcwd(),
+                'lambdas',
+                'authorizer'),
+            runtime=lambda_.Runtime.PYTHON_3_9,
+            timeout=cdk.Duration.seconds(30),
+            memory_size=128,
+            environment={
+                'TWITCH_CLIENT_ID': TWITCH_CLIENT_ID,
+                'MONGODB_URI': mongodb_full_uri.secret_value.to_string(),
+                'DB_NAME': mongo_db_database,
+            })
 
         state_machine.grant_read(auth_fn)
 

@@ -16,7 +16,6 @@ import os
 import re
 
 import arrow
-import boto3
 import requests
 from pymongo import MongoClient
 
@@ -38,25 +37,22 @@ def get_user(authorization_token):
 
 def is_user_allowed(twitchId):
     client = MongoClient(os.getenv('MONGODB_URI'))
-    db = client[os.getenv('MONGO_DB')]
+    db = client[os.getenv('DB_NAME')]
     exports = db['exports']
     # find the most recent export with the matching twitchId
     last_export = exports.find_one({'twitchId': twitchId}, sort=[('_id', -1)])
 
-    executionArn = last_export.get('executionArn')
+    last_export_time = last_export.get('startDate')
 
-    # if they haven't exported anything
-    if not executionArn:
+    if last_export_time is None:
         return True
 
-    sfn = boto3.client('stepfunctions')
-    response = sfn.describe_execution(
-        executionArn=executionArn
-    )
-
-    startTime = arrow.get(response['startDate']).to('UTC')
+    startTime = arrow.get(last_export_time).to('UTC')
     now = arrow.utcnow()
     diff = now - startTime
+
+    print(f'Now: {now}')
+    print(f'StartTime: {startTime}')
 
     if diff.total_seconds() > EXPORT_RATELIMIT:
         return True

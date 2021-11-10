@@ -300,7 +300,11 @@ class RenderLambdaStack(cdk.Stack):
                                  memory_size=128,
                                  environment={
                                      'TWITCH_CLIENT_ID': TWITCH_CLIENT_ID,
+                                     'MONGODB_URI': mongodb_full_uri.secret_value.to_string(),
+                                     'DB_NAME': mongo_db_database,
                                  })
+
+        state_machine.grant_read(auth_fn)
 
         auth = apigateway.TokenAuthorizer(
             self, 'Token Authorizer', handler=auth_fn)
@@ -457,6 +461,8 @@ class RenderLambdaStack(cdk.Stack):
 
         mobile_export_state_machine = stepfunctions.StateMachine(
             self, "MobileExporter", definition=mobile_definition)
+
+        mobile_export_state_machine.grant_read(auth_fn)
 
         mobile_export_state_machine.grant_start_execution(api_role)
 

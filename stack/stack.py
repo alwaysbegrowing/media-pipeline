@@ -4,7 +4,6 @@ import json
 from aws_cdk import (core as cdk,
                      aws_apigateway as apigateway,
                      aws_s3 as s3,
-                     aws_s3_notifications as s3_notify,
                      aws_lambda as lambda_,
                      aws_mediaconvert as mediaconvert,
                      aws_stepfunctions as stepfunctions,
@@ -411,9 +410,7 @@ class RenderLambdaStack(cdk.Stack):
             result_selector={
                 'file.$': '$.Payload.file'},
             result_path="$.ClipName",
-            output_path="$").add_catch(
-            send_mobile_failure_email,
-            result_path="$.Error")
+            output_path="$")
 
         # crop video task
         crop_video_task = stp_tasks.LambdaInvoke(
@@ -428,9 +425,7 @@ class RenderLambdaStack(cdk.Stack):
                 {
                     "TaskToken": stepfunctions.JsonPath.task_token,
                     "ClipName.$": "$.ClipName.file",
-                    "Outputs.$": "$.data.Outputs"})).add_catch(
-            send_mobile_failure_email,
-            result_path="$.Error")
+                    "Outputs.$": "$.data.Outputs"}))
 
         combine_video_task = stp_tasks.LambdaInvoke(
             self,
@@ -438,9 +433,7 @@ class RenderLambdaStack(cdk.Stack):
             lambda_function=combiner_lambda,
             result_path="$.combine",
             input_path="$.crop",
-            output_path="$").add_catch(
-            send_mobile_failure_email,
-            result_path="$.Error")
+            output_path="$")
 
         mobile_notify_task = stp_tasks.LambdaInvoke(
             self,
@@ -452,8 +445,11 @@ class RenderLambdaStack(cdk.Stack):
                         "outputFilePath.$": "$.combine.Payload.output_file"},
                     "user.$": "$.user"}))
 
-        mobile_definition = download_clip_task.next(crop_video_task).next(
+        mobile_chain = download_clip_task.next(crop_video_task).next(
             combine_video_task).next(mobile_notify_task)
+
+        mobile_definition = stepfunctions.Parallel(self, "Mobile Branch").branch(
+            mobile_chain).add_catch(send_mobile_failure_email)
 
         mobile_export_state_machine = stepfunctions.StateMachine(
             self, "MobileExporter", definition=mobile_definition)

@@ -237,9 +237,8 @@ class RenderLambdaStack(cdk.Stack):
             include_execution_data=True,
             level=stepfunctions.LogLevel.ALL)
 
-        state_machine = stepfunctions.StateMachine(self, "Renderer",
-                                                   definition=definition,
-                                                   logs=state_machine_log_options)
+        state_machine = stepfunctions.StateMachine(
+            self, "Renderer", definition=definition, logs=state_machine_log_options)
 
         def formated_request_template(state_machine_arn):
             # This transforms the input into the format that the step functions are expecting.
@@ -465,10 +464,15 @@ class RenderLambdaStack(cdk.Stack):
             self, "MobileExportLogGroup", retention=logs.RetentionDays.ONE_YEAR)
 
         mobile_export_state_machine_log_options = stepfunctions.LogOptions(
-            destination=mobile_export_log_group, include_execution_data=True, level=stepfunctions.LogLevel.ALL)
+            destination=mobile_export_log_group,
+            include_execution_data=True,
+            level=stepfunctions.LogLevel.ALL)
 
         mobile_export_state_machine = stepfunctions.StateMachine(
-            self, "MobileExporter", definition=mobile_definition, logs=mobile_export_state_machine_log_options)
+            self,
+            "MobileExporter",
+            definition=mobile_definition,
+            logs=mobile_export_state_machine_log_options)
 
         mobile_export_state_machine.grant_start_execution(api_role)
 

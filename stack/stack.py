@@ -11,7 +11,8 @@ from aws_cdk import (core as cdk,
                      aws_iam as iam,
                      aws_events as events,
                      aws_events_targets as events_targets,
-                     aws_secretsmanager as secretsmanager)
+                     aws_secretsmanager as secretsmanager,
+                     aws_logs as logs,)
 
 from aws_cdk.aws_lambda_python import PythonFunction
 
@@ -227,9 +228,17 @@ class RenderLambdaStack(cdk.Stack):
                     "$.data.uploadToYoutube",
                     True),
                 upload_to_yt_task.next(notify_task)).otherwise(notify_task))
-        state_machine = stepfunctions.StateMachine(self, "Renderer",
-                                                   definition=definition
-                                                   )
+
+        renderer_log_group = logs.LogGroup(
+            self, 'RendererLogGroup', retention=logs.RetentionDays.ONE_YEAR)
+
+        state_machine_log_options = stepfunctions.LogOptions(
+            destination=renderer_log_group,
+            include_execution_data=True,
+            level=stepfunctions.LogLevel.ALL)
+
+        state_machine = stepfunctions.StateMachine(
+            self, "Renderer", definition=definition, logs=state_machine_log_options)
 
         def formated_request_template(state_machine_arn):
             # This transforms the input into the format that the step functions are expecting.
@@ -451,8 +460,19 @@ class RenderLambdaStack(cdk.Stack):
         mobile_definition = stepfunctions.Parallel(self, "Mobile Branch").branch(
             mobile_chain).add_catch(send_mobile_failure_email)
 
+        mobile_export_log_group = logs.LogGroup(
+            self, "MobileExportLogGroup", retention=logs.RetentionDays.ONE_YEAR)
+
+        mobile_export_state_machine_log_options = stepfunctions.LogOptions(
+            destination=mobile_export_log_group,
+            include_execution_data=True,
+            level=stepfunctions.LogLevel.ALL)
+
         mobile_export_state_machine = stepfunctions.StateMachine(
-            self, "MobileExporter", definition=mobile_definition)
+            self,
+            "MobileExporter",
+            definition=mobile_definition,
+            logs=mobile_export_state_machine_log_options)
 
         mobile_export_state_machine.grant_start_execution(api_role)
 

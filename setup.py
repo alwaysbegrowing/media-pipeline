@@ -33,6 +33,7 @@ setuptools.setup(
         "aws-cdk.pipelines==1.127.0",
         "aws-cdk.aws-codepipeline-actions==1.127.0",
         "aws_cdk.aws_ses==1.127.0",
+        "aws_cdk.aws_logs==1.127.0",
         "boto3==1.17.39"
     ],
 

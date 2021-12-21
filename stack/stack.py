@@ -434,7 +434,9 @@ class RenderLambdaStack(cdk.Stack):
                 {
                     "TaskToken": stepfunctions.JsonPath.task_token,
                     "ClipName.$": "$.ClipName.file",
-                    "Outputs.$": "$.data.Outputs"}))
+                    "Outputs.$": "$.data.Outputs",
+                    "videoId.$": "$.data.ClipData.videoId",
+                }))
 
         combine_video_task = stp_tasks.LambdaInvoke(
             self,

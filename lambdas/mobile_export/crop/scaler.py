@@ -1,5 +1,5 @@
 import youtube_dl
-import math
+
 
 def get_twitch_vod_width_height(video_id):
     url = f'https://www.twitch.tv/videos/{video_id}'
@@ -16,18 +16,39 @@ def get_twitch_vod_width_height(video_id):
 
     return width, height
 
-def scale_coordinates(video_id, x, y, width, height):
-    video_width, video_height = get_twitch_vod_width_height(video_id)
 
-    if video_width == 0 or video_height == 0:
+class ClipScaler:
+    def __init__(self, video_id):
+        self.video_id = video_id
+        self.video_width, self.video_height = get_twitch_vod_width_height(
+            video_id)
+        self.x_scale = self.video_width / 1920
+        self.y_scale = self.video_height / 1080
+
+    def scale_coordinates(self, x, y, width, height):
+
+        x = int(x * self.x_scale)
+        y = int(y * self.y_scale)
+        width = int(width * self.x_scale)
+        height = int(height * self.y_scale)
+
+        if x % 2 != 0:
+            x += 1
+        if y % 2 != 0:
+            y += 1
+        if width % 2 != 0:
+            width += 1
+        if height % 2 != 0:
+            height += 1
+
         return x, y, width, height
 
-    x_scale = width / video_width
-    y_scale = height / video_height
 
-    x = int(x * x_scale)
-    y = int(y * y_scale)
-    width = int(width * x_scale)
-    height = int(height * y_scale)
-
-    return x, y, width, height
+if __name__ == "__main__":
+    video_id = '1227210464'
+    x = 656
+    y = 0
+    width = 606
+    height = 1080
+    clip_scaler = ClipScaler(video_id)
+    print(clip_scaler.scale_coordinates(x, y, width, height))

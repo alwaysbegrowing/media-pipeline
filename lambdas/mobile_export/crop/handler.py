@@ -53,6 +53,8 @@ def handler(event, context):
         res_x = outputs[output].get('res_x')
         res_y = outputs[output].get('res_y')
 
+        # scaler would go in here
+
         if not res_x or not res_y:
             res_x = outputs[output]['resX']
             res_y = outputs[output]['resY']
